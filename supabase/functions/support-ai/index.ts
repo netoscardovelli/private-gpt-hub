@@ -24,8 +24,8 @@ const handleApiError = (error: any) => {
   });
 };
 
-const callOpenAI = async (messages: any[], apiKey: string) => {
-  console.log('Fazendo requisição para OpenAI API...');
+const callSupportAI = async (messages: any[], apiKey: string) => {
+  console.log('Fazendo requisição para Support AI API...');
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -41,29 +41,29 @@ const callOpenAI = async (messages: any[], apiKey: string) => {
     }),
   });
 
-  console.log('Resposta da OpenAI - Status:', response.status);
+  console.log('Resposta da Support AI - Status:', response.status);
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Erro da OpenAI:', { 
+    console.error('Erro da Support AI:', { 
       status: response.status, 
       statusText: response.statusText,
       error: errorText 
     });
     
     if (response.status === 401) {
-      throw new Error('Chave da API OpenAI inválida ou expirada. Verifique se a chave está correta nos secrets do Supabase.');
+      throw new Error('Chave da API Support AI inválida ou expirada. Verifique se a chave está correta nos secrets do Supabase.');
     } else if (response.status === 429) {
       throw new Error('Limite de requisições excedido. Tente novamente em alguns minutos');
     } else if (response.status === 403) {
       throw new Error('Acesso negado. Verifique as permissões da sua chave API');
     } else {
-      throw new Error(`Erro da OpenAI: ${response.status} - ${errorText}`);
+      throw new Error(`Erro da Support AI: ${response.status} - ${errorText}`);
     }
   }
 
   const data = await response.json();
-  console.log('Resposta recebida da OpenAI com sucesso');
+  console.log('Resposta recebida da Support AI com sucesso');
 
   return data;
 };
@@ -133,15 +133,15 @@ serve(async (req) => {
       throw new Error('Mensagem é obrigatória');
     }
 
-    // Pegar a chave da API dos secrets do Supabase
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    // Pegar a chave da API de suporte dos secrets do Supabase
+    const SUPPORT_API_KEY = Deno.env.get('SUPPORT_API_KEY');
     
-    if (!OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY não encontrada nos secrets');
-      throw new Error('Chave da API OpenAI não configurada');
+    if (!SUPPORT_API_KEY) {
+      console.error('SUPPORT_API_KEY não encontrada nos secrets');
+      throw new Error('Chave da API de Suporte não configurada');
     }
 
-    console.log('Iniciando chamada para OpenAI - Support AI...');
+    console.log('Iniciando chamada para Support AI...');
     console.log('Plano do usuário:', userPlan);
 
     // Preparar mensagens para o contexto de suporte
@@ -156,7 +156,7 @@ serve(async (req) => {
       { role: 'user', content: message }
     ];
 
-    const data = await callOpenAI(messages, OPENAI_API_KEY);
+    const data = await callSupportAI(messages, SUPPORT_API_KEY);
     const aiResponse = data.choices[0].message.content;
 
     return new Response(JSON.stringify({ 
