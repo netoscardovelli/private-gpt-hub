@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FlaskConical, Shield, Sparkles } from 'lucide-react';
+import { ArrowRight, FlaskConical, Shield, Sparkles, Instagram, Twitter, Linkedin } from 'lucide-react';
 
 interface HeroProps {
   onGetStarted: () => void;
@@ -21,10 +21,28 @@ const Hero = ({ onGetStarted }: HeroProps) => {
       
       <div className="container mx-auto px-4 py-20 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
-          {/* Badge */}
-          <div className="inline-flex items-center space-x-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full px-4 py-2 mb-8">
+          {/* Badge with Dr. Info */}
+          <div className="inline-flex items-center space-x-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full px-4 py-2 mb-4">
             <FlaskConical className="w-4 h-4 text-emerald-400" />
             <span className="text-sm text-emerald-300 font-medium">Powered by OpenAI GPT-4</span>
+          </div>
+
+          {/* Dr. Neto Scardovelli Credit */}
+          <div className="mb-8">
+            <p className="text-lg text-emerald-300 font-semibold mb-2">
+              Treinado pelo Dr. Neto Scardovelli
+            </p>
+            <div className="flex justify-center items-center space-x-4">
+              <span className="text-slate-400">Siga-me:</span>
+              <a 
+                href="https://instagram.com/netoscardovelli" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-emerald-400 hover:text-emerald-300 transition-colors"
+              >
+                @netoscardovelli
+              </a>
+            </div>
           </div>
 
           {/* Main Heading */}
