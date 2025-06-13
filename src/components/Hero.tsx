@@ -62,13 +62,6 @@ const Hero = ({ onGetStarted }: HeroProps) => {
       
       <div className="container mx-auto px-4 py-20 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
-          {/* Enhanced Badge with animation */}
-          <div className="inline-flex items-center space-x-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full px-6 py-3 mb-6 backdrop-blur-sm hover:bg-emerald-500/30 transition-all duration-300 animate-fade-in">
-            <FlaskConical className="w-5 h-5 text-emerald-400 animate-pulse" />
-            <span className="text-sm text-emerald-300 font-medium">Powered by OpenAI GPT-4</span>
-            <Sparkles className="w-4 h-4 text-emerald-400" />
-          </div>
-
           {/* Enhanced Dr. Neto Section with visual elements */}
           <div className="mb-10 p-6 bg-gradient-to-r from-emerald-500/10 to-green-500/10 rounded-2xl border border-emerald-500/20 backdrop-blur-sm animate-scale-in">
             <div className="flex items-center justify-center mb-4">
