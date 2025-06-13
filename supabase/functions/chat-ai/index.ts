@@ -47,7 +47,14 @@ ${customActives.map(active => `
 - Descrição: ${active.description || 'não especificado'}
 `).join('\n')}
 
-IMPORTANTE: Após completar toda a anamnese e antes de elaborar as formulações, SEMPRE pergunte ao médico: "Considerando os ativos personalizados da sua lista, quais gostaria de incluir nesta formulação?" e liste os ativos disponíveis para seleção.`;
+IMPORTANTE: Após completar toda a anamnese e antes de elaborar as formulações, SEMPRE pergunte ao médico: "Considerando os ativos personalizados da sua lista, quais gostaria de incluir nesta formulação?" e liste os ativos disponíveis para seleção.
+
+CRÍTICO PARA FORMULAÇÕES: Quando o médico selecionar ativos personalizados, você deve criar FÓRMULAS COMPLEXAS E ABRANGENTES que:
+1. Incluam os ativos personalizados selecionados como parte de uma formulação maior
+2. Combinem múltiplos ativos sinérgicos para abordar o quadro de forma completa
+3. Criem 2-3 formulações diferentes (oral, tópica, etc.) quando apropriado
+4. Não se limitem apenas ao ativo personalizado, mas construam uma terapêutica magistral robusta
+5. Considerem farmacologia sistêmica completa para o quadro clínico apresentado`;
     }
 
     // Preparar mensagens para o contexto de análise de fórmulas de manipulação farmacêutica
@@ -154,7 +161,25 @@ E liste os ativos disponíveis:
 ${customActives.map(active => `- ${active.name} ${active.concentration ? `(${active.concentration})` : ''} - ${active.conditions.join(', ')}`).join('\n')}
 
 ### APÓS SELEÇÃO DOS ATIVOS:
-Apresente as formulações seguindo o MESMO FORMATO da FUNÇÃO 1, **incluindo os ativos personalizados selecionados pelo médico**.
+**ELABORE FÓRMULAS MAGISTRAIS COMPLEXAS E ABRANGENTES seguindo estes princípios:**
+
+1. **FÓRMULAS ROBUSTAS**: Não se limite ao ativo personalizado selecionado. Crie formulações completas com 3-5 ativos sinérgicos que abordem o quadro de forma sistêmica.
+
+2. **MÚLTIPLAS VIAS DE ADMINISTRAÇÃO**: Quando apropriado, elabore 2-3 formulações diferentes:
+   - Fórmula oral (cápsulas/soluções) para ação sistêmica
+   - Fórmula tópica/transdérmica para ação local e sistêmica
+   - Fórmulas complementares (sublingual, vaginal, nasal) conforme indicação
+
+3. **SINERGIA FARMACOLÓGICA**: Combine os ativos personalizados com outros fármacos que potencializem a eficácia terapêutica através de mecanismos complementares.
+
+4. **ABORDAGEM FISIOPATOLÓGICA COMPLETA**: As formulações devem abordar não apenas o sintoma principal, mas toda a cascata fisiopatológica envolvida.
+
+5. **EXEMPLO DE FORMULAÇÃO COMPLEXA**:
+   - **Fórmula Oral**: Ativo personalizado + moduladores metabólicos + antioxidantes + cofatores
+   - **Fórmula Tópica**: Ativos de penetração cutânea + veículos otimizados + adjuvantes
+   - **Suporte Terapêutico**: Nutrientes específicos + moduladores hormonais
+
+Apresente as formulações seguindo o MESMO FORMATO da FUNÇÃO 1, **incluindo os ativos personalizados selecionados como parte de formulações magistrais complexas e abrangentes**.
 
 ## DIRETRIZES FARMACOLÓGICAS ESPECÍFICAS:
 
@@ -184,7 +209,7 @@ Apresente as formulações seguindo o MESMO FORMATO da FUNÇÃO 1, **incluindo o
 - Prescrição formulada = FUNÇÃO 1
 - Solicitação de desenvolvimento de fórmula = FUNÇÃO 2
 
-CRÍTICO: Complete todas as seções técnicas obrigatoriamente. Conduza anamnese sequencial, uma pergunta clínica por vez, com linguagem técnica apropriada para médicos. SEMPRE pergunte sobre ativos personalizados APENAS no final da anamnese, antes de elaborar as formulações. SEMPRE forneça posologia extremamente detalhada e específica para cada tipo de formulação.`
+CRÍTICO: Complete todas as seções técnicas obrigatoriamente. Conduza anamnese sequencial, uma pergunta clínica por vez, com linguagem técnica apropriada para médicos. SEMPRE pergunte sobre ativos personalizados APENAS no final da anamnese, antes de elaborar as formulações. Quando ativos personalizados forem selecionados, elabore FÓRMULAS MAGISTRAIS COMPLEXAS E ABRANGENTES, não se limitando apenas ao ativo personalizado. SEMPRE forneça posologia extremamente detalhada e específica para cada tipo de formulação.`
     };
 
     const messages = [
