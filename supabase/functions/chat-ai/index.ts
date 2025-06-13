@@ -38,7 +38,7 @@ serve(async (req) => {
       customActivesContext = `
 
 ## ATIVOS PERSONALIZADOS DO MÉDICO:
-Quando as condições do paciente coincidirem com as condições listadas abaixo, SEMPRE inclua os ativos correspondentes nas formulações:
+O médico possui os seguintes ativos personalizados configurados:
 
 ${customActives.map(active => `
 **${active.name}** ${active.concentration ? `(${active.concentration})` : ''}
@@ -47,7 +47,7 @@ ${customActives.map(active => `
 - Descrição: ${active.description || 'não especificado'}
 `).join('\n')}
 
-IMPORTANTE: Monitore atentamente as condições mencionadas durante a anamnese e inclua automaticamente os ativos personalizados correspondentes nas fórmulas sugeridas.`;
+IMPORTANTE: Após completar toda a anamnese e antes de elaborar as formulações, SEMPRE pergunte ao médico: "Considerando os ativos personalizados da sua lista, quais gostaria de incluir nesta formulação?" e liste os ativos disponíveis para seleção.`;
     }
 
     // Preparar mensagens para o contexto de análise de fórmulas de manipulação farmacêutica
@@ -131,7 +131,7 @@ Quando solicitado desenvolvimento de formulações, conduza anamnese SEQUENCIAL 
 3. **PRIORIZE dados clinicamente relevantes** para a farmacoterapia
 4. **ADAPTE investigação** baseado nos achados anteriores
 5. **EVITE redundâncias** - só investigue o essencial para prescrição segura
-6. **MONITORE condições que correspondam aos ativos personalizados** e inclua-os automaticamente
+6. **NÃO inclua ativos personalizados automaticamente** - aguarde até o final
 
 ### SEQUÊNCIA INVESTIGATIVA TÍPICA (adapte conforme indicação):
 1. Definição do objetivo terapêutico principal
@@ -146,8 +146,15 @@ Quando solicitado desenvolvimento de formulações, conduza anamnese SEQUENCIAL 
 - NÃO coletar informações supérfluas
 - FOQUE na eficiência clínica
 
-### APÓS ANAMNESE COMPLETA:
-Apresente as formulações seguindo o MESMO FORMATO da FUNÇÃO 1, **SEMPRE incluindo os ativos personalizados quando as condições do paciente coincidirem**.
+### APÓS ANAMNESE COMPLETA - PERGUNTA OBRIGATÓRIA SOBRE ATIVOS PERSONALIZADOS:
+Antes de elaborar as formulações, SEMPRE pergunte:
+"Considerando os ativos personalizados da sua lista, quais gostaria de incluir nesta formulação?"
+
+E liste os ativos disponíveis:
+${customActives.map(active => `- ${active.name} ${active.concentration ? `(${active.concentration})` : ''} - ${active.conditions.join(', ')}`).join('\n')}
+
+### APÓS SELEÇÃO DOS ATIVOS:
+Apresente as formulações seguindo o MESMO FORMATO da FUNÇÃO 1, **incluindo os ativos personalizados selecionados pelo médico**.
 
 ## DIRETRIZES FARMACOLÓGICAS ESPECÍFICAS:
 
@@ -172,13 +179,12 @@ Apresente as formulações seguindo o MESMO FORMATO da FUNÇÃO 1, **SEMPRE incl
 - Basear em farmacologia clínica atual
 - Sempre considerar interações medicamentosas
 - SEMPRE complete todas as seções técnicas, especialmente cronologia terapêutica com tempos precisos
-- **INCLUA automaticamente ativos personalizados quando as condições coincidirem**
 
 ## IDENTIFICAÇÃO DO TIPO DE CONSULTA:
 - Prescrição formulada = FUNÇÃO 1
 - Solicitação de desenvolvimento de fórmula = FUNÇÃO 2
 
-CRÍTICO: Complete todas as seções técnicas obrigatoriamente. Conduza anamnese sequencial, uma pergunta clínica por vez, com linguagem técnica apropriada para médicos. Monitore condições que correspondam aos ativos personalizados e inclua-os nas formulações. SEMPRE forneça posologia extremamente detalhada e específica para cada tipo de formulação.`
+CRÍTICO: Complete todas as seções técnicas obrigatoriamente. Conduza anamnese sequencial, uma pergunta clínica por vez, com linguagem técnica apropriada para médicos. SEMPRE pergunte sobre ativos personalizados APENAS no final da anamnese, antes de elaborar as formulações. SEMPRE forneça posologia extremamente detalhada e específica para cada tipo de formulação.`
     };
 
     const messages = [
