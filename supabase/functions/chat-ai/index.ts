@@ -20,14 +20,25 @@ serve(async (req) => {
       throw new Error('Mensagem é obrigatória');
     }
 
+    // Verificar se a chave existe e tem formato válido
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY não encontrada nas variáveis de ambiente');
-      throw new Error('Chave da API OpenAI não configurada');
+    console.log('Verificando OPENAI_API_KEY...');
+    console.log('Chave presente:', !!OPENAI_API_KEY);
+    console.log('Tipo da chave:', typeof OPENAI_API_KEY);
+    console.log('Comprimento da chave:', OPENAI_API_KEY?.length || 0);
+    
+    if (!OPENAI_API_KEY || OPENAI_API_KEY.trim() === '') {
+      console.error('OPENAI_API_KEY não encontrada ou vazia');
+      throw new Error('Chave da API OpenAI não configurada ou inválida');
+    }
+
+    // Verificar se a chave tem o formato esperado
+    if (!OPENAI_API_KEY.startsWith('sk-')) {
+      console.error('OPENAI_API_KEY não tem o formato esperado (deve começar com sk-)');
+      throw new Error('Chave da API OpenAI inválida - formato incorreto');
     }
 
     console.log('Enviando mensagem para OpenAI:', message);
-    console.log('API Key presente:', OPENAI_API_KEY ? 'Sim' : 'Não');
 
     // Preparar mensagens para o contexto de análise de fórmulas
     const systemMessage = {
@@ -54,7 +65,7 @@ Sempre responda em português e seja claro e didático nas explicações. Quando
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY.trim()}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -72,16 +83,18 @@ Sempre responda em português e seja claro e didático nas explicações. Quando
       console.error('Erro da OpenAI:', errorText);
       
       if (response.status === 401) {
-        throw new Error('Chave da API OpenAI inválida');
+        throw new Error('Chave da API OpenAI inválida ou expirada');
       } else if (response.status === 429) {
-        throw new Error('Limite de requisições excedido');
+        throw new Error('Limite de requisições excedido. Tente novamente em alguns minutos');
+      } else if (response.status === 403) {
+        throw new Error('Acesso negado. Verifique as permissões da sua chave API');
       } else {
         throw new Error(`Erro da OpenAI: ${response.status} - ${errorText}`);
       }
     }
 
     const data = await response.json();
-    console.log('Resposta recebida da OpenAI');
+    console.log('Resposta recebida da OpenAI com sucesso');
 
     const aiResponse = data.choices[0].message.content;
 
