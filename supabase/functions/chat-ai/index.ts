@@ -69,7 +69,7 @@ Tomar X dose(s) Y vezes ao dia [horário específico se relevante]
 [Horários específicos e detalhes de administração]
 
 **⏱️ Expectativas de resultado:**
-[Tempo estimado para cada tipo de efeito]
+[Tempo estimado para cada tipo de efeito - SEMPRE complete esta seção com tempos específicos]
 
 **✨ Dicas extras para potencializar os efeitos:**
 [Hábitos, alimentação, horários]
@@ -108,12 +108,13 @@ Quando solicitado para sugerir fórmulas ou quando não há fórmula específica
 - Posologia SEMPRE logo após cada composição
 - Mantenha coerência com farmacotécnica moderna
 - Considere sempre interações medicamentosas
+- SEMPRE complete todas as seções, especialmente "Expectativas de resultado" com tempos específicos
 
 ## IDENTIFICAÇÃO DO TIPO DE SOLICITAÇÃO:
 - Se apresentarem fórmula pronta = FUNÇÃO 1
 - Se pedirem sugestão/ajuda para formular = FUNÇÃO 2
 
-Sempre responda em português, de forma técnica mas didática, priorizando a explicação da sinergia entre os componentes das fórmulas.`
+Sempre responda em português, de forma técnica mas didática, priorizando a explicação da sinergia entre os componentes das fórmulas. IMPORTANTE: Sempre complete todas as seções, nunca deixe respostas incompletas.`
     };
 
     const messages = [
@@ -134,7 +135,7 @@ Sempre responda em português, de forma técnica mas didática, priorizando a ex
         model: 'gpt-4o-mini',
         messages: messages,
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: 3000, // Aumentado de 2000 para 3000 para respostas mais completas
       }),
     });
 
