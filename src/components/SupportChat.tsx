@@ -61,6 +61,7 @@ Como posso ajudar você hoje?`,
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setIsLoading(true);
 
@@ -71,20 +72,34 @@ Como posso ajudar você hoje?`,
         content: msg.content
       }));
 
+      console.log('Enviando mensagem para support-ai:', {
+        message: currentInput,
+        userPlan: user.plan,
+        historyLength: conversationHistory.length
+      });
+
       const { data, error } = await supabase.functions.invoke('support-ai', {
         body: {
-          message: userMessage.content,
+          message: currentInput,
           conversationHistory: conversationHistory,
           userPlan: user.plan
         }
       });
 
+      console.log('Resposta recebida:', { data, error });
+
       if (error) {
+        console.error('Erro do Supabase:', error);
         throw new Error(error.message || 'Erro ao conectar com o suporte');
       }
 
-      if (data.error) {
+      if (data?.error) {
+        console.error('Erro na resposta:', data);
         throw new Error(data.details || data.error);
+      }
+
+      if (!data?.response) {
+        throw new Error('Resposta vazia do servidor');
       }
 
       const assistantMessage: Message = {
@@ -99,19 +114,14 @@ Como posso ajudar você hoje?`,
     } catch (error) {
       console.error('Erro ao enviar mensagem para suporte:', error);
       
-      // Fallback para respostas locais em caso de erro
-      const fallbackResponses = [
-        "🤔 Entendo sua dúvida! Para questões técnicas específicas, recomendo verificar nossa documentação ou entrar em contato com o suporte técnico através do email suporte@formula.ai",
-        "📚 Ótima pergunta! Nosso sistema foi projetado para ser intuitivo. Se precisar de ajuda detalhada, nossa equipe de suporte está disponível para auxiliá-lo.",
-        "💡 Vou te ajudar com isso! Para problemas relacionados à conta ou assinatura, você pode acessar a seção de configurações ou entrar em contato conosco.",
-        "🔧 Questões técnicas podem ser resolvidas rapidamente! Se o problema persistir, entre em contato com nosso suporte especializado."
-      ];
-      
-      const randomResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
-      
+      // Mensagem de erro amigável
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: randomResponse,
+        content: `🚫 Desculpe, ocorreu um erro temporário. 
+
+Por favor, tente novamente em alguns instantes ou entre em contato conosco através do email: suporte@formula.ai
+
+Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         role: 'assistant',
         timestamp: new Date()
       };
@@ -119,8 +129,8 @@ Como posso ajudar você hoje?`,
       setMessages(prev => [...prev, errorMessage]);
       
       toast({
-        title: "Modo offline",
-        description: "Respondendo com informações básicas. Para suporte completo, tente novamente em alguns momentos.",
+        title: "Erro no chat de suporte",
+        description: "Tente novamente em alguns instantes",
         variant: "destructive"
       });
     } finally {

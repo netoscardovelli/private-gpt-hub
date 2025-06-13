@@ -37,7 +37,7 @@ const callSupportAI = async (messages: any[], apiKey: string) => {
       model: 'gpt-4o-mini',
       messages: messages,
       temperature: 0.7,
-      max_tokens: 4000,
+      max_tokens: 1500,
     }),
   });
 
@@ -152,11 +152,16 @@ serve(async (req) => {
 
     const messages = [
       systemMessage,
-      ...conversationHistory.slice(-10), // Últimas 10 mensagens para contexto
+      ...conversationHistory.slice(-8), // Últimas 8 mensagens para contexto
       { role: 'user', content: message }
     ];
 
     const data = await callSupportAI(messages, SUPPORT_API_KEY);
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Resposta inválida da API');
+    }
+    
     const aiResponse = data.choices[0].message.content;
 
     return new Response(JSON.stringify({ 
