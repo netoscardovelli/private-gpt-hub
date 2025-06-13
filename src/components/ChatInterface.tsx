@@ -24,7 +24,7 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
       id: '1',
       content: `Olá ${user.name}! Sou seu assistente especializado em análise de fórmulas de manipulação farmacêutica.
 
-Escolha uma das opções abaixo ou digite sua pergunta:`,
+Escolha uma das opções abaixo:`,
       role: 'assistant',
       timestamp: new Date()
     }
@@ -293,7 +293,7 @@ Escolha uma das opções abaixo ou digite sua pergunta:`,
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Descreva sua fórmula ou dúvida sobre manipulação farmacêutica..."
+              placeholder="Cole suas fórmulas para análise..."
               className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none"
               rows={1}
               disabled={remainingMessages <= 0}
