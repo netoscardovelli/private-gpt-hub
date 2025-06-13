@@ -20,25 +20,21 @@ serve(async (req) => {
       throw new Error('Mensagem é obrigatória');
     }
 
-    // Verificar se a chave existe e tem formato válido
+    // Obter a chave da API OpenAI
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    console.log('Verificando OPENAI_API_KEY...');
-    console.log('Chave presente:', !!OPENAI_API_KEY);
-    console.log('Tipo da chave:', typeof OPENAI_API_KEY);
-    console.log('Comprimento da chave:', OPENAI_API_KEY?.length || 0);
     
     if (!OPENAI_API_KEY || OPENAI_API_KEY.trim() === '') {
-      console.error('OPENAI_API_KEY não encontrada ou vazia');
-      throw new Error('Chave da API OpenAI não configurada ou inválida');
+      console.error('OPENAI_API_KEY não encontrada');
+      throw new Error('Chave da API OpenAI não configurada. Verifique as configurações.');
     }
 
     // Verificar se a chave tem o formato esperado
     if (!OPENAI_API_KEY.startsWith('sk-')) {
-      console.error('OPENAI_API_KEY não tem o formato esperado (deve começar com sk-)');
-      throw new Error('Chave da API OpenAI inválida - formato incorreto');
+      console.error('OPENAI_API_KEY tem formato inválido');
+      throw new Error('Chave da API OpenAI inválida - deve começar com sk-');
     }
 
-    console.log('Enviando mensagem para OpenAI:', message);
+    console.log('Enviando mensagem para OpenAI...', { messageLength: message.length });
 
     // Preparar mensagens para o contexto de análise de fórmulas
     const systemMessage = {
@@ -60,8 +56,6 @@ Sempre responda em português e seja claro e didático nas explicações. Quando
       { role: 'user', content: message }
     ];
 
-    console.log('Fazendo requisição para OpenAI...');
-
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -69,18 +63,18 @@ Sempre responda em português e seja claro e didático nas explicações. Quando
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: messages,
         temperature: 0.7,
         max_tokens: 1000,
       }),
     });
 
-    console.log('Status da resposta OpenAI:', response.status);
+    console.log('Resposta da OpenAI - Status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Erro da OpenAI:', errorText);
+      console.error('Erro da OpenAI:', { status: response.status, error: errorText });
       
       if (response.status === 401) {
         throw new Error('Chave da API OpenAI inválida ou expirada');
