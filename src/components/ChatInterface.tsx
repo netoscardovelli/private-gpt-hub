@@ -103,11 +103,12 @@ Escolha uma das opções abaixo:`,
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setIsLoading(true);
 
     try {
-      console.log('Enviando mensagem para a API...');
+      console.log('Enviando mensagem para chat-ai...');
       
       // Carregar ativos personalizados do localStorage
       const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
@@ -118,20 +119,34 @@ Escolha uma das opções abaixo:`,
         content: msg.content
       }));
 
+      console.log('Dados a serem enviados:', {
+        message: currentInput,
+        historyLength: conversationHistory.length,
+        customActivesLength: customActives.length
+      });
+
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
-          message: userMessage.content,
+          message: currentInput,
           conversationHistory: conversationHistory,
           customActives: customActives
         }
       });
 
+      console.log('Resposta recebida:', { data, error });
+
       if (error) {
+        console.error('Erro do Supabase:', error);
         throw new Error(error.message || 'Erro ao conectar com a API');
       }
 
-      if (data.error) {
+      if (data?.error) {
+        console.error('Erro na resposta:', data);
         throw new Error(data.details || data.error);
+      }
+
+      if (!data?.response) {
+        throw new Error('Resposta vazia do servidor');
       }
 
       const assistantMessage: Message = {
@@ -153,7 +168,11 @@ Escolha uma das opções abaixo:`,
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `Desculpe, ocorreu um erro ao processar sua mensagem: ${error.message}. Tente novamente em alguns momentos.`,
+        content: `🚫 Desculpe, ocorreu um erro ao processar sua mensagem. 
+
+Por favor, tente novamente em alguns instantes.
+
+Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         role: 'assistant',
         timestamp: new Date()
       };
@@ -161,8 +180,8 @@ Escolha uma das opções abaixo:`,
       setMessages(prev => [...prev, errorMessage]);
       
       toast({
-        title: "Erro na conversa",
-        description: "Não foi possível enviar sua mensagem. Tente novamente.",
+        title: "Erro na análise",
+        description: "Não foi possível processar sua fórmula. Tente novamente.",
         variant: "destructive"
       });
     } finally {

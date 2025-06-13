@@ -76,7 +76,17 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory = [], customActives = [] } = await req.json();
+    console.log('Iniciando processamento da requisição...');
+    
+    const requestBody = await req.json();
+    console.log('Body recebido:', {
+      hasMessage: !!requestBody.message,
+      messageLength: requestBody.message?.length || 0,
+      historyLength: requestBody.conversationHistory?.length || 0,
+      customActivesLength: requestBody.customActives?.length || 0
+    });
+
+    const { message, conversationHistory = [], customActives = [] } = requestBody;
     
     if (!message) {
       throw new Error('Mensagem é obrigatória');
@@ -90,7 +100,6 @@ serve(async (req) => {
       throw new Error('Chave da API OpenAI não configurada');
     }
 
-    console.log('Iniciando chamada para OpenAI...');
     console.log('Chave API disponível:', OPENAI_API_KEY ? 'Sim' : 'Não');
     console.log('Ativos personalizados recebidos:', customActives.length);
 
@@ -106,8 +115,17 @@ serve(async (req) => {
       { role: 'user', content: message }
     ];
 
+    console.log('Preparando chamada para OpenAI com', messages.length, 'mensagens');
+
     const data = await callOpenAI(messages, OPENAI_API_KEY);
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Resposta inválida da OpenAI API');
+    }
+
     const aiResponse = data.choices[0].message.content;
+
+    console.log('Resposta processada com sucesso');
 
     return new Response(JSON.stringify({ 
       response: aiResponse,
@@ -117,6 +135,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    console.error('Erro geral na função:', error);
     return handleApiError(error);
   }
 });
