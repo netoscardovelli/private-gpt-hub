@@ -20,8 +20,12 @@ serve(async (req) => {
       throw new Error('Mensagem é obrigatória');
     }
 
-    // Usar a chave diretamente para teste
-    const OPENAI_API_KEY = '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';
+    // Pegar a chave da API dos secrets do Supabase
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    
+    if (!OPENAI_API_KEY) {
+      throw new Error('Chave da API OpenAI não configurada');
+    }
 
     console.log('Iniciando chamada para OpenAI...');
 
