@@ -158,7 +158,7 @@ Como posso ajudá-lo hoje com suas formulações?`,
       <div className="bg-slate-800 border-b border-slate-700 p-4">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3 text-slate-300">
-            <FlaskConical className="w-5 h-5 text-blue-400" />
+            <FlaskConical className="w-5 h-5 text-emerald-400" />
             <span className="text-sm">Assistente de Manipulação Farmacêutica - Plano {user.plan}</span>
           </div>
           <div className="text-sm text-slate-400">
@@ -178,14 +178,14 @@ Como posso ajudá-lo hoje com suas formulações?`,
             <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <Card className={`max-w-[80%] p-4 ${
                 message.role === 'user' 
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none' 
+                  ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white border-none' 
                   : 'bg-slate-800 border-slate-700 text-slate-100'
               }`}>
                 <div className="flex items-start space-x-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                     message.role === 'user' 
                       ? 'bg-white/20' 
-                      : 'bg-gradient-to-r from-blue-500 to-purple-600'
+                      : 'bg-gradient-to-r from-emerald-500 to-green-600'
                   }`}>
                     {message.role === 'user' ? (
                       <User className="w-4 h-4" />
@@ -236,7 +236,7 @@ Como posso ajudá-lo hoje com suas formulações?`,
             <div className="flex justify-start">
               <Card className="max-w-[80%] p-4 bg-slate-800 border-slate-700">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-green-600 flex items-center justify-center">
                     <FlaskConical className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex items-center space-x-2 text-slate-300">
@@ -267,7 +267,7 @@ Como posso ajudá-lo hoje com suas formulações?`,
             <Button 
               onClick={handleSend}
               disabled={!input.trim() || isLoading || remainingMessages <= 0}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
             >
               <Send className="w-4 h-4" />
             </Button>

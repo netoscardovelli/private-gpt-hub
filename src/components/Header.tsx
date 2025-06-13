@@ -22,7 +22,7 @@ const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onB
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">FM</span>
             </div>
             <span className="text-xl font-bold text-white">Formula.AI</span>
@@ -33,7 +33,7 @@ const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onB
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-slate-300">
-                  Plano: <span className="text-blue-400 font-semibold">{user?.plan}</span>
+                  Plano: <span className="text-emerald-400 font-semibold">{user?.plan}</span>
                 </span>
                 <Button
                   variant="ghost"
@@ -55,7 +55,7 @@ const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onB
                 </Button>
                 <div className="flex items-center space-x-3">
                   <Avatar className="w-8 h-8">
-                    <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm">
+                    <AvatarFallback className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm">
                       {user?.name?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -70,7 +70,7 @@ const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onB
                 </div>
               </div>
             ) : (
-              <Button onClick={onLogin} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+              <Button onClick={onLogin} className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700">
                 Entrar
               </Button>
             )}
@@ -91,7 +91,7 @@ const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onB
             {isAuthenticated ? (
               <div className="space-y-3">
                 <div className="text-sm text-slate-300">
-                  Plano: <span className="text-blue-400 font-semibold">{user?.plan}</span>
+                  Plano: <span className="text-emerald-400 font-semibold">{user?.plan}</span>
                 </div>
                 <Button
                   variant="ghost"
@@ -122,7 +122,7 @@ const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onB
                 </Button>
               </div>
             ) : (
-              <Button onClick={onLogin} className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+              <Button onClick={onLogin} className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700">
                 Entrar
               </Button>
             )}

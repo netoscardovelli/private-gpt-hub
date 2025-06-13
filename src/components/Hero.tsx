@@ -8,7 +8,7 @@ interface HeroProps {
 
 const Hero = ({ onGetStarted }: HeroProps) => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-emerald-900 to-green-900 overflow-hidden">
       {/* Background Animation */}
       <div className="absolute inset-0 opacity-10">
         <div 
@@ -22,15 +22,15 @@ const Hero = ({ onGetStarted }: HeroProps) => {
       <div className="container mx-auto px-4 py-20 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
           {/* Badge */}
-          <div className="inline-flex items-center space-x-2 bg-blue-500/20 border border-blue-500/30 rounded-full px-4 py-2 mb-8">
-            <FlaskConical className="w-4 h-4 text-blue-400" />
-            <span className="text-sm text-blue-300 font-medium">Powered by OpenAI GPT-4</span>
+          <div className="inline-flex items-center space-x-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full px-4 py-2 mb-8">
+            <FlaskConical className="w-4 h-4 text-emerald-400" />
+            <span className="text-sm text-emerald-300 font-medium">Powered by OpenAI GPT-4</span>
           </div>
 
           {/* Main Heading */}
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
             Análise de
-            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"> Fórmulas</span>
+            <span className="bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent"> Fórmulas</span>
           </h1>
 
           {/* Subtitle */}
@@ -44,7 +44,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
             <Button 
               size="lg" 
               onClick={onGetStarted}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+              className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
             >
               Começar Análise
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -61,7 +61,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
           {/* Features */}
           <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
             <div className="text-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <FlaskConical className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Análise de Compatibilidade</h3>
@@ -69,7 +69,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
             </div>
 
             <div className="text-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Estabilidade</h3>
@@ -77,7 +77,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
             </div>
 
             <div className="text-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Otimização</h3>
