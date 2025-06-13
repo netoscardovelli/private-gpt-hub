@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Bot, User, Loader2, Copy, ThumbsUp, ThumbsDown, FlaskConical } from 'lucide-react';
+import { Send, Bot, User, Loader2, Copy, ThumbsUp, ThumbsDown, FlaskConical, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -19,25 +19,18 @@ interface ChatInterfaceProps {
 }
 
 const ChatInterface = ({ user }: ChatInterfaceProps) => {
-  const [messages, setMessages] = useState<Message[]>([
+  const getInitialMessages = (): Message[] => [
     {
       id: '1',
-      content: `Olá ${user.name}! Sou seu assistente especializado em análise de fórmulas de manipulação farmacêutica. Posso ajudá-lo a:
+      content: `Olá ${user.name}! Sou seu assistente especializado em análise de fórmulas de manipulação farmacêutica.
 
-🧪 Analisar compatibilidade entre ativos e excipientes
-⚖️ Calcular concentrações e diluições precisas
-🔬 Verificar estabilidade físico-química
-⚠️ Identificar incompatibilidades e interações
-💡 Sugerir alternativas de formulação
-🎯 Orientar técnicas de manipulação
-📊 Calcular equivalências entre formas farmacêuticas
-🛡️ Avaliar segurança e estabilidade
-
-Como posso ajudá-lo hoje com suas formulações?`,
+Escolha uma das opções abaixo ou digite sua pergunta:`,
       role: 'assistant',
       timestamp: new Date()
     }
-  ]);
+  ];
+
+  const [messages, setMessages] = useState<Message[]>(getInitialMessages());
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -50,6 +43,26 @@ Como posso ajudá-lo hoje com suas formulações?`,
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const resetConversation = () => {
+    setMessages(getInitialMessages());
+    setInput('');
+    toast({
+      title: "Conversa resetada",
+      description: "Nova conversa iniciada com sucesso.",
+    });
+  };
+
+  const handleQuickAction = (action: string) => {
+    let message = '';
+    if (action === 'analise') {
+      message = 'Quero fazer análise de fórmulas magistrais';
+    } else if (action === 'sugestao') {
+      message = 'Preciso de sugestões de fórmulas magistrais';
+    }
+    
+    setInput(message);
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -174,7 +187,7 @@ Como posso ajudá-lo hoje com suas formulações?`,
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <div className="container mx-auto max-w-4xl">
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <Card className={`max-w-[80%] p-4 ${
                 message.role === 'user' 
@@ -195,6 +208,27 @@ Como posso ajudá-lo hoje com suas formulações?`,
                   </div>
                   <div className="flex-1">
                     <p className="whitespace-pre-wrap">{message.content}</p>
+                    
+                    {/* Quick action buttons - only show on first assistant message */}
+                    {message.role === 'assistant' && index === 0 && (
+                      <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                        <Button
+                          onClick={() => handleQuickAction('analise')}
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                          size="sm"
+                        >
+                          🧪 Análise de Fórmulas
+                        </Button>
+                        <Button
+                          onClick={() => handleQuickAction('sugestao')}
+                          className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+                          size="sm"
+                        >
+                          💡 Sugestão de Fórmulas
+                        </Button>
+                      </div>
+                    )}
+                    
                     <div className="flex items-center justify-between mt-3">
                       <span className="text-xs opacity-70">
                         {message.timestamp.toLocaleTimeString()}
@@ -264,6 +298,14 @@ Como posso ajudá-lo hoje com suas formulações?`,
               rows={1}
               disabled={remainingMessages <= 0}
             />
+            <Button 
+              onClick={resetConversation}
+              variant="outline"
+              className="border-slate-600 text-slate-400 hover:text-slate-200 hover:border-slate-500"
+              title="Resetar conversa"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
             <Button 
               onClick={handleSend}
               disabled={!input.trim() || isLoading || remainingMessages <= 0}
