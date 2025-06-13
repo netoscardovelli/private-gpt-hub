@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -53,15 +52,34 @@ Escolha uma das opções abaixo:`,
     });
   };
 
-  const handleQuickAction = (action: string) => {
-    let message = '';
+  const handleQuickAction = async (action: string) => {
     if (action === 'analise') {
-      message = 'Quero fazer análise de fórmulas magistrais';
+      const message = 'Quero fazer análise de fórmulas magistrais';
+      setInput(message);
     } else if (action === 'sugestao') {
-      message = 'Preciso de sugestões de fórmulas magistrais';
+      // Start the suggestion flow with the first question
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: 'Preciso de sugestões de fórmulas magistrais',
+        role: 'user',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+      setIsLoading(true);
+
+      // Add first question automatically
+      setTimeout(() => {
+        const firstQuestion: Message = {
+          id: (Date.now() + 1).toString(),
+          content: 'Qual é o objetivo terapêutico da formulação que você deseja? (Ex: anti-idade, clareamento, hidratação, tratamento de acne, etc.)',
+          role: 'assistant',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, firstQuestion]);
+        setIsLoading(false);
+      }, 1000);
     }
-    
-    setInput(message);
   };
 
   const handleSend = async () => {
