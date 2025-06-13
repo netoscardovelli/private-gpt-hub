@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FlaskConical, Shield, Sparkles, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { ArrowRight, FlaskConical, Shield, Sparkles, Beaker, CheckCircle, Settings } from 'lucide-react';
 
 interface HeroProps {
   onGetStarted: () => void;
@@ -77,29 +77,37 @@ const Hero = ({ onGetStarted }: HeroProps) => {
           </div>
 
           {/* Features */}
-          <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-8 max-w-5xl mx-auto">
             <div className="text-center">
               <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <FlaskConical className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Análise de Compatibilidade</h3>
-              <p className="text-slate-400">Verifique interações entre ativos e excipientes</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Análise de Fórmulas Magistrais</h3>
+              <p className="text-slate-400">Análise completa de composições e sinergias entre ativos</p>
             </div>
 
             <div className="text-center">
               <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-6 h-6 text-white" />
+                <Beaker className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Estabilidade</h3>
-              <p className="text-slate-400">Avalie estabilidade física e química das formulações</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Sugestões de Fórmulas Magistrais</h3>
+              <p className="text-slate-400">Formulações personalizadas baseadas em evidências científicas</p>
             </div>
 
             <div className="text-center">
               <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-6 h-6 text-white" />
+                <CheckCircle className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Compatibilidade</h3>
+              <p className="text-slate-400">Verificação de interações entre ativos e excipientes</p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Settings className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Otimização</h3>
-              <p className="text-slate-400">Receba sugestões para melhorar suas formulações</p>
+              <p className="text-slate-400">Melhore concentrações e formas farmacêuticas</p>
             </div>
           </div>
         </div>
