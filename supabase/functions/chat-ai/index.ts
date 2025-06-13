@@ -24,10 +24,12 @@ serve(async (req) => {
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
     if (!OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY não encontrada nos secrets');
       throw new Error('Chave da API OpenAI não configurada');
     }
 
     console.log('Iniciando chamada para OpenAI...');
+    console.log('Chave API disponível:', OPENAI_API_KEY ? 'Sim' : 'Não');
 
     // Preparar mensagens para o contexto de análise de fórmulas de manipulação farmacêutica
     const systemMessage = {
@@ -88,7 +90,7 @@ Seja preciso nas informações farmacêuticas e sempre alerte sobre questões de
       });
       
       if (response.status === 401) {
-        throw new Error('Chave da API OpenAI inválida ou expirada');
+        throw new Error('Chave da API OpenAI inválida ou expirada. Verifique se a chave está correta nos secrets do Supabase.');
       } else if (response.status === 429) {
         throw new Error('Limite de requisições excedido. Tente novamente em alguns minutos');
       } else if (response.status === 403) {
