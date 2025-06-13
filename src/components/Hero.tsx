@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { ArrowRight, FlaskConical, Shield, Sparkles, Beaker, CheckCircle, Settings } from 'lucide-react';
 
@@ -47,14 +46,12 @@ const Hero = ({ onGetStarted }: HeroProps) => {
 
           {/* Main Heading */}
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            Análise de
-            <span className="bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent"> Fórmulas</span>
+            <span className="bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent">ANÁLISE DE FÓRMULAS MAGISTRAIS</span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Assistente IA especializado em análise de fórmulas de manipulação farmacêutica. 
-            Analise compatibilidade, calcule concentrações e otimize suas formulações com segurança.
+            IA TREINADA POR MÉDICO PARA AUXILIAR NO SEU DIA A DIA DO CONSULTÓRIO
           </p>
 
           {/* CTA Buttons */}
