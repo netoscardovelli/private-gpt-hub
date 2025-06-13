@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Zap, Shield, Sparkles } from 'lucide-react';
+import { ArrowRight, Calculator, TrendingUp, Sparkles } from 'lucide-react';
 
 interface HeroProps {
   onGetStarted: () => void;
@@ -23,20 +23,20 @@ const Hero = ({ onGetStarted }: HeroProps) => {
         <div className="text-center max-w-4xl mx-auto">
           {/* Badge */}
           <div className="inline-flex items-center space-x-2 bg-blue-500/20 border border-blue-500/30 rounded-full px-4 py-2 mb-8">
-            <Sparkles className="w-4 h-4 text-blue-400" />
+            <Calculator className="w-4 h-4 text-blue-400" />
             <span className="text-sm text-blue-300 font-medium">Powered by OpenAI GPT-4</span>
           </div>
 
           {/* Main Heading */}
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            Sua IA
-            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"> Pessoal</span>
+            Análise de
+            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"> Fórmulas</span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Acesse o poder da inteligência artificial mais avançada do mundo. 
-            Chat inteligente, respostas precisas, criatividade sem limites.
+            Assistente IA especializado em fórmulas do Excel, Google Sheets e análises matemáticas. 
+            Crie, otimize e entenda fórmulas complexas com facilidade.
           </p>
 
           {/* CTA Buttons */}
@@ -46,7 +46,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
               onClick={onGetStarted}
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
             >
-              Começar Gratuitamente
+              Começar Análise
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button 
@@ -54,7 +54,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
               size="lg"
               className="border-slate-400 text-slate-300 hover:bg-slate-800 px-8 py-4 text-lg rounded-xl"
             >
-              Ver Demonstração
+              Ver Exemplos
             </Button>
           </div>
 
@@ -62,26 +62,26 @@ const Hero = ({ onGetStarted }: HeroProps) => {
           <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
             <div className="text-center">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-6 h-6 text-white" />
+                <Calculator className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Respostas Instantâneas</h3>
-              <p className="text-slate-400">IA ultra-rápida com processamento em tempo real</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Criação de Fórmulas</h3>
+              <p className="text-slate-400">Descreva o que precisa e receba a fórmula perfeita</p>
             </div>
 
             <div className="text-center">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-6 h-6 text-white" />
+                <TrendingUp className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">100% Seguro</h3>
-              <p className="text-slate-400">Suas conversas são privadas e protegidas</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Otimização</h3>
+              <p className="text-slate-400">Melhore fórmulas existentes para máxima eficiência</p>
             </div>
 
             <div className="text-center">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Sem Limites</h3>
-              <p className="text-slate-400">Criatividade e produtividade sem fronteiras</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Explicações Detalhadas</h3>
+              <p className="text-slate-400">Entenda cada parte da fórmula com explicações claras</p>
             </div>
           </div>
         </div>

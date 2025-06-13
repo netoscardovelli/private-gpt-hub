@@ -3,8 +3,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Bot, User, Loader2, Copy, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Send, Bot, User, Loader2, Copy, ThumbsUp, ThumbsDown, Calculator } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   id: string;
@@ -21,7 +22,15 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: `Olá ${user.name}! Sou sua assistente de IA. Como posso ajudá-lo hoje?`,
+      content: `Olá ${user.name}! Sou seu assistente especializado em análise de fórmulas. Posso ajudá-lo a:
+
+📊 Criar fórmulas do Excel/Google Sheets
+🔍 Explicar fórmulas complexas
+⚡ Otimizar fórmulas existentes
+🐛 Identificar e corrigir erros
+💡 Sugerir alternativas mais eficientes
+
+Como posso ajudá-lo hoje?`,
       role: 'assistant',
       timestamp: new Date()
     }
@@ -63,18 +72,64 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
     setInput('');
     setIsLoading(true);
 
-    // Simulate API call to OpenAI
-    setTimeout(() => {
+    try {
+      console.log('Enviando mensagem para a API...');
+      
+      // Preparar histórico da conversa para contexto
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      const { data, error } = await supabase.functions.invoke('chat-ai', {
+        body: {
+          message: userMessage.content,
+          conversationHistory: conversationHistory
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Erro ao conectar com a API');
+      }
+
+      if (data.error) {
+        throw new Error(data.details || data.error);
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `Esta é uma resposta simulada da IA para sua pergunta: "${userMessage.content}". Em uma implementação real, aqui estaria a resposta da API da OpenAI. Para integrar a API real, você precisará configurar sua chave da OpenAI nas variáveis de ambiente.`,
+        content: data.response,
         role: 'assistant',
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Mostrar informações de uso se disponível
+      if (data.usage) {
+        console.log('Tokens utilizados:', data.usage);
+      }
+
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+      
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: `Desculpe, ocorreu um erro ao processar sua mensagem: ${error.message}. Tente novamente em alguns momentos.`,
+        role: 'assistant',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+      
+      toast({
+        title: "Erro na conversa",
+        description: "Não foi possível enviar sua mensagem. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const copyToClipboard = (content: string) => {
@@ -99,8 +154,9 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
       {/* Usage indicator */}
       <div className="bg-slate-800 border-b border-slate-700 p-4">
         <div className="container mx-auto flex items-center justify-between">
-          <div className="text-slate-300">
-            <span className="text-sm">Plano {user.plan}</span>
+          <div className="flex items-center space-x-3 text-slate-300">
+            <Calculator className="w-5 h-5 text-blue-400" />
+            <span className="text-sm">Assistente de Fórmulas - Plano {user.plan}</span>
           </div>
           <div className="text-sm text-slate-400">
             {remainingMessages > 0 ? (
@@ -131,7 +187,7 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
                     {message.role === 'user' ? (
                       <User className="w-4 h-4" />
                     ) : (
-                      <Bot className="w-4 h-4 text-white" />
+                      <Calculator className="w-4 h-4 text-white" />
                     )}
                   </div>
                   <div className="flex-1">
@@ -178,11 +234,11 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
               <Card className="max-w-[80%] p-4 bg-slate-800 border-slate-700">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-white" />
+                    <Calculator className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex items-center space-x-2 text-slate-300">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Pensando...</span>
+                    <span>Analisando fórmula...</span>
                   </div>
                 </div>
               </Card>
@@ -200,7 +256,7 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Digite sua mensagem..."
+              placeholder="Digite sua dúvida sobre fórmulas ou cole uma fórmula para análise..."
               className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none"
               rows={1}
               disabled={remainingMessages <= 0}
