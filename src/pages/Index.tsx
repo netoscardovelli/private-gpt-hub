@@ -5,6 +5,7 @@ import Hero from '@/components/Hero';
 import PricingSection from '@/components/PricingSection';
 import ChatInterface from '@/components/ChatInterface';
 import AuthModal from '@/components/AuthModal';
+import CustomActives from '@/components/CustomActives';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {

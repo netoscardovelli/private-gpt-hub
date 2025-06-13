@@ -109,6 +109,9 @@ Escolha uma das opções abaixo:`,
     try {
       console.log('Enviando mensagem para a API...');
       
+      // Carregar ativos personalizados do localStorage
+      const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
+      
       // Preparar histórico da conversa para contexto
       const conversationHistory = messages.map(msg => ({
         role: msg.role,
@@ -118,7 +121,8 @@ Escolha uma das opções abaixo:`,
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
           message: userMessage.content,
-          conversationHistory: conversationHistory
+          conversationHistory: conversationHistory,
+          customActives: customActives
         }
       });
 

@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory = [] } = await req.json();
+    const { message, conversationHistory = [], customActives = [] } = await req.json();
     
     if (!message) {
       throw new Error('Mensagem é obrigatória');
@@ -30,11 +30,30 @@ serve(async (req) => {
 
     console.log('Iniciando chamada para OpenAI...');
     console.log('Chave API disponível:', OPENAI_API_KEY ? 'Sim' : 'Não');
+    console.log('Ativos personalizados recebidos:', customActives.length);
+
+    // Preparar string dos ativos personalizados para incluir no contexto
+    let customActivesContext = '';
+    if (customActives && customActives.length > 0) {
+      customActivesContext = `
+
+## ATIVOS PERSONALIZADOS DO MÉDICO:
+Quando as condições do paciente coincidirem com as condições listadas abaixo, SEMPRE inclua os ativos correspondentes nas formulações:
+
+${customActives.map(active => `
+**${active.name}** ${active.concentration ? `(${active.concentration})` : ''}
+- Condições: ${active.conditions.join(', ')}
+- Tipo de formulação: ${active.formulationType || 'não especificado'}
+- Descrição: ${active.description || 'não especificado'}
+`).join('\n')}
+
+IMPORTANTE: Monitore atentamente as condições mencionadas durante a anamnese e inclua automaticamente os ativos personalizados correspondentes nas fórmulas sugeridas.`;
+    }
 
     // Preparar mensagens para o contexto de análise de fórmulas de manipulação farmacêutica
     const systemMessage = {
       role: 'system',
-      content: `Você é um assistente especializado em farmacologia clínica e manipulação magistral, desenvolvido pelo Dr. Neto Scardovelli (@netoscardovelli). Sua comunicação é direcionada exclusivamente para MÉDICOS, utilizando linguagem técnica e científica apropriada.
+      content: `Você é um assistente especializado em farmacologia clínica e manipulação magistral, desenvolvido pelo Dr. Neto Scardovelli (@netoscardovelli). Sua comunicação é direcionada exclusivamente para MÉDICOS, utilizando linguagem técnica e científica apropriada.${customActivesContext}
 
 ## FUNÇÃO 1: ANÁLISE DE PRESCRIÇÕES MAGISTRAIS (para comunicação médico-paciente)
 
@@ -88,6 +107,7 @@ Quando solicitado desenvolvimento de formulações, conduza anamnese SEQUENCIAL 
 3. **PRIORIZE dados clinicamente relevantes** para a farmacoterapia
 4. **ADAPTE investigação** baseado nos achados anteriores
 5. **EVITE redundâncias** - só investigue o essencial para prescrição segura
+6. **MONITORE condições que correspondam aos ativos personalizados** e inclua-os automaticamente
 
 ### SEQUÊNCIA INVESTIGATIVA TÍPICA (adapte conforme indicação):
 1. Definição do objetivo terapêutico principal
@@ -103,7 +123,7 @@ Quando solicitado desenvolvimento de formulações, conduza anamnese SEQUENCIAL 
 - FOQUE na eficiência clínica
 
 ### APÓS ANAMNESE COMPLETA:
-Apresente as formulações seguindo o MESMO FORMATO da FUNÇÃO 1.
+Apresente as formulações seguindo o MESMO FORMATO da FUNÇÃO 1, **SEMPRE incluindo os ativos personalizados quando as condições do paciente coincidirem**.
 
 ## DIRETRIZES FARMACOLÓGICAS:
 - Linguagem técnico-científica para comunicação entre médicos
@@ -114,12 +134,13 @@ Apresente as formulações seguindo o MESMO FORMATO da FUNÇÃO 1.
 - Basear em farmacologia clínica atual
 - Sempre considerar interações medicamentosas
 - SEMPRE complete todas as seções técnicas, especialmente cronologia terapêutica com tempos precisos
+- **INCLUA automaticamente ativos personalizados quando as condições coincidirem**
 
 ## IDENTIFICAÇÃO DO TIPO DE CONSULTA:
 - Prescrição formulada = FUNÇÃO 1
 - Solicitação de desenvolvimento de fórmula = FUNÇÃO 2
 
-CRÍTICO: Complete todas as seções técnicas obrigatoriamente. Conduza anamnese sequencial, uma pergunta clínica por vez, com linguagem técnica apropriada para médicos.`
+CRÍTICO: Complete todas as seções técnicas obrigatoriamente. Conduza anamnese sequencial, uma pergunta clínica por vez, com linguagem técnica apropriada para médicos. Monitore condições que correspondam aos ativos personalizados e inclua-os nas formulações.`
     };
 
     const messages = [
