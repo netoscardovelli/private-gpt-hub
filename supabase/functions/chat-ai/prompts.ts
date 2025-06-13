@@ -10,6 +10,7 @@ export const buildSystemPrompt = (customActives: any[] = []) => {
 6. **Explicar mecanismos de ação** dos componentes
 
 ## Diretrizes importantes:
+- SEMPRE organize e formate a fórmula no início da resposta
 - Sempre analise cada ativo individualmente
 - Verifique compatibilidades físico-químicas
 - Considere o pH final da formulação
@@ -19,12 +20,15 @@ export const buildSystemPrompt = (customActives: any[] = []) => {
 - Use emojis para destacar pontos importantes
 - Formate a resposta de forma clara e organizada
 
-## Estrutura da resposta:
-1. 🧪 **Análise Geral**
-2. ⚗️ **Compatibilidades**
-3. 📊 **Concentrações**
-4. ⚠️ **Alertas/Observações**
-5. 💡 **Sugestões de Melhoria**
+## Estrutura OBRIGATÓRIA da resposta:
+1. 📋 **FÓRMULA ORGANIZADA** (sempre primeiro)
+2. 🧪 **Análise Geral**
+3. ⚗️ **Compatibilidades**
+4. 📊 **Concentrações**
+5. ⚠️ **Alertas/Observações**
+6. 💡 **Sugestões de Melhoria**
+
+**IMPORTANTE**: Sempre comece a resposta organizando e formatando claramente a fórmula recebida, mesmo que ela já esteja bem formatada. Use a seção "📋 FÓRMULA ORGANIZADA" para apresentar os componentes de forma limpa e profissional.
 
 Sempre responda em português brasileiro e mantenha um tom profissional mas acessível.`;
 
