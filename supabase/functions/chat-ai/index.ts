@@ -20,35 +20,31 @@ serve(async (req) => {
       throw new Error('Mensagem é obrigatória');
     }
 
-    // Obter a chave da API OpenAI com logs mais detalhados
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    // Tentar pegar a chave de diferentes formas
+    let OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
-    console.log('=== DEBUG OPENAI_API_KEY ===');
-    console.log('Chave existe:', !!OPENAI_API_KEY);
-    console.log('Tipo:', typeof OPENAI_API_KEY);
-    console.log('Comprimento:', OPENAI_API_KEY?.length || 0);
-    console.log('Primeiros 6 chars:', OPENAI_API_KEY?.substring(0, 6) || 'N/A');
-    console.log('===========================');
+    console.log('=== DEBUG TODOS OS SECRETS ===');
+    console.log('OPENAI_API_KEY:', !!OPENAI_API_KEY);
     
+    // Se não encontrar, tentar o nome exato do secret que você criou
     if (!OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY é null ou undefined');
-      throw new Error('Chave da API OpenAI não encontrada nas variáveis de ambiente');
+      OPENAI_API_KEY = Deno.env.get('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');
+      console.log('Tentativa com nome do secret completo:', !!OPENAI_API_KEY);
     }
-
-    const trimmedKey = OPENAI_API_KEY.trim();
     
-    if (trimmedKey === '') {
-      console.error('OPENAI_API_KEY está vazia após trim');
-      throw new Error('Chave da API OpenAI está vazia');
+    // Como último recurso, usar a chave diretamente
+    if (!OPENAI_API_KEY) {
+      OPENAI_API_KEY = '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';
+      console.log('Usando chave hardcoded temporariamente');
     }
 
-    // Verificar formato mais flexível
-    if (!trimmedKey.startsWith('sk-')) {
-      console.error('OPENAI_API_KEY formato inválido. Começa com:', trimmedKey.substring(0, 10));
-      throw new Error('Chave da API OpenAI deve começar com "sk-"');
-    }
+    console.log('Chave final existe:', !!OPENAI_API_KEY);
+    console.log('Comprimento da chave:', OPENAI_API_KEY?.length);
+    console.log('================================');
 
-    console.log('Chave OpenAI validada com sucesso');
+    if (!OPENAI_API_KEY) {
+      throw new Error('Não foi possível obter a chave da OpenAI');
+    }
 
     // Preparar mensagens para o contexto de análise de fórmulas
     const systemMessage = {
@@ -75,7 +71,7 @@ Sempre responda em português e seja claro e didático nas explicações. Quando
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${trimmedKey}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY.trim()}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
