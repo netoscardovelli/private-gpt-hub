@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FlaskConical, Shield, Sparkles, Beaker, CheckCircle, Settings, Star, Zap, Atom } from 'lucide-react';
+import { ArrowRight, FlaskConical, Shield, Sparkles, Beaker, CheckCircle, Settings, Star, Zap, Atom, Instagram } from 'lucide-react';
 
 interface HeroProps {
   onGetStarted: () => void;
@@ -62,29 +62,45 @@ const Hero = ({ onGetStarted }: HeroProps) => {
       
       <div className="container mx-auto px-4 py-20 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
-          {/* Enhanced Dr. Neto Section with visual elements */}
-          <div className="mb-10 p-6 bg-gradient-to-r from-emerald-500/10 to-green-500/10 rounded-2xl border border-emerald-500/20 backdrop-blur-sm animate-scale-in">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full flex items-center justify-center mr-4">
-                <Star className="w-8 h-8 text-white" />
+          {/* Redesigned Dr. Neto Section */}
+          <div className="mb-12 animate-scale-in">
+            <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-lg rounded-3xl p-8 border border-emerald-500/20 shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500">
+              <div className="flex flex-col items-center space-y-6">
+                {/* Avatar and Title */}
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="relative">
+                    <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg">
+                      <Star className="w-10 h-10 text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                      <Sparkles className="w-3 h-3 text-yellow-800" />
+                    </div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                      Treinado pelo Dr. Neto Scardovelli
+                    </h2>
+                    <p className="text-emerald-300 font-medium text-lg">
+                      Especialista em Fórmulas Magistrais
+                    </p>
+                  </div>
+                </div>
+
+                {/* Social Media */}
+                <div className="flex items-center space-x-3 bg-slate-800/30 rounded-full px-6 py-3 border border-slate-600/30">
+                  <span className="text-slate-300 text-sm">Siga-me:</span>
+                  <a 
+                    href="https://instagram.com/netoscardovelli" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 transition-colors duration-200 font-semibold group"
+                  >
+                    <Instagram className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <span>@netoscardovelli</span>
+                  </a>
+                </div>
               </div>
-              <div>
-                <p className="text-xl text-emerald-300 font-bold">
-                  Treinado pelo Dr. Neto Scardovelli
-                </p>
-                <p className="text-sm text-slate-400">Especialista em Fórmulas Magistrais</p>
-              </div>
-            </div>
-            <div className="flex justify-center items-center space-x-6">
-              <span className="text-slate-400">Siga-me:</span>
-              <a 
-                href="https://instagram.com/netoscardovelli" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold hover:scale-105 transform duration-200"
-              >
-                @netoscardovelli
-              </a>
             </div>
           </div>
 
