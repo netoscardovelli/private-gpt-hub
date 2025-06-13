@@ -93,15 +93,15 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] bg-slate-800 border-slate-700 text-white">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <DialogTitle className="text-center text-2xl font-bold bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent">
             Acesse sua conta
           </DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-slate-700">
-            <TabsTrigger value="login" className="data-[state=active]:bg-slate-600">Entrar</TabsTrigger>
-            <TabsTrigger value="signup" className="data-[state=active]:bg-slate-600">Criar conta</TabsTrigger>
+            <TabsTrigger value="login" className="data-[state=active]:bg-emerald-600">Entrar</TabsTrigger>
+            <TabsTrigger value="signup" className="data-[state=active]:bg-emerald-600">Criar conta</TabsTrigger>
           </TabsList>
 
           <TabsContent value="login" className="space-y-4 mt-6">
@@ -147,7 +147,7 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
 
               <Button 
                 type="submit" 
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 py-6"
+                className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 py-6"
                 disabled={isLoading}
               >
                 {isLoading ? "Entrando..." : "Entrar"}
@@ -230,7 +230,7 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
 
               <Button 
                 type="submit" 
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 py-6"
+                className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 py-6"
                 disabled={isLoading}
               >
                 {isLoading ? "Criando conta..." : "Criar conta"}
