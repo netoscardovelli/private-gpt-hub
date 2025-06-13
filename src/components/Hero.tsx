@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Calculator, TrendingUp, Sparkles } from 'lucide-react';
+import { ArrowRight, FlaskConical, Shield, Sparkles } from 'lucide-react';
 
 interface HeroProps {
   onGetStarted: () => void;
@@ -23,7 +23,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
         <div className="text-center max-w-4xl mx-auto">
           {/* Badge */}
           <div className="inline-flex items-center space-x-2 bg-blue-500/20 border border-blue-500/30 rounded-full px-4 py-2 mb-8">
-            <Calculator className="w-4 h-4 text-blue-400" />
+            <FlaskConical className="w-4 h-4 text-blue-400" />
             <span className="text-sm text-blue-300 font-medium">Powered by OpenAI GPT-4</span>
           </div>
 
@@ -34,9 +34,9 @@ const Hero = ({ onGetStarted }: HeroProps) => {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Assistente IA especializado em fórmulas do Excel, Google Sheets e análises matemáticas. 
-            Crie, otimize e entenda fórmulas complexas com facilidade.
+          <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+            Assistente IA especializado em análise de fórmulas de manipulação farmacêutica. 
+            Analise compatibilidade, calcule concentrações e otimize suas formulações com segurança.
           </p>
 
           {/* CTA Buttons */}
@@ -62,26 +62,26 @@ const Hero = ({ onGetStarted }: HeroProps) => {
           <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
             <div className="text-center">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Calculator className="w-6 h-6 text-white" />
+                <FlaskConical className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Criação de Fórmulas</h3>
-              <p className="text-slate-400">Descreva o que precisa e receba a fórmula perfeita</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Análise de Compatibilidade</h3>
+              <p className="text-slate-400">Verifique interações entre ativos e excipientes</p>
             </div>
 
             <div className="text-center">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="w-6 h-6 text-white" />
+                <Shield className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Otimização</h3>
-              <p className="text-slate-400">Melhore fórmulas existentes para máxima eficiência</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Estabilidade</h3>
+              <p className="text-slate-400">Avalie estabilidade física e química das formulações</p>
             </div>
 
             <div className="text-center">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Explicações Detalhadas</h3>
-              <p className="text-slate-400">Entenda cada parte da fórmula com explicações claras</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Otimização</h3>
+              <p className="text-slate-400">Receba sugestões para melhorar suas formulações</p>
             </div>
           </div>
         </div>

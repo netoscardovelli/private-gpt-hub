@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Bot, User, Loader2, Copy, ThumbsUp, ThumbsDown, Calculator } from 'lucide-react';
+import { Send, Bot, User, Loader2, Copy, ThumbsUp, ThumbsDown, FlaskConical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -22,15 +22,18 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: `Olá ${user.name}! Sou seu assistente especializado em análise de fórmulas. Posso ajudá-lo a:
+      content: `Olá ${user.name}! Sou seu assistente especializado em análise de fórmulas de manipulação farmacêutica. Posso ajudá-lo a:
 
-📊 Criar fórmulas do Excel/Google Sheets
-🔍 Explicar fórmulas complexas
-⚡ Otimizar fórmulas existentes
-🐛 Identificar e corrigir erros
-💡 Sugerir alternativas mais eficientes
+🧪 Analisar compatibilidade entre ativos e excipientes
+⚖️ Calcular concentrações e diluições precisas
+🔬 Verificar estabilidade físico-química
+⚠️ Identificar incompatibilidades e interações
+💡 Sugerir alternativas de formulação
+🎯 Orientar técnicas de manipulação
+📊 Calcular equivalências entre formas farmacêuticas
+🛡️ Avaliar segurança e estabilidade
 
-Como posso ajudá-lo hoje?`,
+Como posso ajudá-lo hoje com suas formulações?`,
       role: 'assistant',
       timestamp: new Date()
     }
@@ -155,12 +158,12 @@ Como posso ajudá-lo hoje?`,
       <div className="bg-slate-800 border-b border-slate-700 p-4">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3 text-slate-300">
-            <Calculator className="w-5 h-5 text-blue-400" />
-            <span className="text-sm">Assistente de Fórmulas - Plano {user.plan}</span>
+            <FlaskConical className="w-5 h-5 text-blue-400" />
+            <span className="text-sm">Assistente de Manipulação Farmacêutica - Plano {user.plan}</span>
           </div>
           <div className="text-sm text-slate-400">
             {remainingMessages > 0 ? (
-              <span>{remainingMessages} mensagens restantes hoje</span>
+              <span>{remainingMessages} análises restantes hoje</span>
             ) : (
               <span className="text-red-400">Limite diário atingido</span>
             )}
@@ -187,7 +190,7 @@ Como posso ajudá-lo hoje?`,
                     {message.role === 'user' ? (
                       <User className="w-4 h-4" />
                     ) : (
-                      <Calculator className="w-4 h-4 text-white" />
+                      <FlaskConical className="w-4 h-4 text-white" />
                     )}
                   </div>
                   <div className="flex-1">
@@ -234,11 +237,11 @@ Como posso ajudá-lo hoje?`,
               <Card className="max-w-[80%] p-4 bg-slate-800 border-slate-700">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                    <Calculator className="w-4 h-4 text-white" />
+                    <FlaskConical className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex items-center space-x-2 text-slate-300">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Analisando fórmula...</span>
+                    <span>Analisando formulação...</span>
                   </div>
                 </div>
               </Card>
@@ -256,7 +259,7 @@ Como posso ajudá-lo hoje?`,
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Digite sua dúvida sobre fórmulas ou cole uma fórmula para análise..."
+              placeholder="Descreva sua fórmula ou dúvida sobre manipulação farmacêutica..."
               className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none"
               rows={1}
               disabled={remainingMessages <= 0}
@@ -271,7 +274,7 @@ Como posso ajudá-lo hoje?`,
           </div>
           {remainingMessages <= 0 && (
             <p className="text-sm text-red-400 mt-2 text-center">
-              Limite diário atingido. Faça upgrade do seu plano para continuar conversando.
+              Limite diário atingido. Faça upgrade do seu plano para continuar analisando formulações.
             </p>
           )}
         </div>
