@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, Menu, X, Settings, CreditCard } from 'lucide-react';
+import { LogOut, Menu, X, Settings, CreditCard, MessageCircle } from 'lucide-react';
 
 interface HeaderProps {
   isAuthenticated: boolean;
@@ -11,9 +11,10 @@ interface HeaderProps {
   onLogout: () => void;
   onSettingsClick: () => void;
   onBillingClick: () => void;
+  onChatClick: () => void;
 }
 
-const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onBillingClick }: HeaderProps) => {
+const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onBillingClick, onChatClick }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -35,6 +36,15 @@ const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onB
                 <span className="text-sm text-slate-300">
                   Plano: <span className="text-emerald-400 font-semibold">{user?.plan}</span>
                 </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onChatClick}
+                  className="text-slate-300 hover:text-white"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Chat
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -93,6 +103,15 @@ const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onB
                 <div className="text-sm text-slate-300">
                   Plano: <span className="text-emerald-400 font-semibold">{user?.plan}</span>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onChatClick}
+                  className="w-full justify-start text-slate-300 hover:text-white"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Chat
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"

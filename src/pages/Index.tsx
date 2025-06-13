@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
@@ -56,6 +55,10 @@ const Index = () => {
 
   const handleBillingClick = () => {
     setCurrentView('billing');
+  };
+
+  const handleChatClick = () => {
+    setCurrentView('chat');
   };
 
   const renderCurrentView = () => {
@@ -132,6 +135,7 @@ const Index = () => {
         onLogout={handleLogout}
         onSettingsClick={handleSettingsClick}
         onBillingClick={handleBillingClick}
+        onChatClick={handleChatClick}
       />
       
       {renderCurrentView()}
