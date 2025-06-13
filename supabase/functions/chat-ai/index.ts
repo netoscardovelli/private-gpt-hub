@@ -20,21 +20,35 @@ serve(async (req) => {
       throw new Error('Mensagem é obrigatória');
     }
 
-    // Obter a chave da API OpenAI
+    // Obter a chave da API OpenAI com logs mais detalhados
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
-    if (!OPENAI_API_KEY || OPENAI_API_KEY.trim() === '') {
-      console.error('OPENAI_API_KEY não encontrada');
-      throw new Error('Chave da API OpenAI não configurada. Verifique as configurações.');
+    console.log('=== DEBUG OPENAI_API_KEY ===');
+    console.log('Chave existe:', !!OPENAI_API_KEY);
+    console.log('Tipo:', typeof OPENAI_API_KEY);
+    console.log('Comprimento:', OPENAI_API_KEY?.length || 0);
+    console.log('Primeiros 6 chars:', OPENAI_API_KEY?.substring(0, 6) || 'N/A');
+    console.log('===========================');
+    
+    if (!OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY é null ou undefined');
+      throw new Error('Chave da API OpenAI não encontrada nas variáveis de ambiente');
     }
 
-    // Verificar se a chave tem o formato esperado
-    if (!OPENAI_API_KEY.startsWith('sk-')) {
-      console.error('OPENAI_API_KEY tem formato inválido');
-      throw new Error('Chave da API OpenAI inválida - deve começar com sk-');
+    const trimmedKey = OPENAI_API_KEY.trim();
+    
+    if (trimmedKey === '') {
+      console.error('OPENAI_API_KEY está vazia após trim');
+      throw new Error('Chave da API OpenAI está vazia');
     }
 
-    console.log('Enviando mensagem para OpenAI...', { messageLength: message.length });
+    // Verificar formato mais flexível
+    if (!trimmedKey.startsWith('sk-')) {
+      console.error('OPENAI_API_KEY formato inválido. Começa com:', trimmedKey.substring(0, 10));
+      throw new Error('Chave da API OpenAI deve começar com "sk-"');
+    }
+
+    console.log('Chave OpenAI validada com sucesso');
 
     // Preparar mensagens para o contexto de análise de fórmulas
     const systemMessage = {
@@ -56,10 +70,12 @@ Sempre responda em português e seja claro e didático nas explicações. Quando
       { role: 'user', content: message }
     ];
 
+    console.log('Fazendo requisição para OpenAI API...');
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY.trim()}`,
+        'Authorization': `Bearer ${trimmedKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -74,7 +90,11 @@ Sempre responda em português e seja claro e didático nas explicações. Quando
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Erro da OpenAI:', { status: response.status, error: errorText });
+      console.error('Erro da OpenAI:', { 
+        status: response.status, 
+        statusText: response.statusText,
+        error: errorText 
+      });
       
       if (response.status === 401) {
         throw new Error('Chave da API OpenAI inválida ou expirada');
@@ -101,6 +121,8 @@ Sempre responda em português e seja claro e didático nas explicações. Quando
 
   } catch (error) {
     console.error('Erro na função chat-ai:', error);
+    console.error('Stack trace:', error.stack);
+    
     return new Response(JSON.stringify({ 
       error: 'Erro interno do servidor',
       details: error.message 
