@@ -20,31 +20,10 @@ serve(async (req) => {
       throw new Error('Mensagem é obrigatória');
     }
 
-    // Tentar pegar a chave de diferentes formas
-    let OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    
-    console.log('=== DEBUG TODOS OS SECRETS ===');
-    console.log('OPENAI_API_KEY:', !!OPENAI_API_KEY);
-    
-    // Se não encontrar, tentar o nome exato do secret que você criou
-    if (!OPENAI_API_KEY) {
-      OPENAI_API_KEY = Deno.env.get('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');
-      console.log('Tentativa com nome do secret completo:', !!OPENAI_API_KEY);
-    }
-    
-    // Como último recurso, usar a chave diretamente
-    if (!OPENAI_API_KEY) {
-      OPENAI_API_KEY = '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';
-      console.log('Usando chave hardcoded temporariamente');
-    }
+    // Usar a chave diretamente para teste
+    const OPENAI_API_KEY = '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';
 
-    console.log('Chave final existe:', !!OPENAI_API_KEY);
-    console.log('Comprimento da chave:', OPENAI_API_KEY?.length);
-    console.log('================================');
-
-    if (!OPENAI_API_KEY) {
-      throw new Error('Não foi possível obter a chave da OpenAI');
-    }
+    console.log('Iniciando chamada para OpenAI...');
 
     // Preparar mensagens para o contexto de análise de fórmulas
     const systemMessage = {
@@ -71,7 +50,7 @@ Sempre responda em português e seja claro e didático nas explicações. Quando
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY.trim()}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
