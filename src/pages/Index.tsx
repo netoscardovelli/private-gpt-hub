@@ -65,23 +65,32 @@ const Index = () => {
       case 'settings':
         return (
           <div className="min-h-screen bg-slate-900 p-8">
-            <div className="container mx-auto max-w-2xl">
+            <div className="container mx-auto max-w-4xl">
               <h1 className="text-3xl font-bold text-white mb-8">Configurações</h1>
-              <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-                <h2 className="text-xl font-semibold text-white mb-4">Perfil do Usuário</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-slate-300 mb-2">Nome</label>
-                    <div className="text-white">{user?.name}</div>
+              
+              <div className="space-y-8">
+                {/* Perfil do Usuário */}
+                <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+                  <h2 className="text-xl font-semibold text-white mb-4">Perfil do Usuário</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm text-slate-300 mb-2">Nome</label>
+                      <div className="text-white">{user?.name}</div>
+                    </div>
+                    <div>
+                      <label className="block text-sm text-slate-300 mb-2">Email</label>
+                      <div className="text-white">{user?.email}</div>
+                    </div>
+                    <div>
+                      <label className="block text-sm text-slate-300 mb-2">Plano atual</label>
+                      <div className="text-blue-400 font-semibold">{user?.plan}</div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm text-slate-300 mb-2">Email</label>
-                    <div className="text-white">{user?.email}</div>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-slate-300 mb-2">Plano atual</label>
-                    <div className="text-blue-400 font-semibold">{user?.plan}</div>
-                  </div>
+                </div>
+
+                {/* Ativos Personalizados */}
+                <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+                  <CustomActives />
                 </div>
               </div>
             </div>
