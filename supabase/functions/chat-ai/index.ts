@@ -22,10 +22,12 @@ serve(async (req) => {
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY não encontrada nas variáveis de ambiente');
       throw new Error('Chave da API OpenAI não configurada');
     }
 
     console.log('Enviando mensagem para OpenAI:', message);
+    console.log('API Key presente:', OPENAI_API_KEY ? 'Sim' : 'Não');
 
     // Preparar mensagens para o contexto de análise de fórmulas
     const systemMessage = {
@@ -47,6 +49,8 @@ Sempre responda em português e seja claro e didático nas explicações. Quando
       { role: 'user', content: message }
     ];
 
+    console.log('Fazendo requisição para OpenAI...');
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -61,10 +65,19 @@ Sempre responda em português e seja claro e didático nas explicações. Quando
       }),
     });
 
+    console.log('Status da resposta OpenAI:', response.status);
+
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Erro da OpenAI:', errorData);
-      throw new Error(`Erro da OpenAI: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Erro da OpenAI:', errorText);
+      
+      if (response.status === 401) {
+        throw new Error('Chave da API OpenAI inválida');
+      } else if (response.status === 429) {
+        throw new Error('Limite de requisições excedido');
+      } else {
+        throw new Error(`Erro da OpenAI: ${response.status} - ${errorText}`);
+      }
     }
 
     const data = await response.json();
