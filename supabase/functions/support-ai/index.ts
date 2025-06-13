@@ -12,7 +12,9 @@ const handleCorsOptions = () => {
 };
 
 const handleApiError = (error: any) => {
-  console.error('Erro na API:', error);
+  console.error('Erro na função support-ai:', error);
+  console.error('Stack trace:', error.stack);
+  
   return new Response(JSON.stringify({ 
     error: 'Erro interno do servidor',
     details: error.message 
@@ -23,6 +25,8 @@ const handleApiError = (error: any) => {
 };
 
 const callOpenAI = async (messages: any[], apiKey: string) => {
+  console.log('Fazendo requisição para OpenAI API...');
+
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -33,97 +37,103 @@ const callOpenAI = async (messages: any[], apiKey: string) => {
       model: 'gpt-4o-mini',
       messages: messages,
       temperature: 0.7,
-      max_tokens: 1000,
+      max_tokens: 4000,
     }),
   });
 
+  console.log('Resposta da OpenAI - Status:', response.status);
+
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`OpenAI API Error: ${errorData.error?.message || 'Erro desconhecido'}`);
+    const errorText = await response.text();
+    console.error('Erro da OpenAI:', { 
+      status: response.status, 
+      statusText: response.statusText,
+      error: errorText 
+    });
+    
+    if (response.status === 401) {
+      throw new Error('Chave da API OpenAI inválida ou expirada. Verifique se a chave está correta nos secrets do Supabase.');
+    } else if (response.status === 429) {
+      throw new Error('Limite de requisições excedido. Tente novamente em alguns minutos');
+    } else if (response.status === 403) {
+      throw new Error('Acesso negado. Verifique as permissões da sua chave API');
+    } else {
+      throw new Error(`Erro da OpenAI: ${response.status} - ${errorText}`);
+    }
   }
 
-  return await response.json();
+  const data = await response.json();
+  console.log('Resposta recebida da OpenAI com sucesso');
+
+  return data;
 };
 
-const buildSupportPrompt = (userPlan: string) => {
-  return `Você é um assistente de suporte especializado do Formula.AI, uma plataforma de análise e formulação magistral farmacêutica. Sua comunicação deve ser SEMPRE profissional, útil e com uso apropriado de emojis.
+const buildSupportSystemPrompt = (userPlan: string) => {
+  return `Você é um assistente de suporte especializado do Formula.AI, uma plataforma de análise de fórmulas farmacêuticas magistrais.
 
-🎯 **MISSÃO**: Auxiliar usuários com dúvidas sobre o sistema, funcionalidades e questões técnicas
+🎯 **MISSÃO**: Fornecer suporte técnico e esclarecer dúvidas sobre o sistema
 
-## 🏥 **CONTEXTO DA PLATAFORMA**
-O Formula.AI é uma plataforma que:
-- 💊 Analisa fórmulas magistrais farmacêuticas
-- 🧪 Sugere formulações personalizadas
-- ⚗️ Oferece consultoria técnica especializada
-- 📋 Gerencia ativos personalizados
-- 🔬 Fornece análises farmacológicas
+## 🤖 **SUAS ESPECIALIDADES**
+- 💡 Explicar funcionalidades do sistema
+- 🔧 Resolver problemas técnicos básicos
+- 📋 Orientar sobre uso das ferramentas
+- 💰 Informações sobre planos e assinatura
+- ⚙️ Configurações da conta
 
-## 👤 **INFORMAÇÕES DO USUÁRIO**
-- Plano atual: ${userPlan}
-- Acesso às funcionalidades conforme plano contratado
+## 📋 **PROTOCOLO DE ATENDIMENTO**
 
-## 🛠️ **SUAS FUNÇÕES DE SUPORTE**
+### ✅ **Para DÚVIDAS sobre funcionalidades:**
+- Explique de forma clara e didática
+- Use exemplos práticos quando relevante
+- Forneça passos detalhados quando necessário
 
-### 📚 **DÚVIDAS SOBRE FUNCIONALIDADES**
-- Como usar o chat de análise de fórmulas
-- Como configurar ativos personalizados
-- Como interpretar as sugestões da IA
-- Navegação pela plataforma
-- Configurações de conta
+### 🔧 **Para PROBLEMAS técnicos:**
+- Solicite informações específicas sobre o erro
+- Ofereça soluções step-by-step
+- Sugira alternativas quando apropriado
 
-### 🔧 **PROBLEMAS TÉCNICOS**
-- Dificuldades de login
-- Problemas de carregamento
-- Erros no sistema
-- Questões de compatibilidade
-
-### 💰 **PLANOS E ASSINATURA**
-- Diferenças entre planos
-- Como fazer upgrade
-- Limites de uso
-- Funcionalidades por plano
-
-### 💡 **DICAS E MELHORES PRÁTICAS**
-- Como obter melhores resultados
-- Otimização do uso da plataforma
-- Fluxos de trabalho recomendados
+### 💰 **Plano atual do usuário:** ${userPlan}
+- Explique limitações do plano quando relevante
+- Sugira upgrades apenas quando necessário
+- Informe sobre recursos disponíveis
 
 ## 🎯 **DIRETRIZES DE RESPOSTA**
 
 ✅ **SEMPRE:**
-- Use emojis apropriados para tornar a comunicação amigável
-- Seja específico e prático nas orientações
-- Ofereça soluções passo a passo quando possível
-- Mantenha tom profissional mas acessível
-- Reconheça limitações quando necessário
+- 😊 Use emojis para facilitar a leitura
+- 🔍 Seja específico e objetivo
+- 💡 Ofereça soluções práticas
+- 🤝 Mantenha tom amigável e profissional
+- ⚡ Responda de forma eficiente
 
 ❌ **NUNCA:**
-- Forneça informações médicas ou diagnósticos
-- Prometa funcionalidades que não existem
-- Dê informações técnicas sobre formulações (essa é função do chat principal)
-- Compartilhe informações de outros usuários
+- 🚫 Forneça informações técnicas sobre manipulação farmacêutica
+- 💊 Dê conselhos médicos ou farmacêuticos
+- 🏥 Substitua consulta profissional
+- 🔐 Solicite senhas ou informações sensíveis
 
-## 🔄 **ENCAMINHAMENTOS**
-Para questões complexas, oriente sobre:
-- 📧 Contato direto: suporte@formula.ai
-- 📱 Chat técnico especializado
-- 📋 Documentação da plataforma
+## 🆘 **ESCALAÇÃO DE SUPORTE**
 
-**🤖 Lembre-se: Você é o primeiro ponto de contato para suporte. Seja útil, claro e sempre use emojis apropriados para manter a comunicação amigável e profissional!**`;
+Para problemas complexos que não conseguir resolver:
+📧 "Para esta questão específica, recomendo entrar em contato com nosso suporte técnico através do email: suporte@formula.ai"
+
+**🤖 Lembre-se: Você é um assistente de suporte. Seja prestativo, claro e sempre focado em resolver as dúvidas do usuário!**`;
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return handleCorsOptions();
   }
 
   try {
-    const { message, conversationHistory = [], userPlan = 'Básico' } = await req.json();
+    const { message, conversationHistory = [], userPlan = 'Free' } = await req.json();
     
     if (!message) {
       throw new Error('Mensagem é obrigatória');
     }
 
+    // Pegar a chave da API dos secrets do Supabase
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
     if (!OPENAI_API_KEY) {
@@ -131,17 +141,18 @@ serve(async (req) => {
       throw new Error('Chave da API OpenAI não configurada');
     }
 
-    console.log('Iniciando chat de suporte...');
+    console.log('Iniciando chamada para OpenAI - Support AI...');
     console.log('Plano do usuário:', userPlan);
 
+    // Preparar mensagens para o contexto de suporte
     const systemMessage = {
       role: 'system',
-      content: buildSupportPrompt(userPlan)
+      content: buildSupportSystemPrompt(userPlan)
     };
 
     const messages = [
       systemMessage,
-      ...conversationHistory.slice(-8), // Últimas 8 mensagens para contexto
+      ...conversationHistory.slice(-10), // Últimas 10 mensagens para contexto
       { role: 'user', content: message }
     ];
 
