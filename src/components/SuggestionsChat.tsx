@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -56,98 +55,122 @@ Qual é a queixa principal do seu paciente? Pode descrever livremente a condiç�
     scrollToBottom();
   }, [messages]);
 
-  // IA ADAPTATIVA - Analisa se já pode formular ou precisa de mais informações
+  // IA ADAPTATIVA CORRIGIDA - Analisa se já pode formular ou precisa de mais informações
   const clinicalReasoning = (context: Record<string, string>) => {
     const fullText = Object.values(context).join(' ').toLowerCase();
+    
+    console.log('🔍 DEBUGANDO ANÁLISE CLÍNICA:');
+    console.log('📝 Texto completo para análise:', fullText);
 
-    const hasComplaint = fullText.match(/dor|queda|acne|melasma|ansiedade|obesidade|sono|fadiga|celulite|rugas|manchas|calvície|cabelo|dermatite|eczema|psoríase|hipertensão|diabetes|colesterol|artrite|artrose|fibromialgia|enxaqueca|insônia|depressão|estresse/);
-    const hasDemographics = fullText.match(/\b\d{1,3}\b.*(anos|kg|m|cm|metro|quilo|idade)|sexo|masculino|feminino|homem|mulher/);
-    const hasHistory = fullText.match(/histórico|tratamento|remédio|medicação|uso|toma|tomou|fez|cirurgia|alergia|problema|doença|condição|diagnóstico/);
-    const hasObjective = fullText.match(/objetivo|meta|desejo|espera|resultado|melhorar|tratar|curar|controlar|diminuir|aumentar/);
+    // REGEX MELHORADAS E MAIS AMPLAS
+    const hasComplaint = fullText.match(/dor|queda|acne|melasma|ansiedade|obesidade|sono|fadiga|celulite|rugas|manchas|calvície|cabelo|dermatite|eczema|psoríase|hipertensão|diabetes|colesterol|artrite|artrose|fibromialgia|enxaqueca|insônia|depressão|estresse|problemas?|queixas?|sintomas?|tratamento|condição|doença/);
+    
+    const hasDemographics = fullText.match(/\b\d{1,3}\b.*(anos?|kg|kilo|quilos?|metro|metros?|cm|idade)|sexo|masculino|feminino|homem|mulher|mulheres|homens|anos|idade|peso|altura/);
+    
+    const hasHistory = fullText.match(/histórico|tratamento|remédio|medicação|medicamento|uso|toma|tomou|fez|cirurgia|alergia|problema|doença|condição|diagnóstico|médico|exame|análise|já|tratou|usou|faz|anterior|passado/);
+    
+    const hasObjective = fullText.match(/objetivo|meta|desejo|espera|resultado|melhorar|tratar|curar|controlar|diminuir|aumentar|quer|precisa|necessita|busca|procura|almeja|pretende/);
 
-    console.log('🔍 Análise do contexto clínico:');
-    console.log('- Queixa identificada:', !!hasComplaint);
-    console.log('- Demografia identificada:', !!hasDemographics);
-    console.log('- Histórico identificado:', !!hasHistory);
-    console.log('- Objetivo identificado:', !!hasObjective);
+    console.log('✅ RESULTADOS DA ANÁLISE:');
+    console.log('- Queixa identificada:', !!hasComplaint, hasComplaint ? hasComplaint[0] : 'NENHUMA');
+    console.log('- Demografia identificada:', !!hasDemographics, hasDemographics ? hasDemographics[0] : 'NENHUMA');
+    console.log('- Histórico identificado:', !!hasHistory, hasHistory ? hasHistory[0] : 'NENHUMA');
+    console.log('- Objetivo identificado:', !!hasObjective, hasObjective ? hasObjective[0] : 'NENHUMA');
 
-    if (hasComplaint && hasDemographics && hasHistory && hasObjective) {
-      console.log('✅ CONTEXTO COMPLETO - Gerando formulação!');
+    // CRITÉRIO MAIS FLEXÍVEL - precisa de pelo menos 3 dos 4 elementos
+    const completedCriteria = [hasComplaint, hasDemographics, hasHistory, hasObjective].filter(Boolean).length;
+    
+    console.log(`📊 Critérios atendidos: ${completedCriteria}/4`);
+
+    if (completedCriteria >= 3 && hasComplaint) {
+      console.log('✅ CONTEXTO SUFICIENTE - Gerando formulação!');
       return {
         ready: true,
         nextStep: ''
       };
     }
 
+    // PERGUNTAS MAIS ESPECÍFICAS E DIRETAS
     if (!hasComplaint) {
+      console.log('❌ Faltando: QUEIXA PRINCIPAL');
       return { 
         ready: false, 
-        nextStep: `**🔍 INFORMAÇÃO NECESSÁRIA:**
+        nextStep: `**🔍 QUEIXA PRINCIPAL NECESSÁRIA:**
 
-Preciso entender melhor a queixa principal. Pode me contar:
-• Qual é exatamente o problema que o paciente apresenta?
-• Quais são os sintomas principais?
-• Em que parte do corpo ou aspecto da saúde?
+Preciso saber qual é o problema principal que o paciente apresenta. Por favor, me conte:
 
-Exemplo: "Paciente com acne inflamatória no rosto" ou "Dores articulares nos joelhos"` 
+• Qual é a condição/problema que precisa ser tratado?
+• Quais são os sintomas que o paciente apresenta?
+
+Exemplo: "Paciente com acne inflamatória" ou "Queda de cabelo androgenética" ou "Celulite grau 2"`
       };
     }
 
     if (!hasDemographics) {
+      console.log('❌ Faltando: DEMOGRAFIA');
       return { 
         ready: false, 
         nextStep: `**📊 PERFIL DO PACIENTE:**
 
-Para calcular dosagens seguras, preciso saber:
-• Idade e sexo do paciente?
-• Peso aproximado e altura?
+Para calcular dosagens adequadas, preciso saber:
 
-Essas informações são fundamentais para personalizar a formulação.` 
+• Qual a idade do paciente?
+• Sexo (masculino/feminino)?
+• Peso aproximado?
+
+Essas informações são fundamentais para personalizar a formulação com segurança.`
       };
     }
 
     if (!hasHistory) {
+      console.log('❌ Faltando: HISTÓRICO MÉDICO');
       return { 
         ready: false, 
-        nextStep: `**🏥 HISTÓRICO CLÍNICO:**
+        nextStep: `**🏥 INFORMAÇÕES MÉDICAS:**
 
-Preciso conhecer o contexto médico:
-• O paciente tem alguma doença crônica ou condição médica?
-• Usa algum medicamento regularmente?
-• Tem alergias conhecidas a medicamentos ou substâncias?
-• Já tentou algum tratamento para este problema?
+Preciso conhecer o contexto de saúde:
 
-Isso me ajuda a evitar interações e escolher os melhores ativos.` 
+• O paciente tem alguma doença ou condição médica?
+• Usa algum medicamento atualmente?
+• Tem alergias conhecidas?
+• Já tentou algum tratamento para este problema antes?
+
+Isso me ajuda a evitar interações e escolher os melhores ativos.`
       };
     }
 
     if (!hasObjective) {
+      console.log('❌ Faltando: OBJETIVOS');
       return { 
         ready: false, 
         nextStep: `**🎯 OBJETIVOS DO TRATAMENTO:**
 
 Para personalizar a abordagem, preciso saber:
-• Qual o principal resultado que o paciente espera?
-• Em quanto tempo gostaria de ver melhorias?
-• Prioriza resultados rápidos ou tratamento mais suave?
-• Tem preferência de horário para aplicação (manhã/noite)?
 
-Isso define o protocolo ideal.` 
+• O que o paciente espera alcançar com o tratamento?
+• Qual o principal resultado desejado?
+• Tem alguma preferência específica (ex: resultados rápidos vs. tratamento suave)?
+
+Isso define o protocolo ideal para o caso.`
       };
     }
 
+    console.log('❓ Solicitando informações complementares');
     return { 
       ready: false, 
-      nextStep: `**💡 COMPLEMENTANDO O CASO:**
+      nextStep: `**💡 QUASE PRONTO!**
 
-Estou quase com todas as informações! Me conte mais alguns detalhes relevantes:
+Tenho a maioria das informações necessárias. Para completar o quadro clínico, pode me contar mais alguns detalhes:
+
 • Há fatores que pioram ou melhoram a condição?
-• O paciente tem rotina específica ou limitações?
-• Alguma informação adicional importante sobre o caso?
+• Alguma informação adicional relevante sobre o caso?
+• O paciente tem alguma limitação ou preferência específica?
 
-Após isso poderei gerar uma formulação completa e personalizada.` 
+Com essas informações finais poderei gerar uma formulação completa e personalizada!`
     };
   };
+
+  // ... keep existing code (generateFormulation function)
 
   const generateFormulation = (context: ClinicalContext) => {
     const fullText = Object.values(context).join(' ').toLowerCase();
@@ -307,10 +330,12 @@ ${prognosis}
     setIsLoading(true);
 
     setTimeout(() => {
+      console.log('📨 PROCESSANDO NOVA MENSAGEM:', currentInput);
+      
       // Atualiza o contexto acumulado com timestamp único
       const updatedContext = {
         ...clinicalContext,
-        [`info_${Date.now()}`]: currentInput
+        [`resposta_${Date.now()}`]: currentInput
       };
 
       setClinicalContext(updatedContext);
@@ -331,10 +356,13 @@ ${prognosis}
       setMessages(prev => [...prev, assistantMessage]);
 
       if (ready) {
+        console.log('🎉 FORMULAÇÃO GERADA COM SUCESSO!');
         toast({
           title: "✅ Formulação Inteligente Gerada!",
           description: "Baseada em raciocínio clínico completo e adaptativo.",
         });
+      } else {
+        console.log('❓ Ainda coletando informações...');
       }
 
       setIsLoading(false);
@@ -349,6 +377,7 @@ ${prognosis}
   };
 
   const resetAnamnesis = () => {
+    console.log('🔄 REINICIANDO ANAMNESE');
     setMessages([{
       id: '1',
       content: `Olá Dr(a). ${user.name}! 👨‍⚕️
