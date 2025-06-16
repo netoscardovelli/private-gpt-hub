@@ -7,7 +7,7 @@ interface SpecialtySelectorProps {
 }
 
 const specialties = [
-  { value: 'geral', label: 'Medicina Geral' },
+  { value: 'geral', label: 'FULL' },
   { value: 'dermatologia', label: 'Dermatologia' },
   { value: 'endocrinologia', label: 'Endocrinologia' },
   { value: 'cardiologia', label: 'Cardiologia' },
