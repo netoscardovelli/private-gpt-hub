@@ -24,17 +24,17 @@ const specialties = [
 const SpecialtySelector = ({ selectedSpecialty, onSpecialtyChange }: SpecialtySelectorProps) => {
   return (
     <div className="flex items-center space-x-2">
-      <span className="text-xs text-slate-400 hidden sm:block">Foco:</span>
+      <span className="text-xs text-slate-400 hidden sm:block whitespace-nowrap">Especialidade:</span>
       <Select value={selectedSpecialty} onValueChange={onSpecialtyChange}>
-        <SelectTrigger className="w-36 sm:w-40 h-8 bg-slate-700 border-slate-600 text-xs text-white">
-          <SelectValue />
+        <SelectTrigger className="w-40 sm:w-48 h-9 bg-slate-700 border-slate-600 text-xs text-white hover:bg-slate-600 transition-colors">
+          <SelectValue placeholder="Selecione..." />
         </SelectTrigger>
-        <SelectContent className="bg-slate-700 border-slate-600">
+        <SelectContent className="bg-slate-700 border-slate-600 z-50">
           {specialties.map((specialty) => (
             <SelectItem 
               key={specialty.value} 
               value={specialty.value}
-              className="text-white hover:bg-slate-600 focus:bg-slate-600 text-xs"
+              className="text-white hover:bg-slate-600 focus:bg-slate-600 text-xs cursor-pointer"
             >
               {specialty.label}
             </SelectItem>
