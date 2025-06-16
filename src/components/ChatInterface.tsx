@@ -21,6 +21,8 @@ interface ChatInterfaceProps {
 }
 
 const ChatInterface = ({ user }: ChatInterfaceProps) => {
+  const [selectedSpecialty, setSelectedSpecialty] = useState('geral');
+
   const getInitialMessages = (): Message[] => [
     {
       id: '1',
@@ -126,7 +128,8 @@ Escolha uma das opções abaixo:`,
           message: currentInput,
           conversationHistory,
           customActives,
-          userId: user.id // Incluir ID do usuário para personalização
+          userId: user.id,
+          specialty: selectedSpecialty // Enviar especialidade selecionada
         }
       });
 
@@ -177,7 +180,11 @@ Escolha uma das opções abaixo:`,
 
   return (
     <div className="flex flex-col h-screen bg-slate-900">
-      <ChatHeader user={user} />
+      <ChatHeader 
+        user={user} 
+        selectedSpecialty={selectedSpecialty}
+        onSpecialtyChange={setSelectedSpecialty}
+      />
 
       {/* Botão de exportar PDF */}
       <div className="flex justify-end px-4 pt-2">

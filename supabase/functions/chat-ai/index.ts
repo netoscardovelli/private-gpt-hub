@@ -36,7 +36,7 @@ const callOpenAI = async (messages: any[], apiKey: string) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4.1-2025-04-14', // Modelo mais avançado para análises profundas
+      model: 'gpt-4o', // Usando modelo mais avançado para análises especializadas
       messages: messages,
       temperature: 0.3, // Menor para mais precisão científica
       max_tokens: 4000, // Aumentado para análises detalhadas
@@ -83,6 +83,7 @@ serve(async (req) => {
       conversationHistory = [], 
       customActives = [], 
       userId = null,
+      specialty = 'geral', // Nova propriedade para especialidade
       feedback = null,
       originalAnalysis = null,
       rating = null
@@ -152,12 +153,12 @@ serve(async (req) => {
       }
     }
 
-    console.log('Preparando mensagens...');
+    console.log('Preparando mensagens com especialidade:', specialty);
 
-    // Preparar mensagens com perfil personalizado
+    // Preparar mensagens com perfil personalizado e especialidade
     const systemMessage = {
       role: 'system',
-      content: buildSystemPrompt(customActives, doctorProfile)
+      content: buildSystemPrompt(customActives, doctorProfile, specialty)
     };
 
     // Histórico mais extenso para análises complexas
