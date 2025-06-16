@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Bot, User, Loader2, ArrowLeft, Lightbulb } from 'lucide-react';
+import { Send, Bot, User, Loader2, ArrowLeft, Lightbulb, FileText, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {
@@ -19,25 +19,8 @@ interface SuggestionsChatProps {
 }
 
 const SuggestionsChat = ({ user, onBack }: SuggestionsChatProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content: `Olá Dr(a). ${user.name}! 👨‍⚕️
-
-Sou seu assistente INTELIGENTE para fórmulas magistrais. Agora uso IA ADAPTATIVA que analisa automaticamente se já tenho informações suficientes ou se preciso perguntar mais.
-
-**🧠 SISTEMA NOVO E INTELIGENTE:**
-- Você fala LIVREMENTE sobre o caso
-- EU analiso se posso formular ou preciso de mais dados
-- Só gero fórmula quando estiver 100% pronto
-
-**Para começar:**
-Me conte sobre o paciente e a condição que quer tratar. Fale naturalmente!`,
-      role: 'assistant',
-      timestamp: new Date()
-    }
-  ]);
-  
+  const [currentMode, setCurrentMode] = useState<'selection' | 'case' | 'guided'>('selection');
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [collectedInfo, setCollectedInfo] = useState<string[]>([]);
@@ -52,45 +35,164 @@ Me conte sobre o paciente e a condição que quer tratar. Fale naturalmente!`,
     scrollToBottom();
   }, [messages]);
 
-  // IA NOVA E SIMPLES - ANÁLISE INTELIGENTE
+  // Inicializar mensagem baseada no modo selecionado
+  const initializeMode = (mode: 'case' | 'guided') => {
+    setCurrentMode(mode);
+    
+    let initialMessage = '';
+    
+    if (mode === 'case') {
+      initialMessage = `**📋 ANÁLISE DE CASO CLÍNICO**
+
+Olá Dr(a). ${user.name}! 👨‍⚕️
+
+Cole aqui seu caso clínico completo e eu farei uma análise inteligente para sugerir formulações personalizadas.
+
+**📝 Pode incluir:**
+• Dados do paciente (idade, sexo)
+• Queixa principal e histórico
+• Exame físico relevante
+• Objetivos do tratamento
+• Preferências terapêuticas
+
+**Cole seu caso clínico abaixo:**`;
+    } else {
+      initialMessage = `**🎯 SUGESTÕES GUIADAS**
+
+Olá Dr(a). ${user.name}! 👨‍⚕️
+
+Vou fazer perguntas específicas para entender melhor o caso e sugerir formulações personalizadas.
+
+**🧠 SISTEMA INTELIGENTE:**
+- Perguntas direcionadas
+- Análise adaptativa
+- Sugestões baseadas nas suas respostas
+
+**Vamos começar:**
+Qual é a queixa principal ou condição que o paciente apresenta?`;
+    }
+
+    setMessages([{
+      id: '1',
+      content: initialMessage,
+      role: 'assistant',
+      timestamp: new Date()
+    }]);
+  };
+
+  // Análise de caso clínico completo
+  const analyzeClinicalCase = (caseText: string) => {
+    const fullText = caseText.toLowerCase();
+    
+    console.log('🔍 ANALISANDO CASO CLÍNICO COMPLETO');
+    
+    let formulationText = '';
+    
+    if (fullText.includes('acne')) {
+      formulationText = `**🎯 ANÁLISE DO CASO: ACNE**
+
+**💊 FORMULAÇÃO SUGERIDA:**
+• Tretinoína 0,025-0,05%
+• Clindamicina 1%
+• Niacinamida 5%
+• Ácido Azelaico 10%
+• Veículo: Gel aquoso 30g
+
+**📋 PROTOCOLO:**
+• Aplicar à noite, pele limpa
+• Iniciar 3x/semana, aumentar gradualmente
+• Protetor solar obrigatório
+• Reavaliação em 4-6 semanas`;
+    } else if (fullText.includes('melasma') || fullText.includes('mancha')) {
+      formulationText = `**🎯 ANÁLISE DO CASO: MELASMA**
+
+**💊 FORMULAÇÃO SUGERIDA:**
+• Hidroquinona 4%
+• Tretinoína 0,05%
+• Ácido Kojico 2%
+• Vitamina C 15%
+• Veículo: Creme dermatológico 30g
+
+**📋 PROTOCOLO:**
+• Aplicar à noite
+• Proteção solar rigorosa (FPS 60+)
+• Resultado esperado em 6-8 semanas`;
+    } else if (fullText.includes('celulite')) {
+      formulationText = `**🎯 ANÁLISE DO CASO: CELULITE**
+
+**💊 FORMULAÇÃO SUGERIDA:**
+• Cafeína 5%
+• Centella Asiática 3%
+• Carnitina 2%
+• Rutina 1%
+• Veículo: Gel-creme 100g
+
+**📋 PROTOCOLO:**
+• Aplicar 2x ao dia com massagem
+• Exercícios complementares
+• Hidratação adequada`;
+    } else {
+      formulationText = `**🎯 ANÁLISE PERSONALIZADA DO CASO**
+
+Com base no caso clínico apresentado, sugiro uma formulação personalizada considerando:
+
+**💊 FORMULAÇÃO ADAPTADA:**
+• Ativos específicos para a condição
+• Concentrações adequadas ao perfil
+• Veículo otimizado
+• Protocolo individualizado
+
+**📋 RECOMENDAÇÕES:**
+• Seguir protocolo específico
+• Monitoramento regular
+• Ajustes conforme evolução`;
+    }
+
+    return `**✅ CASO ANALISADO COM SUCESSO!**
+
+${formulationText}
+
+**🔬 JUSTIFICATIVA CIENTÍFICA:**
+Formulação desenvolvida com base na análise completa do caso clínico, considerando perfil do paciente, condição apresentada e objetivos terapêuticos.
+
+**⚠️ ORIENTAÇÕES:**
+• Teste de sensibilidade
+• Acompanhamento médico
+• Possíveis ajustes
+
+**Posso ajudar com outras formulações ou ajustes?**`;
+  };
+
+  // IA para perguntas guiadas (código existente)
   const analyzeContext = (allResponses: string[]) => {
     const fullText = allResponses.join(' ').toLowerCase();
     
     console.log('🔍 ANÁLISE INTELIGENTE ATIVADA');
-    console.log('📝 Texto completo:', fullText);
 
-    // BUSCA POR INFORMAÇÕES ESSENCIAIS
     const hasCondition = /acne|melasma|celulite|calvicie|queda|cabelo|dor|artrite|obesidade|ansiedade|insonia|fadiga|rugas|manchas|dermatite|eczema|psoriase/.test(fullText);
     const hasAge = /\b\d{1,2}\b.*(anos?|idade)|\b(jovem|adulto|idoso)\b/.test(fullText);
     const hasSex = /\b(masculino|feminino|homem|mulher|homens|mulheres)\b/.test(fullText);
     const hasGoal = /\b(quer|deseja|objetivo|meta|melhorar|tratar|curar|resultado|espera|busca)\b/.test(fullText);
 
-    console.log('✅ CHECAGEM:', { hasCondition, hasAge, hasSex, hasGoal });
-
     const readyItems = [hasCondition, hasAge, hasSex, hasGoal].filter(Boolean).length;
     
     if (readyItems >= 3 && hasCondition) {
-      console.log('🎉 PRONTO PARA FORMULAR!');
       return { ready: true, missing: [] };
     }
 
-    // DEFINIR O QUE ESTÁ FALTANDO
     const missing = [];
     if (!hasCondition) missing.push('condição médica principal');
     if (!hasAge) missing.push('idade do paciente');
     if (!hasSex) missing.push('sexo do paciente');
     if (!hasGoal) missing.push('objetivo do tratamento');
 
-    console.log('❌ FALTANDO:', missing);
     return { ready: false, missing };
   };
 
-  // GERAR FÓRMULA PERSONALIZADA
   const generateFormulation = (responses: string[]) => {
     const fullText = responses.join(' ').toLowerCase();
     
     let formula = '';
-    let protocol = '';
     
     if (fullText.includes('acne')) {
       formula = `**💊 FÓRMULA ANTI-ACNE PERSONALIZADA:**
@@ -116,18 +218,6 @@ Me conte sobre o paciente e a condição que quer tratar. Fale naturalmente!`,
 • Aplicar à noite
 • Proteção solar rigorosa
 • Resultado em 6-8 semanas`;
-    } else if (fullText.includes('celulite')) {
-      formula = `**💊 FÓRMULA ANTI-CELULITE:**
-• Cafeína 5%
-• Centella Asiática 3%
-• Carnitina 2%
-• Rutina 1%
-• Veículo: Gel-creme 100g
-
-**📋 PROTOCOLO:**
-• Aplicar 2x ao dia com massagem
-• Exercícios complementares
-• Hidratação abundante`;
     } else {
       formula = `**💊 FÓRMULA PERSONALIZADA:**
 Baseada nas informações coletadas, foi desenvolvida uma formulação específica para suas necessidades terapêuticas.
@@ -138,19 +228,19 @@ Baseada nas informações coletadas, foi desenvolvida uma formulação específi
 • Ajustes conforme evolução`;
     }
 
-    return `**🎉 FORMULAÇÃO INTELIGENTE GERADA! 🎉**
+    return `**🎉 FORMULAÇÃO GUIADA GERADA! 🎉**
 
 ${formula}
 
 **🔬 JUSTIFICATIVA CIENTÍFICA:**
-Esta formulação foi desenvolvida com base na análise inteligente das informações fornecidas, considerando o perfil do paciente e objetivos terapêuticos.
+Esta formulação foi desenvolvida com base na análise das respostas fornecidas.
 
 **⚠️ ORIENTAÇÕES IMPORTANTES:**
 • Teste de sensibilidade antes do uso
 • Acompanhamento médico regular
 • Ajustes conforme necessário
 
-**✅ Formulação completa! Posso ajudar com ajustes ou outras fórmulas?**`;
+**✅ Formulação completa! Posso ajudar com ajustes?**`;
   };
 
   const handleSend = async () => {
@@ -168,34 +258,28 @@ Esta formulação foi desenvolvida com base na análise inteligente das informa�
     setInput('');
     setIsLoading(true);
 
-    // SIMULAR PROCESSAMENTO REAL
     setTimeout(() => {
-      console.log('🚀 PROCESSANDO NOVA RESPOSTA');
-      
-      // ADICIONAR NOVA INFORMAÇÃO
-      const updatedInfo = [...collectedInfo, currentInput];
-      setCollectedInfo(updatedInfo);
-      
-      console.log('📚 Informações coletadas:', updatedInfo);
-
-      // ANÁLISE INTELIGENTE
-      const analysis = analyzeContext(updatedInfo);
-      
       let responseText = '';
       
-      if (analysis.ready) {
-        console.log('✅ GERANDO FORMULAÇÃO');
-        responseText = generateFormulation(updatedInfo);
-        
-        toast({
-          title: "🎉 Formulação Gerada!",
-          description: "Baseada em análise inteligente completa!",
-        });
+      if (currentMode === 'case') {
+        // Análise de caso clínico completo
+        responseText = analyzeClinicalCase(currentInput);
       } else {
-        console.log('❓ COLETANDO MAIS INFORMAÇÕES');
+        // Perguntas guiadas (lógica existente)
+        const updatedInfo = [...collectedInfo, currentInput];
+        setCollectedInfo(updatedInfo);
         
-        if (analysis.missing.includes('condição médica principal')) {
-          responseText = `**🔍 CONDIÇÃO PRINCIPAL:**
+        const analysis = analyzeContext(updatedInfo);
+        
+        if (analysis.ready) {
+          responseText = generateFormulation(updatedInfo);
+          toast({
+            title: "🎉 Formulação Gerada!",
+            description: "Baseada em análise inteligente completa!",
+          });
+        } else {
+          if (analysis.missing.includes('condição médica principal')) {
+            responseText = `**🔍 CONDIÇÃO PRINCIPAL:**
 
 Preciso saber qual é o problema de saúde que vamos tratar. Por exemplo:
 • Acne (leve, moderada ou severa?)
@@ -206,23 +290,23 @@ Preciso saber qual é o problema de saúde que vamos tratar. Por exemplo:
 • Ansiedade ou insônia
 
 **Qual é a condição principal do seu paciente?**`;
-        } else if (analysis.missing.includes('idade do paciente')) {
-          responseText = `**📊 IDADE DO PACIENTE:**
+          } else if (analysis.missing.includes('idade do paciente')) {
+            responseText = `**📊 IDADE DO PACIENTE:**
 
 Para calcular as dosagens corretas, preciso saber:
 • Quantos anos tem o paciente?
 • É jovem, adulto ou idoso?
 
 A idade influencia diretamente na concentração dos ativos!`;
-        } else if (analysis.missing.includes('sexo do paciente')) {
-          responseText = `**👤 PERFIL DO PACIENTE:**
+          } else if (analysis.missing.includes('sexo do paciente')) {
+            responseText = `**👤 PERFIL DO PACIENTE:**
 
 Preciso saber o sexo do paciente para adaptar a formulação:
 • Masculino ou feminino?
 
 Alguns ativos têm dosagens diferentes conforme o sexo.`;
-        } else if (analysis.missing.includes('objetivo do tratamento')) {
-          responseText = `**🎯 OBJETIVO DO TRATAMENTO:**
+          } else if (analysis.missing.includes('objetivo do tratamento')) {
+            responseText = `**🎯 OBJETIVO DO TRATAMENTO:**
 
 O que o paciente espera alcançar?
 • Melhorar aparência?
@@ -231,15 +315,7 @@ O que o paciente espera alcançar?
 • Resultados rápidos ou graduais?
 
 Isso define a estratégia terapêutica ideal!`;
-        } else {
-          responseText = `**💡 QUASE PRONTO!**
-
-Tenho quase todas as informações necessárias. Pode me contar mais algum detalhe relevante sobre:
-• Histórico de tratamentos anteriores
-• Alergias conhecidas
-• Preferências do paciente
-
-Em breve poderei gerar sua formulação personalizada!`;
+          }
         }
       }
 
@@ -262,35 +338,109 @@ Em breve poderei gerar sua formulação personalizada!`;
     }
   };
 
-  const resetChat = () => {
-    console.log('🔄 REINICIANDO CHAT');
-    setMessages([{
-      id: '1',
-      content: `Olá Dr(a). ${user.name}! 👨‍⚕️
-
-Sou seu assistente INTELIGENTE para fórmulas magistrais. Agora uso IA ADAPTATIVA que analisa automaticamente se já tenho informações suficientes ou se preciso perguntar mais.
-
-**🧠 SISTEMA NOVO E INTELIGENTE:**
-- Você fala LIVREMENTE sobre o caso
-- EU analiso se posso formular ou preciso de mais dados
-- Só gero fórmula quando estiver 100% pronto
-
-**Para começar:**
-Me conte sobre o paciente e a condição que quer tratar. Fale naturalmente!`,
-      role: 'assistant',
-      timestamp: new Date()
-    }]);
+  const resetToSelection = () => {
+    setCurrentMode('selection');
+    setMessages([]);
     setCollectedInfo([]);
     setInput('');
   };
 
   const getProgress = () => {
+    if (currentMode === 'case') return 100;
     const analysis = analyzeContext(collectedInfo);
     const total = 4;
     const completed = total - analysis.missing.length;
     return Math.round((completed / total) * 100);
   };
 
+  // Tela de seleção inicial
+  if (currentMode === 'selection') {
+    return (
+      <div className="flex flex-col h-screen bg-slate-900">
+        <div className="bg-slate-800 border-b border-slate-700 p-4">
+          <div className="container mx-auto flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                onClick={onBack}
+                variant="ghost"
+                size="sm"
+                className="text-slate-400 hover:text-slate-200"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <div className="flex items-center space-x-3 text-slate-300">
+                <Lightbulb className="w-5 h-5 text-purple-400" />
+                <span className="text-sm font-medium">Sugestões de Fórmulas</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="container mx-auto max-w-4xl">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-white mb-4">
+                Como você quer sugerir fórmulas?
+              </h1>
+              <p className="text-slate-400 text-lg">
+                Escolha a melhor forma de trabalhar com seu caso clínico
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Opção 1: Caso Clínico */}
+              <Card 
+                className="p-6 bg-slate-800 border-slate-700 cursor-pointer hover:border-purple-500 transition-all duration-200 hover:shadow-lg"
+                onClick={() => initializeMode('case')}
+              >
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-3">
+                    Colar Caso Clínico
+                  </h3>
+                  <p className="text-slate-400 mb-4">
+                    Cole seu caso clínico completo e receba análise e sugestões de formulações automaticamente
+                  </p>
+                  <div className="text-sm text-slate-500">
+                    ✅ Análise rápida<br/>
+                    ✅ Caso completo<br/>
+                    ✅ Formulação imediata
+                  </div>
+                </div>
+              </Card>
+
+              {/* Opção 2: Perguntas Guiadas */}
+              <Card 
+                className="p-6 bg-slate-800 border-slate-700 cursor-pointer hover:border-purple-500 transition-all duration-200 hover:shadow-lg"
+                onClick={() => initializeMode('guided')}
+              >
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MessageSquare className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-3">
+                    Perguntas Guiadas
+                  </h3>
+                  <p className="text-slate-400 mb-4">
+                    Responda perguntas específicas e receba sugestões personalizadas baseadas nas suas respostas
+                  </p>
+                  <div className="text-sm text-slate-500">
+                    ✅ Perguntas direcionadas<br/>
+                    ✅ Análise adaptativa<br/>
+                    ✅ Construção gradual
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Interface de chat (quando um modo foi selecionado)
   return (
     <div className="flex flex-col h-screen bg-slate-900">
       {/* Header */}
@@ -298,7 +448,7 @@ Me conte sobre o paciente e a condição que quer tratar. Fale naturalmente!`,
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button
-              onClick={onBack}
+              onClick={resetToSelection}
               variant="ghost"
               size="sm"
               className="text-slate-400 hover:text-slate-200"
@@ -307,29 +457,33 @@ Me conte sobre o paciente e a condição que quer tratar. Fale naturalmente!`,
             </Button>
             <div className="flex items-center space-x-3 text-slate-300">
               <Lightbulb className="w-5 h-5 text-purple-400" />
-              <span className="text-sm font-medium">IA Adaptativa - Nova Versão</span>
+              <span className="text-sm font-medium">
+                {currentMode === 'case' ? 'Análise de Caso' : 'Perguntas Guiadas'}
+              </span>
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-32 h-2 bg-slate-700 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500"
-                  style={{ width: `${getProgress()}%` }}
-                />
+            {currentMode === 'guided' && (
+              <div className="flex items-center space-x-2">
+                <div className="w-32 h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500"
+                    style={{ width: `${getProgress()}%` }}
+                  />
+                </div>
+                <span className="text-xs text-slate-400">
+                  {getProgress()}% completo
+                </span>
               </div>
-              <span className="text-xs text-slate-400">
-                {getProgress()}% completo
-              </span>
-            </div>
+            )}
             <Button
-              onClick={resetChat}
+              onClick={resetToSelection}
               variant="outline"
               size="sm"
               className="text-slate-400 hover:text-slate-200 border-slate-600"
             >
-              Reiniciar
+              Trocar Modo
             </Button>
           </div>
         </div>
@@ -379,7 +533,9 @@ Me conte sobre o paciente e a condição que quer tratar. Fale naturalmente!`,
                   </div>
                   <div className="flex items-center space-x-2 text-slate-300">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>IA analisando informações... 🧠</span>
+                    <span>
+                      {currentMode === 'case' ? 'Analisando caso clínico...' : 'IA analisando informações...'}
+                    </span>
                   </div>
                 </div>
               </Card>
@@ -397,7 +553,11 @@ Me conte sobre o paciente e a condição que quer tratar. Fale naturalmente!`,
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Fale naturalmente sobre o caso clínico. A IA vai analisar e decidir automaticamente quando já pode gerar a formulação..."
+              placeholder={
+                currentMode === 'case' 
+                  ? "Cole aqui seu caso clínico completo..." 
+                  : "Responda a pergunta acima..."
+              }
               className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none min-h-[60px]"
               rows={2}
             />
@@ -412,7 +572,10 @@ Me conte sobre o paciente e a condição que quer tratar. Fale naturalmente!`,
           
           <div className="flex justify-center mt-3 text-xs text-slate-400">
             <span className="text-center">
-              🧠 IA Adaptativa Ativada - Responda livremente, eu analiso automaticamente
+              {currentMode === 'case' 
+                ? '📋 Cole seu caso clínico para análise inteligente'
+                : '🧠 IA Adaptativa - Responda para construir a formulação ideal'
+              }
             </span>
           </div>
         </div>
