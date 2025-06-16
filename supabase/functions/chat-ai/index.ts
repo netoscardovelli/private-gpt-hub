@@ -3,6 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { buildSystemPrompt, buildLearningPrompt } from './prompts.ts';
 import { getDoctorProfile, updateDoctorLearning, saveFeedback } from './learning.ts';
+import { processAutoLearning } from './auto-learning.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -83,15 +84,15 @@ serve(async (req) => {
       conversationHistory = [], 
       customActives = [], 
       userId = null,
-      specialty = 'geral', // Nova propriedade para especialidade
+      specialty = 'geral',
       feedback = null,
       originalAnalysis = null,
       rating = null
     } = requestBody;
     
-    // Se é um feedback para aprendizado
+    // Se é um feedback para aprendizado manual
     if (feedback && userId && originalAnalysis) {
-      console.log('Processando feedback...');
+      console.log('Processando feedback manual...');
       
       const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
       
@@ -178,11 +179,20 @@ serve(async (req) => {
 
     const aiResponse = data.choices[0].message.content;
 
+    // 🧠 APRENDIZADO AUTOMÁTICO - Processar em background
+    if (userId) {
+      console.log('🤖 Iniciando aprendizado automático...');
+      processAutoLearning(userId, message, aiResponse, specialty).catch(error => {
+        console.error('Erro no aprendizado automático:', error);
+      });
+    }
+
     console.log('Análise detalhada concluída');
 
     return new Response(JSON.stringify({ 
       response: aiResponse,
-      usage: data.usage 
+      usage: data.usage,
+      autoLearningActive: !!userId // Indicar se aprendizado automático está ativo
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
