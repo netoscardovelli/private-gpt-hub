@@ -43,30 +43,36 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
   const handleRequestSuggestions = async () => {
     setIsLoadingSuggestions(true);
     
-    // Simular resposta de sugestões (aqui você integraria com a API)
+    // Simular resposta de sugestões baseadas nas fórmulas analisadas
     setTimeout(() => {
-      // Mock de sugestões baseadas na análise
+      // Mock de sugestões com fórmulas específicas identificadas
       const mockSuggestions = [
         {
           name: "Berberina",
           concentration: "500mg",
           benefit: "Potencializa controle glicêmico e melhora sensibilidade à insulina",
           mechanism: "Ativa AMPK e modula microbiota intestinal",
-          synergyWith: ["Dapagliflozina", "Metformina"]
+          synergyWith: ["Dapagliflozina", "Metformina"],
+          targetFormula: "Fórmula Hipertrofia",
+          targetFormulaReason: "Complementa a ação anabólica otimizando o metabolismo energético e a captação de glicose pelos músculos"
         },
         {
-          name: "NAD+ Precursor",
-          concentration: "250mg", 
-          benefit: "Otimiza metabolismo celular e função mitocondrial",
-          mechanism: "Aumenta produção de NAD+ e ativa sirtuínas",
-          synergyWith: ["Resveratrol", "Curcumina"]
+          name: "HMB (β-Hydroxy β-Methylbutyrate)",
+          concentration: "1000mg",
+          benefit: "Reduz catabolismo muscular e acelera recuperação pós-treino",
+          mechanism: "Inibe proteólise via ubiquitina-proteassoma e estimula síntese proteica",
+          synergyWith: ["Creatina", "Leucina"],
+          targetFormula: "Fórmula Manutenção Massa Muscular",
+          targetFormulaReason: "Potencializa a ação do Peptistrong na preservação muscular, especialmente em períodos de stress catabólico"
         },
         {
-          name: "Akkermansia muciniphila",
-          concentration: "10⁹ UFC",
-          benefit: "Fortalece barreira intestinal e melhora metabolismo",
-          mechanism: "Produz butirato e regula permeabilidade intestinal",
-          synergyWith: ["Probióticos", "Inulina"]
+          name: "Citrulina Malato",
+          concentration: "3000mg",
+          benefit: "Melhora bomba muscular e reduz fadiga durante treinos intensos",
+          mechanism: "Aumenta produção de óxido nítrico e remove amônia muscular",
+          synergyWith: ["Arginina", "Beta Alanina"],
+          targetFormula: "Fórmula Pré-Treino",
+          targetFormulaReason: "Sinergia perfeita com Beta Alanina e cria pump muscular superior, potencializando a performance durante o treino"
         }
       ];
       

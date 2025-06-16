@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Check, Lightbulb } from 'lucide-react';
+import { Plus, Check, Lightbulb, Target } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface SuggestedActive {
@@ -12,6 +12,8 @@ interface SuggestedActive {
   benefit: string;
   mechanism: string;
   synergyWith: string[];
+  targetFormula: string; // Nova propriedade para indicar a fórmula alvo
+  targetFormulaReason: string; // Razão pela qual vai nessa fórmula específica
 }
 
 interface ActiveSuggestionsProps {
@@ -64,7 +66,7 @@ const ActiveSuggestions = ({
 
     toast({
       title: "Ativo adicionado!",
-      description: `${active.name} foi incluído na fórmula. Gerando nova versão...`,
+      description: `${active.name} foi incluído na ${active.targetFormula}. Gerando nova versão...`,
     });
   };
 
@@ -104,15 +106,28 @@ const ActiveSuggestions = ({
                     {active.concentration}
                   </Badge>
                 </div>
-                
+
+                {/* Indicação da fórmula alvo */}
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="w-3 h-3 text-blue-400" />
+                  <Badge className="bg-blue-600/30 text-blue-300 text-xs font-medium">
+                    → {active.targetFormula}
+                  </Badge>
+                </div>
+
                 <p className="text-xs text-slate-300 mb-2">{active.benefit}</p>
                 
                 <p className="text-xs text-slate-400 mb-2">{active.mechanism}</p>
+
+                {/* Razão pela qual vai nessa fórmula específica */}
+                <p className="text-xs text-blue-300 mb-2 italic">
+                  {active.targetFormulaReason}
+                </p>
                 
                 {active.synergyWith.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {active.synergyWith.map((synergy, idx) => (
-                      <Badge key={idx} className="bg-blue-600/30 text-blue-300 text-xs">
+                      <Badge key={idx} className="bg-purple-600/30 text-purple-300 text-xs">
                         Sinergia: {synergy}
                       </Badge>
                     ))}
@@ -138,7 +153,7 @@ const ActiveSuggestions = ({
                 ) : (
                   <>
                     <Plus className="w-3 h-3 mr-1" />
-                    Incluir na Fórmula
+                    Incluir na {active.targetFormula}
                   </>
                 )}
               </Button>

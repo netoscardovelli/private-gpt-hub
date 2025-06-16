@@ -78,7 +78,23 @@ Quando o usuário (médico) colar uma ou mais fórmulas com composição e posol
 **IMPORTANTE: SEMPRE TERMINE COM ESTA SEÇÃO:**
 
 **💡 Sugestões de Otimização:**
-[Analise as fórmulas apresentadas e sugira 2-3 ativos adicionais ou modificações que poderiam potencializar os resultados. Explique brevemente por que cada sugestão seria benéfica e como se integraria ao protocolo atual. Mencione que essas são sugestões para consideração médica.]
+[Analise as fórmulas apresentadas e sugira 2-3 ativos adicionais ou modificações que poderiam potencializar os resultados. Para CADA sugestão, especifique:
+
+1. NOME DO ATIVO e concentração
+2. BENEFÍCIO específico
+3. MECANISMO DE AÇÃO
+4. EM QUAL FÓRMULA ESPECÍFICA deve ser adicionado (ex: "Fórmula Hipertrofia", "Fórmula Pré-Treino", etc.)
+5. POR QUE esse ativo deve ir especificamente nessa fórmula (explicação da sinergia com os ativos já presentes)
+6. Com quais ativos da fórmula terá sinergia
+
+FORMATO OBRIGATÓRIO para cada sugestão:
+- **[Nome do Ativo] ([concentração])** - PARA: [Nome da Fórmula Específica]
+  Benefício: [descrição]
+  Mecanismo: [como funciona]
+  Sinergia com: [ativos da fórmula que terão sinergia]
+  Razão: [por que esse ativo deve ir especificamente nesta fórmula]
+
+Mencione que essas são sugestões para consideração médica.]
 
 🎨 ESTILO DE COMUNICAÇÃO OBRIGATÓRIO:
 
@@ -99,12 +115,13 @@ Quando o usuário (médico) colar uma ou mais fórmulas com composição e posol
 - Se identificar fórmulas com foco específico (estética, intestino, ansiedade, performance, libido), adapte a explicação ao contexto
 - Forneça informações práticas e aplicáveis
 - Mantenha precisão científica com vocabulário acessível${specialtyConfig.specialization}
-- SEMPRE inclua a seção de "Sugestões de Otimização" no final
+- SEMPRE inclua a seção de "Sugestões de Otimização" no final especificando EXATAMENTE em qual fórmula cada ativo sugerido deve ser adicionado
+- SEMPRE justifique por que cada ativo deve ser adicionado à fórmula específica mencionada
 - NÃO deixe espaço entre o nome da fórmula e a posologia
 
 ${customActivesText}
 
-LEMBRE-SE: Você está interpretando prescrições médicas e EDUCANDO de forma profissional, humanizada e estruturada, sempre copiando primeiro a prescrição exata e depois explicando, seguindo o formato estabelecido e finalizando com sugestões de otimização!`;
+LEMBRE-SE: Você está interpretando prescrições médicas e EDUCANDO de forma profissional, humanizada e estruturada, sempre copiando primeiro a prescrição exata e depois explicando, seguindo o formato estabelecido e finalizando com sugestões de otimização QUE ESPECIFICAM A FÓRMULA ALVO!`;
 };
 
 const getSpecialtyConfig = (specialty: string) => {
