@@ -28,7 +28,7 @@ const handleApiError = (error: any) => {
 };
 
 const callOpenAI = async (messages: any[], apiKey: string) => {
-  console.log('Chamando OpenAI API...');
+  console.log('Chamando OpenAI API com modelo avançado...');
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -37,10 +37,11 @@ const callOpenAI = async (messages: any[], apiKey: string) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o', // Usando modelo mais avançado para análises especializadas
+      model: 'gpt-4o', // Modelo mais avançado para análises médicas complexas
       messages: messages,
-      temperature: 0.3, // Menor para mais precisão científica
-      max_tokens: 4000, // Aumentado para análises detalhadas
+      temperature: 0.2, // Menor ainda para máxima precisão científica
+      max_tokens: 4500, // Aumentado para análises ainda mais detalhadas
+      top_p: 0.9, // Adiciona controle de qualidade
     }),
   });
 
@@ -64,7 +65,7 @@ const callOpenAI = async (messages: any[], apiKey: string) => {
   }
 
   const data = await response.json();
-  console.log('Resposta da OpenAI recebida');
+  console.log('Resposta da OpenAI recebida com modelo avançado');
 
   return data;
 };
@@ -165,7 +166,7 @@ serve(async (req) => {
     // Histórico mais extenso para análises complexas
     const messages = [
       systemMessage,
-      ...conversationHistory.slice(-4), // Últimas 4 mensagens para contexto
+      ...conversationHistory.slice(-6), // Aumentado para 6 mensagens para melhor contexto
       { role: 'user', content: message }
     ];
 
@@ -187,12 +188,13 @@ serve(async (req) => {
       });
     }
 
-    console.log('Análise detalhada concluída');
+    console.log('Análise médica avançada concluída');
 
     return new Response(JSON.stringify({ 
       response: aiResponse,
       usage: data.usage,
-      autoLearningActive: !!userId // Indicar se aprendizado automático está ativo
+      autoLearningActive: !!userId,
+      model: 'gpt-4o' // Indicar qual modelo foi usado
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
