@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Copy, ThumbsUp, ThumbsDown, FlaskConical, User, MessageSquarePlus } from 'lucide-react';
+import { Copy, ThumbsUp, ThumbsDown, FlaskConical, User, MessageSquarePlus, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import FeedbackPanel from './FeedbackPanel';
 
@@ -36,6 +36,17 @@ const MessageBubble = ({ message, index, onQuickAction, userId }: MessageBubbleP
     setShowFeedback(true);
   };
 
+  const handleSuggestImprovements = () => {
+    onQuickAction('suggest-improvements');
+  };
+
+  // Verificar se a mensagem contém análise de fórmulas
+  const containsFormulaAnalysis = message.role === 'assistant' && 
+    (message.content.includes('Composição:') || 
+     message.content.includes('Posologia:') ||
+     message.content.includes('fórmula')) &&
+    message.content.length > 200;
+
   return (
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
       <Card className={`w-full max-w-[90%] sm:max-w-[80%] p-3 sm:p-4 ${
@@ -66,6 +77,20 @@ const MessageBubble = ({ message, index, onQuickAction, userId }: MessageBubbleP
                   size="sm"
                 >
                   🧪 Análise de Fórmulas
+                </Button>
+              </div>
+            )}
+
+            {/* Botão de sugestões para mensagens com análise de fórmulas */}
+            {containsFormulaAnalysis && !message.content.includes('Sugestões de Otimização') && (
+              <div className="mt-3 sm:mt-4">
+                <Button
+                  onClick={handleSuggestImprovements}
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs sm:text-sm px-3 py-2 h-auto flex items-center gap-2"
+                  size="sm"
+                >
+                  <Lightbulb className="w-3 h-3" />
+                  💡 Sugerir Ativos para Otimizar
                 </Button>
               </div>
             )}

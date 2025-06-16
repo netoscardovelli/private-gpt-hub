@@ -84,6 +84,80 @@ Cole suas fórmulas aqui e eu farei uma análise completa para você!`,
         setIsLoading(false);
       }, 1000);
     }
+
+    if (action === 'suggest-improvements') {
+      const message = 'Com base nas fórmulas analisadas, sugira ativos adicionais ou modificações que poderiam otimizar os resultados do protocolo.';
+
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: message,
+        role: 'user',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+      setInput('');
+      setIsLoading(true);
+
+      try {
+        const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
+
+        const conversationHistory = messages.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
+
+        const enhancedMessage = `${message}
+
+INSTRUÇÃO ESPECIAL: Analise as fórmulas discutidas anteriormente e forneça sugestões específicas de otimização. Foque em:
+1. Ativos que poderiam ser adicionados para potencializar os efeitos
+2. Modificações de dosagem que poderiam ser benéficas
+3. Combinações sinérgicas que ainda não foram exploradas
+4. Explicação científica de por que cada sugestão seria valiosa
+
+Use a seção "💡 Sugestões de Otimização" conforme definido no prompt.`;
+
+        const { data, error } = await supabase.functions.invoke('chat-ai', {
+          body: {
+            message: enhancedMessage,
+            conversationHistory,
+            customActives,
+            userId: user.id,
+            specialty: selectedSpecialty
+          }
+        });
+
+        if (error || data?.error || !data?.response) {
+          throw new Error(data?.details || error?.message || 'Erro desconhecido');
+        }
+
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: data.response,
+          role: 'assistant',
+          timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, assistantMessage]);
+      } catch (error: any) {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: `🚫 Ocorreu um erro ao gerar sugestões. Tente novamente.\n\nErro: ${error.message}`,
+          role: 'assistant',
+          timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, errorMessage]);
+
+        toast({
+          title: "Erro ao gerar sugestões",
+          description: error.message,
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   const handleSend = async () => {

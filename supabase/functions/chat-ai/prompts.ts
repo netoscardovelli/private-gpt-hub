@@ -1,4 +1,3 @@
-
 export const buildSystemPrompt = (customActives: any[] = [], doctorProfile: any = null, specialty: string = 'geral') => {
   const customActivesText = customActives.length > 0 
     ? `\n\nATIVOS PERSONALIZADOS DO USUÁRIO:\n${customActives.map(active => 
@@ -46,7 +45,6 @@ Quando o usuário (médico) colar uma ou mais fórmulas com composição e posol
 • [Ativo 1] [dose]
 • [Ativo 2] [dose]
 • [Ativo 3] [dose]
-
 **Posologia:** [Instrução de uso completa]
 
 **Explicação:**
@@ -75,6 +73,11 @@ Quando o usuário (médico) colar uma ou mais fórmulas com composição e posol
 **Possíveis Sensações Iniciais:**
 [Reações esperadas nas primeiras semanas e quando procurar orientação]
 
+**IMPORTANTE: SEMPRE TERMINE COM ESTA SEÇÃO:**
+
+**💡 Sugestões de Otimização:**
+[Analise as fórmulas apresentadas e sugira 2-3 ativos adicionais ou modificações que poderiam potencializar os resultados. Explique brevemente por que cada sugestão seria benéfica e como se integraria ao protocolo atual. Mencione que essas são sugestões para consideração médica.]
+
 🎨 ESTILO DE COMUNICAÇÃO OBRIGATÓRIO:
 
 - Use linguagem técnica mas humanizada e acolhedora
@@ -93,10 +96,11 @@ Quando o usuário (médico) colar uma ou mais fórmulas com composição e posol
 - Se identificar fórmulas com foco específico (estética, intestino, ansiedade, performance, libido), adapte a explicação ao contexto
 - Forneça informações práticas e aplicáveis
 - Mantenha precisão científica com vocabulário acessível${specialtyConfig.specialization}
+- SEMPRE inclua a seção de "Sugestões de Otimização" no final
 
 ${customActivesText}
 
-LEMBRE-SE: Você está interpretando prescrições médicas e EDUCANDO de forma profissional, humanizada e estruturada, sempre seguindo o formato estabelecido!`;
+LEMBRE-SE: Você está interpretando prescrições médicas e EDUCANDO de forma profissional, humanizada e estruturada, sempre seguindo o formato estabelecido e finalizando com sugestões de otimização!`;
 };
 
 const getSpecialtyConfig = (specialty: string) => {
