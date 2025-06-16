@@ -2,9 +2,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Copy, ThumbsUp, ThumbsDown, FlaskConical, User, MessageSquarePlus, Lightbulb } from 'lucide-react';
+import { Copy, ThumbsUp, ThumbsDown, FlaskConical, User, MessageSquarePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import FeedbackPanel from './FeedbackPanel';
+import ActiveSuggestions from './ActiveSuggestions';
 
 interface Message {
   id: string;
@@ -23,6 +24,8 @@ interface MessageBubbleProps {
 const MessageBubble = ({ message, index, onQuickAction, userId }: MessageBubbleProps) => {
   const { toast } = useToast();
   const [showFeedback, setShowFeedback] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
 
   const copyToClipboard = (content: string) => {
     navigator.clipboard.writeText(content);
@@ -36,8 +39,39 @@ const MessageBubble = ({ message, index, onQuickAction, userId }: MessageBubbleP
     setShowFeedback(true);
   };
 
-  const handleSuggestImprovements = () => {
-    onQuickAction('suggest-improvements');
+  const handleRequestSuggestions = async () => {
+    setIsLoadingSuggestions(true);
+    
+    // Simular resposta de sugestões (aqui você integraria com a API)
+    setTimeout(() => {
+      // Mock de sugestões baseadas na análise
+      const mockSuggestions = [
+        {
+          name: "Berberina",
+          concentration: "500mg",
+          benefit: "Potencializa controle glicêmico e melhora sensibilidade à insulina",
+          mechanism: "Ativa AMPK e modula microbiota intestinal",
+          synergyWith: ["Dapagliflozina", "Metformina"]
+        },
+        {
+          name: "NAD+ Precursor",
+          concentration: "250mg", 
+          benefit: "Otimiza metabolismo celular e função mitocondrial",
+          mechanism: "Aumenta produção de NAD+ e ativa sirtuínas",
+          synergyWith: ["Resveratrol", "Curcumina"]
+        },
+        {
+          name: "Akkermansia muciniphila",
+          concentration: "10⁹ UFC",
+          benefit: "Fortalece barreira intestinal e melhora metabolismo",
+          mechanism: "Produz butirato e regula permeabilidade intestinal",
+          synergyWith: ["Probióticos", "Inulina"]
+        }
+      ];
+      
+      setSuggestions(mockSuggestions);
+      setIsLoadingSuggestions(false);
+    }, 2000);
   };
 
   // Verificar se a mensagem contém análise de fórmulas
@@ -81,18 +115,14 @@ const MessageBubble = ({ message, index, onQuickAction, userId }: MessageBubbleP
               </div>
             )}
 
-            {/* Botão de sugestões para mensagens com análise de fórmulas */}
-            {containsFormulaAnalysis && !message.content.includes('Sugestões de Otimização') && (
-              <div className="mt-3 sm:mt-4">
-                <Button
-                  onClick={handleSuggestImprovements}
-                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs sm:text-sm px-3 py-2 h-auto flex items-center gap-2"
-                  size="sm"
-                >
-                  <Lightbulb className="w-3 h-3" />
-                  💡 Sugerir Ativos para Otimizar
-                </Button>
-              </div>
+            {/* Componente de sugestões para mensagens com análise de fórmulas */}
+            {containsFormulaAnalysis && (
+              <ActiveSuggestions
+                messageId={message.id}
+                onRequestSuggestions={handleRequestSuggestions}
+                suggestions={suggestions}
+                isLoading={isLoadingSuggestions}
+              />
             )}
             
             <div className="flex items-center justify-between mt-2 sm:mt-3">
