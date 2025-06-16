@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
@@ -66,7 +65,6 @@ const Index = () => {
     setCurrentView('chat');
   };
 
-  // Nova função para lidar com o clique em Sugestões
   const handleSuggestionsClick = () => {
     if (isAuthenticated) {
       setCurrentView('suggestions');
