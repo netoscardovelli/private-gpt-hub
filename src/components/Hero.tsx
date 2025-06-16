@@ -1,12 +1,14 @@
-
 import { Button } from '@/components/ui/button';
 import { ArrowRight, FlaskConical, Shield, Sparkles, Beaker, CheckCircle, Settings, Star, Zap, Atom, Instagram } from 'lucide-react';
 
 interface HeroProps {
-  onGetStarted: () => void;
+  onGetStarted?: () => void;
+  onStartChat?: () => void;
 }
 
-const Hero = ({ onGetStarted }: HeroProps) => {
+const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
+  const handleStartClick = onStartChat || onGetStarted || (() => {});
+
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-emerald-900 to-green-900 overflow-hidden px-4">
       {/* Simplified Background Elements for mobile */}
@@ -88,7 +90,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 justify-center items-center mb-12 sm:mb-16 lg:mb-20 px-2">
             <Button 
               size="lg" 
-              onClick={onGetStarted}
+              onClick={handleStartClick}
               className="group bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 text-sm sm:text-base lg:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-2xl hover:shadow-emerald-500/25 transform hover:scale-105 transition-all duration-300 border border-emerald-400/30 w-full sm:w-auto max-w-xs sm:max-w-none"
             >
               <Zap className="mr-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:animate-pulse" />

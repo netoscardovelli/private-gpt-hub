@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import Header from "@/components/Header";
@@ -19,8 +18,11 @@ const Index = () => {
 
   // Mock user data - in a real app this would come from authentication
   const mockUser = {
+    id: "mock-user-id",
     name: "Usuário",
-    plan: "Free"
+    plan: "Free",
+    dailyLimit: 10,
+    usageToday: 2
   };
 
   const handleLogin = () => {

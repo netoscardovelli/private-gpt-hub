@@ -10,12 +10,27 @@ interface HeaderProps {
   onLogin: () => void;
   onLogout: () => void;
   onSettingsClick: () => void;
-  onBillingClick: () => void;
-  onChatClick: () => void;
+  onBillingClick?: () => void;
+  onChatClick?: () => void;
+  onSupportClick: () => void;
+  userName?: string;
 }
 
-const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onBillingClick, onChatClick }: HeaderProps) => {
+const Header = ({ 
+  isAuthenticated, 
+  user, 
+  onLogin, 
+  onLogout, 
+  onSettingsClick, 
+  onBillingClick = () => {}, 
+  onChatClick = () => {}, 
+  onSupportClick,
+  userName 
+}: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const displayName = userName || user?.name;
+  const displayPlan = user?.plan || "Free";
 
   return (
     <header className="bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
@@ -34,7 +49,7 @@ const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onB
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-slate-300">
-                  Plano: <span className="text-emerald-400 font-semibold">{user?.plan}</span>
+                  Plano: <span className="text-emerald-400 font-semibold">{displayPlan}</span>
                 </span>
                 <Button
                   variant="ghost"
@@ -66,7 +81,7 @@ const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onB
                 <div className="flex items-center space-x-3">
                   <Avatar className="w-8 h-8">
                     <AvatarFallback className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm">
-                      {user?.name?.charAt(0).toUpperCase()}
+                      {displayName?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <Button
@@ -101,7 +116,7 @@ const Header = ({ isAuthenticated, user, onLogin, onLogout, onSettingsClick, onB
             {isAuthenticated ? (
               <div className="space-y-3">
                 <div className="text-sm text-slate-300">
-                  Plano: <span className="text-emerald-400 font-semibold">{user?.plan}</span>
+                  Plano: <span className="text-emerald-400 font-semibold">{displayPlan}</span>
                 </div>
                 <Button
                   variant="ghost"
