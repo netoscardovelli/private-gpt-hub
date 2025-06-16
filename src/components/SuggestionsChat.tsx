@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -61,8 +60,8 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
     'demographics', 
     'severity',
     'timeline',
-    'medical_history',
-    'current_treatments',
+    'medicalHistory',
+    'currentTreatments',
     'allergies',
     'lifestyle',
     'objectives'
@@ -80,10 +79,12 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
     console.log(`🔍 Pergunta atual: ${currentStage}/9`);
     console.log(`📝 Resposta recebida: ${userResponse}`);
     
-    // Atualizar contexto clínico baseado na pergunta atual
+    // Atualizar contexto clínico PRIMEIRO
     const stageKey = ANAMNESIS_STAGES[currentStage - 1];
     const updatedContext = { ...clinicalContext, [stageKey]: userResponse };
     setClinicalContext(updatedContext);
+    
+    console.log('🔄 Contexto atualizado:', updatedContext);
     
     // Se chegou na pergunta 9, gerar formulação após a resposta
     if (currentStage === 9) {
@@ -94,7 +95,7 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
       };
     }
 
-    // Continuar com as perguntas sequenciais
+    // Continuar com as perguntas sequenciais usando o contexto atualizado
     const nextQuestionNumber = currentStage + 1;
     let nextQuestion = '';
     
