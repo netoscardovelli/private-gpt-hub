@@ -1,7 +1,8 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { buildSystemPrompt } from './prompts.ts';
+import { buildSystemPrompt, buildLearningPrompt } from './prompts.ts';
+import { getDoctorProfile, updateDoctorLearning, saveFeedback } from './learning.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -83,11 +84,68 @@ serve(async (req) => {
       hasMessage: !!requestBody.message,
       messageLength: requestBody.message?.length || 0,
       historyLength: requestBody.conversationHistory?.length || 0,
-      customActivesLength: requestBody.customActives?.length || 0
+      customActivesLength: requestBody.customActives?.length || 0,
+      hasUserId: !!requestBody.userId,
+      hasFeedback: !!requestBody.feedback
     });
 
-    const { message, conversationHistory = [], customActives = [] } = requestBody;
+    const { 
+      message, 
+      conversationHistory = [], 
+      customActives = [], 
+      userId = null,
+      feedback = null,
+      originalAnalysis = null,
+      rating = null
+    } = requestBody;
     
+    // Se é um feedback para aprendizado
+    if (feedback && userId && originalAnalysis) {
+      console.log('Processando feedback para aprendizado...');
+      
+      const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+      
+      if (!OPENAI_API_KEY) {
+        throw new Error('Chave da API OpenAI não configurada');
+      }
+
+      // Salvar feedback
+      await saveFeedback(userId, originalAnalysis, feedback, rating || 0);
+
+      // Processar aprendizado com IA
+      const learningPrompt = buildLearningPrompt(userId, feedback, originalAnalysis);
+      
+      const learningMessages = [
+        { role: 'system', content: 'Você é um especialista em análise de padrões médicos. Extraia informações estruturadas do feedback fornecido.' },
+        { role: 'user', content: learningPrompt }
+      ];
+
+      const learningResponse = await callOpenAI(learningMessages, OPENAI_API_KEY);
+      
+      if (learningResponse.choices && learningResponse.choices[0]) {
+        try {
+          const learningData = JSON.parse(learningResponse.choices[0].message.content);
+          await updateDoctorLearning(userId, learningData);
+          
+          return new Response(JSON.stringify({ 
+            success: true,
+            message: 'Feedback processado e perfil atualizado com sucesso!' 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (parseError) {
+          console.error('Erro ao processar resposta de aprendizado:', parseError);
+        }
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true,
+        message: 'Feedback salvo com sucesso!' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (!message) {
       throw new Error('Mensagem é obrigatória');
     }
@@ -100,13 +158,20 @@ serve(async (req) => {
       throw new Error('Chave da API OpenAI não configurada');
     }
 
+    // Buscar perfil do médico se userId fornecido
+    let doctorProfile = null;
+    if (userId) {
+      doctorProfile = await getDoctorProfile(userId);
+      console.log('Perfil do médico carregado:', !!doctorProfile);
+    }
+
     console.log('Chave API disponível:', OPENAI_API_KEY ? 'Sim' : 'Não');
     console.log('Ativos personalizados recebidos:', customActives.length);
 
-    // Preparar mensagens para o contexto de análise de fórmulas de manipulação farmacêutica
+    // Preparar mensagens com perfil personalizado
     const systemMessage = {
       role: 'system',
-      content: buildSystemPrompt(customActives)
+      content: buildSystemPrompt(customActives, doctorProfile)
     };
 
     const messages = [

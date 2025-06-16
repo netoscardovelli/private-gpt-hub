@@ -17,7 +17,7 @@ interface Message {
 }
 
 interface ChatInterfaceProps {
-  user: { name: string; plan: string; dailyLimit: number; usageToday: number };
+  user: { id: string; name: string; plan: string; dailyLimit: number; usageToday: number };
 }
 
 const ChatInterface = ({ user }: ChatInterfaceProps) => {
@@ -125,7 +125,8 @@ Escolha uma das opções abaixo:`,
         body: {
           message: currentInput,
           conversationHistory,
-          customActives
+          customActives,
+          userId: user.id // Incluir ID do usuário para personalização
         }
       });
 
@@ -197,6 +198,7 @@ Escolha uma das opções abaixo:`,
             message={message}
             index={index}
             onQuickAction={handleQuickAction}
+            userId={user.id}
           />
         ))}
 

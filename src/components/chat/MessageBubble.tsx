@@ -1,8 +1,10 @@
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Copy, ThumbsUp, ThumbsDown, FlaskConical, User } from 'lucide-react';
+import { Copy, ThumbsUp, ThumbsDown, FlaskConical, User, MessageSquarePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import FeedbackPanel from './FeedbackPanel';
 
 interface Message {
   id: string;
@@ -15,10 +17,12 @@ interface MessageBubbleProps {
   message: Message;
   index: number;
   onQuickAction: (action: string) => void;
+  userId?: string;
 }
 
-const MessageBubble = ({ message, index, onQuickAction }: MessageBubbleProps) => {
+const MessageBubble = ({ message, index, onQuickAction, userId }: MessageBubbleProps) => {
   const { toast } = useToast();
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const copyToClipboard = (content: string) => {
     navigator.clipboard.writeText(content);
@@ -26,6 +30,10 @@ const MessageBubble = ({ message, index, onQuickAction }: MessageBubbleProps) =>
       title: "Copiado!",
       description: "Mensagem copiada para a área de transferência.",
     });
+  };
+
+  const handleFeedbackClick = () => {
+    setShowFeedback(true);
   };
 
   return (
@@ -81,13 +89,24 @@ const MessageBubble = ({ message, index, onQuickAction }: MessageBubbleProps) =>
                     size="sm"
                     onClick={() => copyToClipboard(message.content)}
                     className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-slate-400 hover:text-slate-200"
+                    title="Copiar análise"
                   >
                     <Copy className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={handleFeedbackClick}
+                    className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-slate-400 hover:text-blue-400"
+                    title="Ensinar o sistema"
+                  >
+                    <MessageSquarePlus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-slate-400 hover:text-green-400"
+                    title="Curtir análise"
                   >
                     <ThumbsUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   </Button>
@@ -95,6 +114,7 @@ const MessageBubble = ({ message, index, onQuickAction }: MessageBubbleProps) =>
                     variant="ghost"
                     size="sm"
                     className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-slate-400 hover:text-red-400"
+                    title="Não curtir análise"
                   >
                     <ThumbsDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   </Button>
@@ -103,6 +123,16 @@ const MessageBubble = ({ message, index, onQuickAction }: MessageBubbleProps) =>
             </div>
           </div>
         </div>
+        
+        {/* Painel de feedback */}
+        {showFeedback && message.role === 'assistant' && (
+          <FeedbackPanel
+            messageId={message.id}
+            originalAnalysis={message.content}
+            userId={userId}
+            onClose={() => setShowFeedback(false)}
+          />
+        )}
       </Card>
     </div>
   );
