@@ -72,6 +72,74 @@ export const exportChatToPDF = (messages: Message[]) => {
   pdf.line(margin, yPosition, pageWidth - margin, yPosition);
   yPosition += 20;
 
+  // SEÇÃO 1 - ENTENDA SUA PRESCRIÇÃO
+  pdf.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+  pdf.rect(margin, yPosition - 5, pageWidth - (margin * 2), 20, 'F');
+  
+  pdf.setTextColor(white[0], white[1], white[2]);
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('1 - ENTENDA SUA PRESCRICAO:', margin + 5, yPosition + 8);
+  yPosition += 30;
+
+  // Conteúdo explicativo da prescrição
+  const prescriptionExplanation = [
+    {
+      titulo: 'O QUE SAO MEDICAMENTOS MANIPULADOS?',
+      texto: 'Os medicamentos manipulados sao formulacoes personalizadas, preparadas especificamente para suas necessidades individuais. Diferente dos medicamentos industrializados, eles permitem ajustes precisos de doses, combinacoes de ativos e formas farmaceuticas ideais para seu tratamento.'
+    },
+    {
+      titulo: 'POR QUE FORAM PRESCRITOS PARA VOCE?',
+      texto: 'Sua prescricao foi elaborada considerando seu perfil clinico, necessidades especificas e objetivos terapeuticos. Cada formula foi cuidadosamente desenvolvida para atuar de forma sinergica, maximizando os beneficios e otimizando sua resposta ao tratamento.'
+    },
+    {
+      titulo: 'COMO FUNCIONAM EM CONJUNTO?',
+      texto: 'Todas as formulas trabalham de maneira complementar em seu organismo. Enquanto algumas atuam em aspectos especificos (como saude intestinal ou energia), outras oferecem suporte geral (como antioxidantes e anti-inflamatorios), criando um protocolo integrado e eficiente.'
+    },
+    {
+      titulo: 'IMPORTANCIA DA ADESAO AO TRATAMENTO',
+      texto: 'O sucesso do tratamento depende do uso regular e correto das formulacoes. Cada medicamento tem seu tempo de acao e mecanismo especifico. A interrupcao precoce ou uso inadequado pode comprometer os resultados esperados.'
+    }
+  ];
+
+  prescriptionExplanation.forEach((secao) => {
+    // Verificar se precisa de nova página
+    if (yPosition > pageHeight - 100) {
+      pdf.addPage();
+      yPosition = margin;
+    }
+
+    // Título da seção
+    pdf.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(secao.titulo, margin, yPosition);
+    yPosition += 12;
+
+    // Texto da seção
+    pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    
+    const textLines = pdf.splitTextToSize(secao.texto, maxWidth - 10);
+    textLines.forEach((line: string) => {
+      if (yPosition > pageHeight - 40) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+      pdf.text(line, margin + 5, yPosition);
+      yPosition += 6;
+    });
+    
+    yPosition += 15;
+  });
+
+  // Linha separadora antes das orientações gerais
+  pdf.setDrawColor(greenAccent[0], greenAccent[1], greenAccent[2]);
+  pdf.setLineWidth(1);
+  pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+  yPosition += 20;
+
   // SEÇÃO DE ORIENTAÇÕES GERAIS DAS FÓRMULAS
   pdf.setFillColor(orangeWarning[0], orangeWarning[1], orangeWarning[2]);
   pdf.rect(margin, yPosition - 5, pageWidth - (margin * 2), 20, 'F');
