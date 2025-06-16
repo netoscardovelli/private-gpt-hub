@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -220,7 +221,7 @@ Preciso conhecer o perfil do paciente para calcular dosagens adequadas:
 • **Acne grau IV** - Nódulos dolorosos e cistos
 
 Qual melhor descreve o caso atual? Esta classificação é crucial para definir a potência dos ativos.`;
-    } else if (complaint.includes('melasma') || complaintLower.includes('mancha')) {
+    } else if (complaint.includes('melasma') || complaint.includes('mancha')) {
       return `✅ **Perfil registrado:** ${demographics}
 
 **PERGUNTA 3/9 - CARACTERÍSTICAS DAS MANCHAS:**
@@ -231,7 +232,7 @@ Qual melhor descreve o caso atual? Esta classificação é crucial para definir 
 • Pioram com sol mesmo usando protetor?
 
 Essas características definem o protocolo de tratamento.`;
-    } else if (complaint.includes('dor') || complaintLower.includes('articular')) {
+    } else if (complaint.includes('dor') || complaint.includes('articular')) {
       return `✅ **Perfil registrado:** ${demographics}
 
 **PERGUNTA 3/9 - INTENSIDADE DA DOR:**
