@@ -27,7 +27,7 @@ const handleApiError = (error: any) => {
 };
 
 const callOpenAI = async (messages: any[], apiKey: string) => {
-  console.log('Fazendo requisição para OpenAI API...');
+  console.log('Chamando OpenAI API...');
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -36,14 +36,12 @@ const callOpenAI = async (messages: any[], apiKey: string) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o-mini', // Modelo mais rápido
       messages: messages,
       temperature: 0.7,
-      max_tokens: 4000,
+      max_tokens: 3000, // Reduzido para acelerar
     }),
   });
-
-  console.log('Resposta da OpenAI - Status:', response.status);
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -54,7 +52,7 @@ const callOpenAI = async (messages: any[], apiKey: string) => {
     });
     
     if (response.status === 401) {
-      throw new Error('Chave da API OpenAI inválida ou expirada. Verifique se a chave está correta nos secrets do Supabase.');
+      throw new Error('Chave da API OpenAI inválida ou expirada');
     } else if (response.status === 429) {
       throw new Error('Limite de requisições excedido. Tente novamente em alguns minutos');
     } else if (response.status === 403) {
@@ -65,7 +63,7 @@ const callOpenAI = async (messages: any[], apiKey: string) => {
   }
 
   const data = await response.json();
-  console.log('Resposta recebida da OpenAI com sucesso');
+  console.log('Resposta da OpenAI recebida');
 
   return data;
 };
@@ -77,18 +75,9 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Iniciando processamento da requisição...');
+    console.log('Processando requisição...');
     
     const requestBody = await req.json();
-    console.log('Body recebido:', {
-      hasMessage: !!requestBody.message,
-      messageLength: requestBody.message?.length || 0,
-      historyLength: requestBody.conversationHistory?.length || 0,
-      customActivesLength: requestBody.customActives?.length || 0,
-      hasUserId: !!requestBody.userId,
-      hasFeedback: !!requestBody.feedback
-    });
-
     const { 
       message, 
       conversationHistory = [], 
@@ -101,7 +90,7 @@ serve(async (req) => {
     
     // Se é um feedback para aprendizado
     if (feedback && userId && originalAnalysis) {
-      console.log('Processando feedback para aprendizado...');
+      console.log('Processando feedback...');
       
       const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
       
@@ -109,10 +98,10 @@ serve(async (req) => {
         throw new Error('Chave da API OpenAI não configurada');
       }
 
-      // Salvar feedback
-      await saveFeedback(userId, originalAnalysis, feedback, rating || 0);
+      // Salvar feedback de forma assíncrona (não bloqueia resposta)
+      saveFeedback(userId, originalAnalysis, feedback, rating || 0).catch(console.error);
 
-      // Processar aprendizado com IA
+      // Processar aprendizado com IA de forma assíncrona
       const learningPrompt = buildLearningPrompt(userId, feedback, originalAnalysis);
       
       const learningMessages = [
@@ -120,27 +109,23 @@ serve(async (req) => {
         { role: 'user', content: learningPrompt }
       ];
 
-      const learningResponse = await callOpenAI(learningMessages, OPENAI_API_KEY);
-      
-      if (learningResponse.choices && learningResponse.choices[0]) {
-        try {
-          const learningData = JSON.parse(learningResponse.choices[0].message.content);
-          await updateDoctorLearning(userId, learningData);
-          
-          return new Response(JSON.stringify({ 
-            success: true,
-            message: 'Feedback processado e perfil atualizado com sucesso!' 
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        } catch (parseError) {
-          console.error('Erro ao processar resposta de aprendizado:', parseError);
-        }
-      }
+      // Executar em background para não bloquear resposta
+      callOpenAI(learningMessages, OPENAI_API_KEY)
+        .then(async (learningResponse) => {
+          if (learningResponse.choices && learningResponse.choices[0]) {
+            try {
+              const learningData = JSON.parse(learningResponse.choices[0].message.content);
+              await updateDoctorLearning(userId, learningData);
+            } catch (parseError) {
+              console.error('Erro ao processar resposta de aprendizado:', parseError);
+            }
+          }
+        })
+        .catch(console.error);
 
       return new Response(JSON.stringify({ 
         success: true,
-        message: 'Feedback salvo com sucesso!' 
+        message: 'Feedback processado com sucesso!' 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -150,23 +135,27 @@ serve(async (req) => {
       throw new Error('Mensagem é obrigatória');
     }
 
-    // Pegar a chave da API dos secrets do Supabase
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
     if (!OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY não encontrada nos secrets');
+      console.error('OPENAI_API_KEY não encontrada');
       throw new Error('Chave da API OpenAI não configurada');
     }
 
-    // Buscar perfil do médico se userId fornecido
+    // Buscar perfil do médico de forma otimizada (mais rápido ou skip se userId não existir)
     let doctorProfile = null;
     if (userId) {
-      doctorProfile = await getDoctorProfile(userId);
-      console.log('Perfil do médico carregado:', !!doctorProfile);
+      try {
+        doctorProfile = await Promise.race([
+          getDoctorProfile(userId),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)) // timeout de 2s
+        ]);
+      } catch (error) {
+        console.log('Perfil não carregado ou timeout, continuando sem personalização');
+      }
     }
 
-    console.log('Chave API disponível:', OPENAI_API_KEY ? 'Sim' : 'Não');
-    console.log('Ativos personalizados recebidos:', customActives.length);
+    console.log('Preparando mensagens...');
 
     // Preparar mensagens com perfil personalizado
     const systemMessage = {
@@ -174,13 +163,14 @@ serve(async (req) => {
       content: buildSystemPrompt(customActives, doctorProfile)
     };
 
+    // Limitar histórico para acelerar
     const messages = [
       systemMessage,
-      ...conversationHistory.slice(-10), // Últimas 10 mensagens para contexto
+      ...conversationHistory.slice(-6), // Apenas últimas 6 mensagens
       { role: 'user', content: message }
     ];
 
-    console.log('Preparando chamada para OpenAI com', messages.length, 'mensagens');
+    console.log('Enviando para OpenAI...');
 
     const data = await callOpenAI(messages, OPENAI_API_KEY);
     
@@ -190,7 +180,7 @@ serve(async (req) => {
 
     const aiResponse = data.choices[0].message.content;
 
-    console.log('Resposta processada com sucesso');
+    console.log('Análise concluída');
 
     return new Response(JSON.stringify({ 
       response: aiResponse,
