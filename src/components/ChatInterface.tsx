@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -119,9 +118,14 @@ Cole suas fórmulas aqui e eu farei uma análise completa para você!`,
         content: msg.content
       }));
 
+      // Add specific instruction for conversational formula explanations
+      const enhancedMessage = `${currentInput}
+
+INSTRUÇÃO ESPECIAL: Ao explicar fórmulas, faça uma explicação conversacional e fluida, como se um técnico farmacêutico estivesse falando diretamente com o paciente. Cite os ativos e suas funções em um texto corrido, sem separar por tópicos ou bullets. Use uma linguagem técnica mas acessível, explicando o conjunto da fórmula de forma integrada.`;
+
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
-          message: currentInput,
+          message: enhancedMessage,
           conversationHistory,
           customActives,
           userId: user.id,
