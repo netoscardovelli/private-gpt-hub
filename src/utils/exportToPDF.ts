@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 
 interface Message {
@@ -23,6 +22,7 @@ export const exportChatToPDF = (messages: Message[]) => {
   const greenAccent = [16, 185, 129] as const;
   const redAlert = [220, 38, 38] as const;
   const white = [255, 255, 255] as const;
+  const orangeWarning = [251, 146, 60] as const;
 
   // Header profissional com gradiente
   pdf.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
@@ -71,6 +71,97 @@ export const exportChatToPDF = (messages: Message[]) => {
   pdf.line(margin, yPosition, pageWidth - margin, yPosition);
   yPosition += 20;
 
+  // SEÇÃO DE ORIENTAÇÕES GERAIS DAS FÓRMULAS
+  pdf.setFillColor(orangeWarning[0], orangeWarning[1], orangeWarning[2]);
+  pdf.rect(margin, yPosition - 5, pageWidth - (margin * 2), 20, 'F');
+  
+  pdf.setTextColor(white[0], white[1], white[2]);
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('📋 ORIENTAÇÕES GERAIS DAS FÓRMULAS', margin + 5, yPosition + 8);
+  yPosition += 30;
+
+  // Orientações detalhadas
+  const orientacoes = [
+    {
+      titulo: '🏥 ARMAZENAMENTO',
+      itens: [
+        'Mantenha em local seco, fresco e ao abrigo da luz',
+        'Temperatura ambiente (15°C a 30°C)',
+        'Mantenha fora do alcance de crianças e animais',
+        'Não armazene em banheiros ou locais úmidos'
+      ]
+    },
+    {
+      titulo: '💊 MODO DE USO',
+      itens: [
+        'Siga rigorosamente a posologia prescrita',
+        'Respeite os horários de administração',
+        'Não interrompa o tratamento sem orientação',
+        'Em caso de dúvidas, consulte seu farmacêutico'
+      ]
+    },
+    {
+      titulo: '⚠️ PRECAUÇÕES IMPORTANTES',
+      itens: [
+        'Verifique o prazo de validade antes do uso',
+        'Observe alterações na cor, odor ou consistência',
+        'Não use se houver sinais de deterioração',
+        'Mantenha a embalagem original sempre fechada'
+      ]
+    },
+    {
+      titulo: '🚨 REAÇÕES ADVERSAS',
+      itens: [
+        'Suspenda o uso em caso de reações alérgicas',
+        'Procure atendimento médico se houver efeitos indesejados',
+        'Comunique ao farmacêutico qualquer reação observada',
+        'Mantenha registro de sintomas ou alterações'
+      ]
+    }
+  ];
+
+  orientacoes.forEach((secao) => {
+    // Verificar se precisa de nova página
+    if (yPosition > pageHeight - 80) {
+      pdf.addPage();
+      yPosition = margin;
+    }
+
+    // Título da seção
+    pdf.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+    pdf.setFontSize(13);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(secao.titulo, margin, yPosition);
+    yPosition += 15;
+
+    // Itens da seção
+    secao.itens.forEach((item) => {
+      if (yPosition > pageHeight - 40) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      
+      const itemLines = pdf.splitTextToSize(`• ${item}`, maxWidth - 10);
+      itemLines.forEach((line: string) => {
+        pdf.text(line, margin + 5, yPosition);
+        yPosition += 6;
+      });
+    });
+    
+    yPosition += 10;
+  });
+
+  // Linha separadora antes das análises
+  pdf.setDrawColor(greenAccent[0], greenAccent[1], greenAccent[2]);
+  pdf.setLineWidth(1);
+  pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+  yPosition += 20;
+
   // Filtrar mensagens relevantes para análise
   const analysisMessages = messages.filter(msg => 
     msg.role === 'assistant' && 
@@ -81,10 +172,17 @@ export const exportChatToPDF = (messages: Message[]) => {
 
   if (analysisMessages.length === 0) {
     // Se não há análises, mostrar mensagem informativa
+    pdf.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+    pdf.rect(margin, yPosition - 5, pageWidth - (margin * 2), 25, 'F');
+    
     pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
     pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('ANÁLISES FARMACÊUTICAS', margin + 5, yPosition + 8);
+    yPosition += 20;
+    
     pdf.setFont('helvetica', 'normal');
-    pdf.text('Nenhuma análise farmacêutica foi realizada nesta sessão.', margin, yPosition);
+    pdf.text('Nenhuma análise farmacêutica foi realizada nesta sessão.', margin + 5, yPosition);
     yPosition += 20;
   } else {
     // Processar análises
