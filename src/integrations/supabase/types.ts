@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      active_incompatibilities: {
+        Row: {
+          active_1: string
+          active_2: string
+          created_at: string
+          id: string
+          incompatibility_type: string
+          notes: string | null
+          severity: string
+        }
+        Insert: {
+          active_1: string
+          active_2: string
+          created_at?: string
+          id?: string
+          incompatibility_type: string
+          notes?: string | null
+          severity: string
+        }
+        Update: {
+          active_1?: string
+          active_2?: string
+          created_at?: string
+          id?: string
+          incompatibility_type?: string
+          notes?: string | null
+          severity?: string
+        }
+        Relationships: []
+      }
       analysis_feedback: {
         Row: {
           created_at: string
@@ -87,6 +117,92 @@ export type Database = {
           specialty?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      reference_formula_actives: {
+        Row: {
+          active_name: string
+          concentration_mg: number
+          concentration_text: string | null
+          created_at: string
+          formula_id: string | null
+          id: string
+          mechanism_notes: string | null
+          role_in_formula: string | null
+        }
+        Insert: {
+          active_name: string
+          concentration_mg: number
+          concentration_text?: string | null
+          created_at?: string
+          formula_id?: string | null
+          id?: string
+          mechanism_notes?: string | null
+          role_in_formula?: string | null
+        }
+        Update: {
+          active_name?: string
+          concentration_mg?: number
+          concentration_text?: string | null
+          created_at?: string
+          formula_id?: string | null
+          id?: string
+          mechanism_notes?: string | null
+          role_in_formula?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reference_formula_actives_formula_id_fkey"
+            columns: ["formula_id"]
+            isOneToOne: false
+            referencedRelation: "reference_formulas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reference_formulas: {
+        Row: {
+          capsules_per_dose: number | null
+          category: string
+          clinical_indication: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          pharmaceutical_form: string
+          specialty: string | null
+          target_dosage_per_day: number | null
+          total_weight_mg: number | null
+          updated_at: string
+        }
+        Insert: {
+          capsules_per_dose?: number | null
+          category: string
+          clinical_indication?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          pharmaceutical_form: string
+          specialty?: string | null
+          target_dosage_per_day?: number | null
+          total_weight_mg?: number | null
+          updated_at?: string
+        }
+        Update: {
+          capsules_per_dose?: number | null
+          category?: string
+          clinical_indication?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          pharmaceutical_form?: string
+          specialty?: string | null
+          target_dosage_per_day?: number | null
+          total_weight_mg?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
