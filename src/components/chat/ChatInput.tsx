@@ -10,6 +10,7 @@ interface ChatInputProps {
   onReset: () => void;
   isLoading: boolean;
   remainingMessages: number;
+  placeholder?: string;
 }
 
 const ChatInput = ({ 
@@ -18,7 +19,8 @@ const ChatInput = ({
   onSend, 
   onReset, 
   isLoading, 
-  remainingMessages 
+  remainingMessages,
+  placeholder = "Cole suas fórmulas para análise..."
 }: ChatInputProps) => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -46,7 +48,7 @@ const ChatInput = ({
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           onKeyDown={handleKeyPress}
-          placeholder="Cole suas fórmulas para análise..."
+          placeholder={placeholder}
           className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none text-sm sm:text-base min-h-[40px]"
           rows={1}
           disabled={remainingMessages <= 0}

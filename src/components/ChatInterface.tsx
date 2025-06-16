@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +33,7 @@ Escolha uma das opções abaixo:`,
   const [messages, setMessages] = useState<Message[]>(getInitialMessages());
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationMode, setConversationMode] = useState<'initial' | 'analysis' | 'suggestion'>('initial');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -46,6 +48,7 @@ Escolha uma das opções abaixo:`,
   const resetConversation = () => {
     setMessages(getInitialMessages());
     setInput('');
+    setConversationMode('initial');
     toast({
       title: "Conversa resetada",
       description: "Nova conversa iniciada com sucesso.",
@@ -55,7 +58,6 @@ Escolha uma das opções abaixo:`,
   const handleQuickAction = async (action: string) => {
     if (action === 'analise') {
       const message = 'Quero fazer análise de fórmulas magistrais';
-      // Ao invés de setar no input, enviar diretamente
       const userMessage: Message = {
         id: Date.now().toString(),
         content: message,
@@ -65,6 +67,7 @@ Escolha uma das opções abaixo:`,
 
       setMessages(prev => [...prev, userMessage]);
       setIsLoading(true);
+      setConversationMode('analysis');
 
       // Simular resposta do assistente
       setTimeout(() => {
@@ -88,6 +91,7 @@ Escolha uma das opções abaixo:`,
 
       setMessages(prev => [...prev, userMessage]);
       setIsLoading(true);
+      setConversationMode('suggestion');
 
       // Add first question automatically
       setTimeout(() => {
@@ -212,6 +216,18 @@ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
 
   const remainingMessages = user.dailyLimit - user.usageToday;
 
+  // Determinar o placeholder baseado no modo da conversa
+  const getPlaceholder = () => {
+    switch (conversationMode) {
+      case 'analysis':
+        return 'Cole suas fórmulas para análise...';
+      case 'suggestion':
+        return 'Vamos falar sobre seu caso clínico...';
+      default:
+        return 'Digite sua mensagem...';
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-slate-900">
       <ChatHeader user={user} />
@@ -238,6 +254,7 @@ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         onReset={resetConversation}
         isLoading={isLoading}
         remainingMessages={remainingMessages}
+        placeholder={getPlaceholder()}
       />
     </div>
   );
