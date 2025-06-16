@@ -6,6 +6,8 @@ import MessageBubble from './chat/MessageBubble';
 import ChatHeader from './chat/ChatHeader';
 import ChatInput from './chat/ChatInput';
 import LoadingMessage from './chat/LoadingMessage';
+import { exportChatToPDF } from '@/utils/exportToPDF';
+import { Download } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -56,65 +58,44 @@ Escolha uma das opções abaixo:`,
   };
 
   const handleQuickAction = async (action: string) => {
-    if (action === 'analise') {
-      const message = 'Quero fazer análise de fórmulas magistrais';
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        content: message,
-        role: 'user',
+    const message =
+      action === 'analise'
+        ? 'Quero fazer análise de fórmulas magistrais'
+        : 'Preciso de sugestões de fórmulas magistrais';
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: message,
+      role: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    setConversationMode(action === 'analise' ? 'analysis' : 'suggestion');
+
+    setTimeout(() => {
+      const response: Message = {
+        id: (Date.now() + 1).toString(),
+        content:
+          action === 'analise'
+            ? 'Perfeito! Cole suas fórmulas aqui e eu farei uma análise completa, incluindo:\n\n• Compatibilidade entre ativos\n• Concentrações adequadas\n• Possíveis incompatibilidades\n• Sugestões de melhorias\n• Observações técnicas importantes\n\nCole sua fórmula e vamos começar!'
+            : 'Qual é o objetivo terapêutico da formulação que você deseja? (Ex: anti-idade, clareamento, hidratação, tratamento de acne, etc.)',
+        role: 'assistant',
         timestamp: new Date()
       };
-
-      setMessages(prev => [...prev, userMessage]);
-      setIsLoading(true);
-      setConversationMode('analysis');
-
-      // Simular resposta do assistente
-      setTimeout(() => {
-        const response: Message = {
-          id: (Date.now() + 1).toString(),
-          content: 'Perfeito! Cole suas fórmulas aqui e eu farei uma análise completa, incluindo:\n\n• Compatibilidade entre ativos\n• Concentrações adequadas\n• Possíveis incompatibilidades\n• Sugestões de melhorias\n• Observações técnicas importantes\n\nCole sua fórmula e vamos começar!',
-          role: 'assistant',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, response]);
-        setIsLoading(false);
-      }, 1000);
-    } else if (action === 'sugestao') {
-      // Start the suggestion flow with the first question
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        content: 'Preciso de sugestões de fórmulas magistrais',
-        role: 'user',
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, userMessage]);
-      setIsLoading(true);
-      setConversationMode('suggestion');
-
-      // Add first question automatically
-      setTimeout(() => {
-        const firstQuestion: Message = {
-          id: (Date.now() + 1).toString(),
-          content: 'Qual é o objetivo terapêutico da formulação que você deseja? (Ex: anti-idade, clareamento, hidratação, tratamento de acne, etc.)',
-          role: 'assistant',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, firstQuestion]);
-        setIsLoading(false);
-      }, 1000);
-    }
+      setMessages(prev => [...prev, response]);
+      setIsLoading(false);
+    }, 1000);
   };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-    // Check usage limits
     if (user.usageToday >= user.dailyLimit) {
       toast({
         title: "Limite diário atingido",
-        description: `Você atingiu o limite de ${user.dailyLimit} mensagens por dia. Faça upgrade do seu plano para continuar.`,
+        description: `Você atingiu o limite de ${user.dailyLimit} mensagens por dia.`,
         variant: "destructive"
       });
       return;
@@ -133,45 +114,23 @@ Escolha uma das opções abaixo:`,
     setIsLoading(true);
 
     try {
-      console.log('Enviando mensagem para chat-ai...');
-      
-      // Carregar ativos personalizados do localStorage
       const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
-      
-      // Preparar histórico da conversa para contexto
+
       const conversationHistory = messages.map(msg => ({
         role: msg.role,
         content: msg.content
       }));
 
-      console.log('Dados a serem enviados:', {
-        message: currentInput,
-        historyLength: conversationHistory.length,
-        customActivesLength: customActives.length
-      });
-
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
           message: currentInput,
-          conversationHistory: conversationHistory,
-          customActives: customActives
+          conversationHistory,
+          customActives
         }
       });
 
-      console.log('Resposta recebida:', { data, error });
-
-      if (error) {
-        console.error('Erro do Supabase:', error);
-        throw new Error(error.message || 'Erro ao conectar com a API');
-      }
-
-      if (data?.error) {
-        console.error('Erro na resposta:', data);
-        throw new Error(data.details || data.error);
-      }
-
-      if (!data?.response) {
-        throw new Error('Resposta vazia do servidor');
+      if (error || data?.error || !data?.response) {
+        throw new Error(data?.details || error?.message || 'Erro desconhecido');
       }
 
       const assistantMessage: Message = {
@@ -182,31 +141,19 @@ Escolha uma das opções abaixo:`,
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-      
-      // Mostrar informações de uso se disponível
-      if (data.usage) {
-        console.log('Tokens utilizados:', data.usage);
-      }
-
-    } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
-      
+    } catch (error: any) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `🚫 Desculpe, ocorreu um erro ao processar sua mensagem. 
-
-Por favor, tente novamente em alguns instantes.
-
-Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        content: `🚫 Ocorreu um erro. Tente novamente.\n\nErro: ${error.message}`,
         role: 'assistant',
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, errorMessage]);
-      
+
       toast({
         title: "Erro na análise",
-        description: "Não foi possível processar sua fórmula. Tente novamente.",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
@@ -216,7 +163,6 @@ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
 
   const remainingMessages = user.dailyLimit - user.usageToday;
 
-  // Determinar o placeholder baseado no modo da conversa
   const getPlaceholder = () => {
     switch (conversationMode) {
       case 'analysis':
@@ -232,7 +178,18 @@ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
     <div className="flex flex-col h-screen bg-slate-900">
       <ChatHeader user={user} />
 
-      {/* Messages */}
+      {/* Botão de exportar PDF */}
+      <div className="flex justify-end px-4 pt-2">
+        <button
+          onClick={() => exportChatToPDF(messages)}
+          className="flex items-center space-x-2 text-sm bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-lg shadow transition-all"
+        >
+          <Download className="w-4 h-4" />
+          <span>Exportar PDF</span>
+        </button>
+      </div>
+
+      {/* Área das mensagens */}
       <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4">
         {messages.map((message, index) => (
           <MessageBubble
@@ -242,7 +199,7 @@ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
             onQuickAction={handleQuickAction}
           />
         ))}
-        
+
         {isLoading && <LoadingMessage />}
         <div ref={messagesEndRef} />
       </div>
