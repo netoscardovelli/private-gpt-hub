@@ -9,7 +9,87 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      analysis_feedback: {
+        Row: {
+          created_at: string
+          feedback: string
+          id: string
+          original_analysis: string
+          processed: boolean | null
+          rating: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback: string
+          id?: string
+          original_analysis: string
+          processed?: boolean | null
+          rating?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback?: string
+          id?: string
+          original_analysis?: string
+          processed?: boolean | null
+          rating?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      doctor_profiles: {
+        Row: {
+          concentration_preferences: Json | null
+          created_at: string
+          experience_level: string | null
+          focus_area: string | null
+          focus_areas: Json | null
+          formulation_preferences: string | null
+          formulation_style: string | null
+          id: string
+          preferred_actives: Json | null
+          preferred_protocols: string | null
+          recent_patterns: Json | null
+          specialty: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concentration_preferences?: Json | null
+          created_at?: string
+          experience_level?: string | null
+          focus_area?: string | null
+          focus_areas?: Json | null
+          formulation_preferences?: string | null
+          formulation_style?: string | null
+          id?: string
+          preferred_actives?: Json | null
+          preferred_protocols?: string | null
+          recent_patterns?: Json | null
+          specialty?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concentration_preferences?: Json | null
+          created_at?: string
+          experience_level?: string | null
+          focus_area?: string | null
+          focus_areas?: Json | null
+          formulation_preferences?: string | null
+          formulation_style?: string | null
+          id?: string
+          preferred_actives?: Json | null
+          preferred_protocols?: string | null
+          recent_patterns?: Json | null
+          specialty?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
