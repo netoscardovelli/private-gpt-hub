@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 
 interface Message {
@@ -36,18 +37,18 @@ export const exportChatToPDF = (messages: Message[]) => {
   pdf.setTextColor(white[0], white[1], white[2]);
   pdf.setFontSize(24);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('PRESCRIÇÃO FARMACÊUTICA', margin, 22);
+  pdf.text('PRESCRICAO FARMACEUTICA', margin, 22);
   
   pdf.setFontSize(14);
   pdf.setFont('helvetica', 'normal');
-  pdf.text('Análise Técnica e Orientações Terapêuticas', margin, 32);
+  pdf.text('Analise Tecnica e Orientacoes Terapeuticas', margin, 32);
 
   // Informações do cabeçalho
   yPosition = 60;
   pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
   pdf.setFontSize(11);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('DOCUMENTO TÉCNICO FARMACÊUTICO', margin, yPosition);
+  pdf.text('DOCUMENTO TECNICO FARMACEUTICO', margin, yPosition);
   yPosition += 8;
   
   pdf.setFont('helvetica', 'normal');
@@ -62,7 +63,7 @@ export const exportChatToPDF = (messages: Message[]) => {
   yPosition += 6;
   pdf.text('Protocolo: ' + Math.random().toString(36).substr(2, 9).toUpperCase(), margin, yPosition);
   yPosition += 6;
-  pdf.text('Sistema: Formula.AI - Análise Farmacêutica Especializada', margin, yPosition);
+  pdf.text('Sistema: Formula.AI - Analise Farmaceutica Especializada', margin, yPosition);
   yPosition += 20;
 
   // Linha separadora elegante
@@ -78,45 +79,45 @@ export const exportChatToPDF = (messages: Message[]) => {
   pdf.setTextColor(white[0], white[1], white[2]);
   pdf.setFontSize(16);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('📋 ORIENTAÇÕES GERAIS DAS FÓRMULAS', margin + 5, yPosition + 8);
+  pdf.text('ORIENTACOES GERAIS DAS FORMULAS', margin + 5, yPosition + 8);
   yPosition += 30;
 
   // Orientações detalhadas
   const orientacoes = [
     {
-      titulo: '🏥 ARMAZENAMENTO',
+      titulo: 'ARMAZENAMENTO',
       itens: [
         'Mantenha em local seco, fresco e ao abrigo da luz',
         'Temperatura ambiente (15°C a 30°C)',
-        'Mantenha fora do alcance de crianças e animais',
-        'Não armazene em banheiros ou locais úmidos'
+        'Mantenha fora do alcance de criancas e animais',
+        'Nao armazene em banheiros ou locais umidos'
       ]
     },
     {
-      titulo: '💊 MODO DE USO',
+      titulo: 'MODO DE USO',
       itens: [
         'Siga rigorosamente a posologia prescrita',
-        'Respeite os horários de administração',
-        'Não interrompa o tratamento sem orientação',
-        'Em caso de dúvidas, consulte seu farmacêutico'
+        'Respeite os horarios de administracao',
+        'Nao interrompa o tratamento sem orientacao',
+        'Em caso de duvidas, consulte seu farmaceutico'
       ]
     },
     {
-      titulo: '⚠️ PRECAUÇÕES IMPORTANTES',
+      titulo: 'PRECAUCOES IMPORTANTES',
       itens: [
         'Verifique o prazo de validade antes do uso',
-        'Observe alterações na cor, odor ou consistência',
-        'Não use se houver sinais de deterioração',
+        'Observe alteracoes na cor, odor ou consistencia',
+        'Nao use se houver sinais de deterioracao',
         'Mantenha a embalagem original sempre fechada'
       ]
     },
     {
-      titulo: '🚨 REAÇÕES ADVERSAS',
+      titulo: 'REACOES ADVERSAS',
       itens: [
-        'Suspenda o uso em caso de reações alérgicas',
-        'Procure atendimento médico se houver efeitos indesejados',
-        'Comunique ao farmacêutico qualquer reação observada',
-        'Mantenha registro de sintomas ou alterações'
+        'Suspenda o uso em caso de reacoes alergicas',
+        'Procure atendimento medico se houver efeitos indesejados',
+        'Comunique ao farmaceutico qualquer reacao observada',
+        'Mantenha registro de sintomas ou alteracoes'
       ]
     }
   ];
@@ -178,11 +179,11 @@ export const exportChatToPDF = (messages: Message[]) => {
     pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('ANÁLISES FARMACÊUTICAS', margin + 5, yPosition + 8);
+    pdf.text('ANALISES FARMACEUTICAS', margin + 5, yPosition + 8);
     yPosition += 20;
     
     pdf.setFont('helvetica', 'normal');
-    pdf.text('Nenhuma análise farmacêutica foi realizada nesta sessão.', margin + 5, yPosition);
+    pdf.text('Nenhuma analise farmaceutica foi realizada nesta sessao.', margin + 5, yPosition);
     yPosition += 20;
   } else {
     // Processar análises
@@ -200,7 +201,7 @@ export const exportChatToPDF = (messages: Message[]) => {
       pdf.setTextColor(white[0], white[1], white[2]);
       pdf.setFontSize(14);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(`ANÁLISE TÉCNICA ${index + 1}`, margin + 5, yPosition + 8);
+      pdf.text(`ANALISE TECNICA ${index + 1}`, margin + 5, yPosition + 8);
       yPosition += 25;
 
       // Conteúdo da análise
@@ -227,8 +228,8 @@ export const exportChatToPDF = (messages: Message[]) => {
                    line.includes('✓') || line.includes('→')) {
           pdf.setFont('helvetica', 'bold');
           pdf.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
-        } else if (line.includes('COMPOSIÇÃO') || line.includes('POSOLOGIA') || 
-                   line.includes('ORIENTAÇÕES') || line.includes('OBSERVAÇÕES')) {
+        } else if (line.includes('COMPOSICAO') || line.includes('POSOLOGIA') || 
+                   line.includes('ORIENTACOES') || line.includes('OBSERVACOES')) {
           pdf.setFont('helvetica', 'bold');
           pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
         } else {
@@ -266,9 +267,9 @@ export const exportChatToPDF = (messages: Message[]) => {
   
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(8);
-  const disclaimer1 = 'Este documento contém análise farmacêutica especializada para fins informativos e educacionais.';
-  const disclaimer2 = 'Consulte sempre um farmacêutico ou médico antes de utilizar qualquer formulação medicamentosa.';
-  const disclaimer3 = 'A responsabilidade pela prescrição e uso é exclusiva do profissional habilitado.';
+  const disclaimer1 = 'Este documento contem analise farmaceutica especializada para fins informativos e educacionais.';
+  const disclaimer2 = 'Consulte sempre um farmaceutico ou medico antes de utilizar qualquer formulacao medicamentosa.';
+  const disclaimer3 = 'A responsabilidade pela prescricao e uso e exclusiva do profissional habilitado.';
   
   pdf.text(disclaimer1, margin, footerY + 12);
   pdf.text(disclaimer2, margin, footerY + 18);
@@ -278,7 +279,7 @@ export const exportChatToPDF = (messages: Message[]) => {
   pdf.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(9);
-  pdf.text('Formula.AI | Tecnologia Farmacêutica Avançada', margin, footerY + 32);
+  pdf.text('Formula.AI | Tecnologia Farmaceutica Avancada', margin, footerY + 32);
   
   // Número da página em todas as páginas
   const pageCount = pdf.getNumberOfPages();
