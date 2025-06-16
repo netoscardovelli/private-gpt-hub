@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, RotateCcw } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 interface ChatInputProps {
   input: string;
@@ -22,6 +23,16 @@ const ChatInput = ({
   remainingMessages,
   placeholder = "Cole suas fórmulas para análise..."
 }: ChatInputProps) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [input]);
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -42,14 +53,15 @@ const ChatInput = ({
 
   return (
     <div className="border-t border-slate-700 p-2 sm:p-4 bg-slate-800">
-      <div className="flex space-x-2 sm:space-x-4">
+      <div className="flex space-x-2 sm:space-x-4 items-end">
         <Textarea
+          ref={textareaRef}
           value={input}
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           onKeyDown={handleKeyPress}
           placeholder={placeholder}
-          className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none text-sm sm:text-base min-h-[40px]"
+          className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none text-sm sm:text-base min-h-[40px] max-h-[200px] overflow-y-auto"
           rows={1}
           disabled={remainingMessages <= 0}
         />
