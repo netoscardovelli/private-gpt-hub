@@ -13,15 +13,70 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   const [showChat, setShowChat] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showSupportChat, setShowSupportChat] = useState(false);
+
+  // Mock user data - in a real app this would come from authentication
+  const mockUser = {
+    name: "Usuário",
+    plan: "Free"
+  };
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+    setShowAuthModal(false);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setShowChat(false);
+  };
+
+  const handleStartChat = () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+    } else {
+      setShowChat(true);
+    }
+  };
+
+  const handleSelectPlan = (plan: string) => {
+    console.log('Selected plan:', plan);
+  };
+
+  const handleSettingsClick = () => {
+    console.log('Settings clicked');
+  };
+
+  const handleSupportClick = () => {
+    setShowSupportChat(true);
+  };
+
+  if (showSupportChat) {
+    return (
+      <SupportChat 
+        user={mockUser}
+        onBack={() => setShowSupportChat(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      <Header />
+      <Header 
+        isAuthenticated={isAuthenticated}
+        onLogin={() => setShowAuthModal(true)}
+        onLogout={handleLogout}
+        onSettingsClick={handleSettingsClick}
+        onSupportClick={handleSupportClick}
+        userName={isAuthenticated ? mockUser.name : undefined}
+      />
       
       {!showChat ? (
         <>
-          <Hero onStartChat={() => setShowChat(true)} />
-          <PricingSection />
+          <Hero onStartChat={handleStartChat} />
+          <PricingSection onSelectPlan={handleSelectPlan} />
         </>
       ) : (
         <div className="container mx-auto px-4 py-8">
@@ -33,7 +88,7 @@ const Index = () => {
             </TabsList>
             
             <TabsContent value="chat" className="mt-6">
-              <ChatInterface />
+              <ChatInterface user={mockUser} />
             </TabsContent>
             
             <TabsContent value="actives" className="mt-6">
@@ -47,8 +102,11 @@ const Index = () => {
         </div>
       )}
 
-      <AuthModal />
-      <SupportChat />
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLogin={handleLogin}
+      />
       <Toaster />
     </div>
   );
