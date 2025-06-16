@@ -80,8 +80,8 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
     }, 2000);
   };
 
-  const handleAddActiveToFormula = (active: any) => {
-    onAddActiveToFormula(message.content, active);
+  const handleAddActiveToFormula = (actives: any[]) => {
+    onAddActiveToFormula(message.content, actives);
   };
 
   // Verificar se a mensagem contém análise de fórmulas
@@ -129,7 +129,7 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
             {containsFormulaAnalysis && (
               <ActiveSuggestions
                 messageId={message.id}
-                messageContent={message.content} // Passar o conteúdo da mensagem
+                messageContent={message.content}
                 onRequestSuggestions={handleRequestSuggestions}
                 onAddActiveToFormula={handleAddActiveToFormula}
                 suggestions={suggestions}

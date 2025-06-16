@@ -160,22 +160,24 @@ Use a seção "💡 Sugestões de Otimização" conforme definido no prompt.`;
     }
   };
 
-  const handleAddActiveToFormula = async (originalFormula: string, addedActive: any) => {
-    const enhancedMessage = `Com base na análise anterior, inclua o ativo ${addedActive.name} ${addedActive.concentration} na fórmula e refaça a análise completa:
+  const handleAddActiveToFormula = async (originalFormula: string, addedActives: any[]) => {
+    const activesText = addedActives.map(active => 
+      `- ${active.name} ${active.concentration}\n  Benefício: ${active.benefit}\n  Mecanismo: ${active.mechanism}`
+    ).join('\n\n');
+
+    const enhancedMessage = `Com base na análise anterior, inclua os seguintes ativos nas fórmulas e refaça a análise completa:
 
 FÓRMULA ORIGINAL:
 ${originalFormula}
 
-ATIVO A INCLUIR:
-- ${addedActive.name} ${addedActive.concentration}
-- Benefício: ${addedActive.benefit}
-- Mecanismo: ${addedActive.mechanism}
+ATIVOS A INCLUIR:
+${activesText}
 
-INSTRUÇÃO: Refaça a análise da fórmula incluindo este novo ativo, mostrando como ele se integra com os demais componentes e potencializa os resultados. Use o formato padrão de análise com composição atualizada e nova explicação.`;
+INSTRUÇÃO: Refaça a análise das fórmulas incluindo estes novos ativos, mostrando como eles se integram com os demais componentes e potencializam os resultados. Para cada ativo, adicione-o especificamente à fórmula mencionada em sua sugestão. Use o formato padrão de análise com composição atualizada e nova explicação.`;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: `Incluir ${addedActive.name} na fórmula e reanalizar`,
+      content: `Incluir ${addedActives.length} ativo(s) nas fórmulas e reanalizar`,
       role: 'user',
       timestamp: new Date()
     };
@@ -216,7 +218,7 @@ INSTRUÇÃO: Refaça a análise da fórmula incluindo este novo ativo, mostrando
     } catch (error: any) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `🚫 Ocorreu um erro ao incluir o ativo na fórmula. Tente novamente.\n\nErro: ${error.message}`,
+        content: `🚫 Ocorreu um erro ao incluir os ativos nas fórmulas. Tente novamente.\n\nErro: ${error.message}`,
         role: 'assistant',
         timestamp: new Date()
       };
@@ -224,7 +226,7 @@ INSTRUÇÃO: Refaça a análise da fórmula incluindo este novo ativo, mostrando
       setMessages(prev => [...prev, errorMessage]);
 
       toast({
-        title: "Erro ao incluir ativo",
+        title: "Erro ao incluir ativos",
         description: error.message,
         variant: "destructive"
       });

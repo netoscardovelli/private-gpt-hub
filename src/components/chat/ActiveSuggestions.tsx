@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Check, Lightbulb, Target } from 'lucide-react';
+import { Plus, Check, Lightbulb, Target, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface SuggestedActive {
@@ -18,9 +18,9 @@ interface SuggestedActive {
 
 interface ActiveSuggestionsProps {
   messageId: string;
-  messageContent: string; // Novo prop para analisar o conteúdo da mensagem
+  messageContent: string;
   onRequestSuggestions: () => void;
-  onAddActiveToFormula: (active: SuggestedActive) => void;
+  onAddActiveToFormula: (actives: SuggestedActive[]) => void;
   suggestions?: SuggestedActive[];
   isLoading?: boolean;
 }
@@ -33,7 +33,7 @@ const ActiveSuggestions = ({
   suggestions = [], 
   isLoading = false 
 }: ActiveSuggestionsProps) => {
-  const [addedActives, setAddedActives] = useState<Set<string>>(new Set());
+  const [selectedActives, setSelectedActives] = useState<Set<string>>(new Set());
   const [parsedSuggestions, setParsedSuggestions] = useState<SuggestedActive[]>([]);
   const { toast } = useToast();
 
@@ -74,43 +74,72 @@ const ActiveSuggestions = ({
     setParsedSuggestions(extracted);
   }, [messageContent]);
 
-  const handleAddActive = (active: SuggestedActive) => {
-    // Buscar ativos personalizados existentes
-    const existingActives = JSON.parse(localStorage.getItem('customActives') || '[]');
-    
-    // Verificar se já existe
-    const alreadyExists = existingActives.some((existing: any) => 
-      existing.name.toLowerCase() === active.name.toLowerCase()
-    );
-
-    if (!alreadyExists) {
-      // Adicionar novo ativo aos personalizados
-      const newActive = {
-        id: Date.now().toString(),
-        name: active.name,
-        concentration: active.concentration,
-        conditions: active.synergyWith,
-        description: `${active.benefit}. ${active.mechanism}`,
-        formulationType: 'cápsula'
-      };
-
-      const updatedActives = [...existingActives, newActive];
-      localStorage.setItem('customActives', JSON.stringify(updatedActives));
-    }
-
-    // Marcar como adicionado
-    setAddedActives(prev => new Set([...prev, active.name]));
-
-    // Solicitar nova análise da fórmula com o ativo incluído
-    onAddActiveToFormula(active);
-
-    toast({
-      title: "Ativo adicionado!",
-      description: `${active.name} foi incluído na ${active.targetFormula}. Gerando nova versão...`,
+  const handleToggleActive = (active: SuggestedActive) => {
+    setSelectedActives(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(active.name)) {
+        newSet.delete(active.name);
+      } else {
+        newSet.add(active.name);
+      }
+      return newSet;
     });
   };
 
-  const isAdded = (activeName: string) => addedActives.has(activeName);
+  const handleSendSelected = () => {
+    if (selectedActives.size === 0) {
+      toast({
+        title: "Nenhum ativo selecionado",
+        description: "Selecione pelo menos um ativo para incluir nas fórmulas.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Filtrar apenas os ativos selecionados
+    const selectedActivesData = activeSuggestions.filter(active => 
+      selectedActives.has(active.name)
+    );
+
+    // Adicionar aos ativos personalizados
+    const existingActives = JSON.parse(localStorage.getItem('customActives') || '[]');
+    const newActives = [];
+
+    selectedActivesData.forEach(active => {
+      const alreadyExists = existingActives.some((existing: any) => 
+        existing.name.toLowerCase() === active.name.toLowerCase()
+      );
+
+      if (!alreadyExists) {
+        newActives.push({
+          id: Date.now().toString() + Math.random(),
+          name: active.name,
+          concentration: active.concentration,
+          conditions: active.synergyWith,
+          description: `${active.benefit}. ${active.mechanism}`,
+          formulationType: 'cápsula'
+        });
+      }
+    });
+
+    if (newActives.length > 0) {
+      const updatedActives = [...existingActives, ...newActives];
+      localStorage.setItem('customActives', JSON.stringify(updatedActives));
+    }
+
+    // Enviar para análise
+    onAddActiveToFormula(selectedActivesData);
+
+    // Limpar seleção
+    setSelectedActives(new Set());
+
+    toast({
+      title: "Ativos incluídos!",
+      description: `${selectedActivesData.length} ativo(s) foram incluídos nas fórmulas. Gerando nova análise...`,
+    });
+  };
+
+  const isSelected = (activeName: string) => selectedActives.has(activeName);
 
   // Usar sugestões extraídas do texto se disponíveis, senão usar as passadas via props
   const activeSuggestions = parsedSuggestions.length > 0 ? parsedSuggestions : suggestions;
@@ -132,14 +161,27 @@ const ActiveSuggestions = ({
   }
 
   if (activeSuggestions.length === 0) {
-    return null; // Não mostrar nada se há seção de sugestões mas nenhuma foi parseada
+    return null;
   }
 
   return (
     <div className="mt-4 space-y-3">
-      <div className="flex items-center gap-2 mb-3">
-        <Lightbulb className="w-4 h-4 text-amber-400" />
-        <h4 className="text-sm font-semibold text-slate-200">Sugestões de Otimização</h4>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 text-amber-400" />
+          <h4 className="text-sm font-semibold text-slate-200">Sugestões de Otimização</h4>
+        </div>
+        
+        {selectedActives.size > 0 && (
+          <Button
+            onClick={handleSendSelected}
+            className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-xs px-3 py-2 h-auto flex items-center gap-2"
+            size="sm"
+          >
+            <Send className="w-3 h-3" />
+            Incluir {selectedActives.size} Selecionado(s)
+          </Button>
+        )}
       </div>
       
       <div className="space-y-2">
@@ -183,24 +225,23 @@ const ActiveSuggestions = ({
               </div>
               
               <Button
-                onClick={() => handleAddActive(active)}
-                disabled={isAdded(active.name)}
+                onClick={() => handleToggleActive(active)}
                 size="sm"
                 className={`h-8 px-3 text-xs ${
-                  isAdded(active.name)
-                    ? 'bg-green-600 hover:bg-green-600'
-                    : 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700'
+                  isSelected(active.name)
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    : 'bg-slate-600 hover:bg-slate-500 text-slate-200'
                 }`}
               >
-                {isAdded(active.name) ? (
+                {isSelected(active.name) ? (
                   <>
                     <Check className="w-3 h-3 mr-1" />
-                    Adicionado
+                    Selecionado
                   </>
                 ) : (
                   <>
                     <Plus className="w-3 h-3 mr-1" />
-                    Incluir na {active.targetFormula}
+                    Selecionar
                   </>
                 )}
               </Button>
