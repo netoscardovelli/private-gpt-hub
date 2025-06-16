@@ -27,12 +27,24 @@ const ChatInput = ({
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleInputFocus = () => {
+    // Se o input contém o texto padrão, limpa quando o usuário focar
+    if (input === 'Quero fazer análise de fórmulas magistrais') {
+      setInput('');
+    }
+  };
+
   return (
     <div className="border-t border-slate-700 p-2 sm:p-4 bg-slate-800">
       <div className="flex space-x-2 sm:space-x-4">
         <Textarea
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
           onKeyDown={handleKeyPress}
           placeholder="Cole suas fórmulas para análise..."
           className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none text-sm sm:text-base min-h-[40px]"

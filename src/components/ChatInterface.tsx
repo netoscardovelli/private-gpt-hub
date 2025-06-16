@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,7 +55,28 @@ Escolha uma das opções abaixo:`,
   const handleQuickAction = async (action: string) => {
     if (action === 'analise') {
       const message = 'Quero fazer análise de fórmulas magistrais';
-      setInput(message);
+      // Ao invés de setar no input, enviar diretamente
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: message,
+        role: 'user',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+      setIsLoading(true);
+
+      // Simular resposta do assistente
+      setTimeout(() => {
+        const response: Message = {
+          id: (Date.now() + 1).toString(),
+          content: 'Perfeito! Cole suas fórmulas aqui e eu farei uma análise completa, incluindo:\n\n• Compatibilidade entre ativos\n• Concentrações adequadas\n• Possíveis incompatibilidades\n• Sugestões de melhorias\n• Observações técnicas importantes\n\nCole sua fórmula e vamos começar!',
+          role: 'assistant',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, response]);
+        setIsLoading(false);
+      }, 1000);
     } else if (action === 'sugestao') {
       // Start the suggestion flow with the first question
       const userMessage: Message = {
