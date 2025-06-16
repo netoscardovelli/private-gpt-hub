@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,12 +12,13 @@ interface SuggestedActive {
   benefit: string;
   mechanism: string;
   synergyWith: string[];
-  targetFormula: string; // Nova propriedade para indicar a fórmula alvo
-  targetFormulaReason: string; // Razão pela qual vai nessa fórmula específica
+  targetFormula: string;
+  targetFormulaReason: string;
 }
 
 interface ActiveSuggestionsProps {
   messageId: string;
+  messageContent: string; // Novo prop para analisar o conteúdo da mensagem
   onRequestSuggestions: () => void;
   onAddActiveToFormula: (active: SuggestedActive) => void;
   suggestions?: SuggestedActive[];
@@ -26,13 +27,52 @@ interface ActiveSuggestionsProps {
 
 const ActiveSuggestions = ({ 
   messageId, 
+  messageContent,
   onRequestSuggestions,
   onAddActiveToFormula,
   suggestions = [], 
   isLoading = false 
 }: ActiveSuggestionsProps) => {
   const [addedActives, setAddedActives] = useState<Set<string>>(new Set());
+  const [parsedSuggestions, setParsedSuggestions] = useState<SuggestedActive[]>([]);
   const { toast } = useToast();
+
+  // Função para extrair sugestões do texto da análise
+  const extractSuggestionsFromText = (text: string): SuggestedActive[] => {
+    const suggestions: SuggestedActive[] = [];
+    
+    // Procurar pela seção de sugestões
+    const suggestionsSection = text.match(/💡 Sugestões de Otimização:.*$/s);
+    if (!suggestionsSection) return suggestions;
+
+    const suggestionsText = suggestionsSection[0];
+    
+    // Regex para capturar cada sugestão
+    const suggestionRegex = /- \*\*([^(]+)\(([^)]+)\)\*\* - PARA: ([^\n]+)\s+Benefício: ([^\n]+)\s+Mecanismo: ([^\n]+)\s+Sinergia com: ([^\n]+)\s+Razão: ([^\n]+)/g;
+    
+    let match;
+    while ((match = suggestionRegex.exec(suggestionsText)) !== null) {
+      const [, name, concentration, targetFormula, benefit, mechanism, synergy, reason] = match;
+      
+      suggestions.push({
+        name: name.trim(),
+        concentration: concentration.trim(),
+        targetFormula: targetFormula.trim(),
+        benefit: benefit.trim(),
+        mechanism: mechanism.trim(),
+        synergyWith: synergy.split(',').map(s => s.trim()),
+        targetFormulaReason: reason.trim()
+      });
+    }
+
+    return suggestions;
+  };
+
+  useEffect(() => {
+    // Extrair sugestões do conteúdo da mensagem sempre que ela mudar
+    const extracted = extractSuggestionsFromText(messageContent);
+    setParsedSuggestions(extracted);
+  }, [messageContent]);
 
   const handleAddActive = (active: SuggestedActive) => {
     // Buscar ativos personalizados existentes
@@ -72,7 +112,10 @@ const ActiveSuggestions = ({
 
   const isAdded = (activeName: string) => addedActives.has(activeName);
 
-  if (suggestions.length === 0) {
+  // Usar sugestões extraídas do texto se disponíveis, senão usar as passadas via props
+  const activeSuggestions = parsedSuggestions.length > 0 ? parsedSuggestions : suggestions;
+
+  if (activeSuggestions.length === 0 && !messageContent.includes('💡 Sugestões de Otimização:')) {
     return (
       <div className="mt-4">
         <Button
@@ -88,6 +131,10 @@ const ActiveSuggestions = ({
     );
   }
 
+  if (activeSuggestions.length === 0) {
+    return null; // Não mostrar nada se há seção de sugestões mas nenhuma foi parseada
+  }
+
   return (
     <div className="mt-4 space-y-3">
       <div className="flex items-center gap-2 mb-3">
@@ -96,7 +143,7 @@ const ActiveSuggestions = ({
       </div>
       
       <div className="space-y-2">
-        {suggestions.map((active, index) => (
+        {activeSuggestions.map((active, index) => (
           <Card key={index} className="bg-slate-700/50 border-slate-600 p-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
