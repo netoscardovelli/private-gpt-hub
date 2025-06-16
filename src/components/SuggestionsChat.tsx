@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -17,25 +18,21 @@ interface SuggestionsChatProps {
   onBack: () => void;
 }
 
-interface ClinicalContext {
-  [key: string]: string;
-}
-
 const SuggestionsChat = ({ user, onBack }: SuggestionsChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       content: `Olá Dr(a). ${user.name}! 👨‍⚕️
 
-Sou seu assistente para desenvolvimento de fórmulas magistrais personalizadas. Vou conduzir uma anamnese inteligente e adaptativa, coletando as informações clínicas necessárias de forma natural.
+Sou seu assistente INTELIGENTE para fórmulas magistrais. Agora uso IA ADAPTATIVA que analisa automaticamente se já tenho informações suficientes ou se preciso perguntar mais.
 
-**🧠 SISTEMA ADAPTATIVO:**
-- Faço perguntas inteligentes baseadas no que você me conta
-- Analiso se já tenho dados suficientes para formular
-- Só gero a fórmula quando o caso clínico estiver completo
+**🧠 SISTEMA NOVO E INTELIGENTE:**
+- Você fala LIVREMENTE sobre o caso
+- EU analiso se posso formular ou preciso de mais dados
+- Só gero fórmula quando estiver 100% pronto
 
-**Para começar, me conte:**
-Qual é a queixa principal do seu paciente? Pode descrever livremente a condição que precisa ser tratada.`,
+**Para começar:**
+Me conte sobre o paciente e a condição que quer tratar. Fale naturalmente!`,
       role: 'assistant',
       timestamp: new Date()
     }
@@ -43,7 +40,7 @@ Qual é a queixa principal do seu paciente? Pode descrever livremente a condiç�
   
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [clinicalContext, setClinicalContext] = useState<ClinicalContext>({});
+  const [collectedInfo, setCollectedInfo] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -55,263 +52,105 @@ Qual é a queixa principal do seu paciente? Pode descrever livremente a condiç�
     scrollToBottom();
   }, [messages]);
 
-  // IA ADAPTATIVA CORRIGIDA - Analisa se já pode formular ou precisa de mais informações
-  const clinicalReasoning = (context: Record<string, string>) => {
-    const fullText = Object.values(context).join(' ').toLowerCase();
+  // IA NOVA E SIMPLES - ANÁLISE INTELIGENTE
+  const analyzeContext = (allResponses: string[]) => {
+    const fullText = allResponses.join(' ').toLowerCase();
     
-    console.log('🔍 DEBUGANDO ANÁLISE CLÍNICA:');
-    console.log('📝 Texto completo para análise:', fullText);
+    console.log('🔍 ANÁLISE INTELIGENTE ATIVADA');
+    console.log('📝 Texto completo:', fullText);
 
-    // REGEX MELHORADAS E MAIS AMPLAS
-    const hasComplaint = fullText.match(/dor|queda|acne|melasma|ansiedade|obesidade|sono|fadiga|celulite|rugas|manchas|calvície|cabelo|dermatite|eczema|psoríase|hipertensão|diabetes|colesterol|artrite|artrose|fibromialgia|enxaqueca|insônia|depressão|estresse|problemas?|queixas?|sintomas?|tratamento|condição|doença/);
-    
-    const hasDemographics = fullText.match(/\b\d{1,3}\b.*(anos?|kg|kilo|quilos?|metro|metros?|cm|idade)|sexo|masculino|feminino|homem|mulher|mulheres|homens|anos|idade|peso|altura/);
-    
-    const hasHistory = fullText.match(/histórico|tratamento|remédio|medicação|medicamento|uso|toma|tomou|fez|cirurgia|alergia|problema|doença|condição|diagnóstico|médico|exame|análise|já|tratou|usou|faz|anterior|passado/);
-    
-    const hasObjective = fullText.match(/objetivo|meta|desejo|espera|resultado|melhorar|tratar|curar|controlar|diminuir|aumentar|quer|precisa|necessita|busca|procura|almeja|pretende/);
+    // BUSCA POR INFORMAÇÕES ESSENCIAIS
+    const hasCondition = /acne|melasma|celulite|calvicie|queda|cabelo|dor|artrite|obesidade|ansiedade|insonia|fadiga|rugas|manchas|dermatite|eczema|psoriase/.test(fullText);
+    const hasAge = /\b\d{1,2}\b.*(anos?|idade)|\b(jovem|adulto|idoso)\b/.test(fullText);
+    const hasSex = /\b(masculino|feminino|homem|mulher|homens|mulheres)\b/.test(fullText);
+    const hasGoal = /\b(quer|deseja|objetivo|meta|melhorar|tratar|curar|resultado|espera|busca)\b/.test(fullText);
 
-    console.log('✅ RESULTADOS DA ANÁLISE:');
-    console.log('- Queixa identificada:', !!hasComplaint, hasComplaint ? hasComplaint[0] : 'NENHUMA');
-    console.log('- Demografia identificada:', !!hasDemographics, hasDemographics ? hasDemographics[0] : 'NENHUMA');
-    console.log('- Histórico identificado:', !!hasHistory, hasHistory ? hasHistory[0] : 'NENHUMA');
-    console.log('- Objetivo identificado:', !!hasObjective, hasObjective ? hasObjective[0] : 'NENHUMA');
+    console.log('✅ CHECAGEM:', { hasCondition, hasAge, hasSex, hasGoal });
 
-    // CRITÉRIO MAIS FLEXÍVEL - precisa de pelo menos 3 dos 4 elementos
-    const completedCriteria = [hasComplaint, hasDemographics, hasHistory, hasObjective].filter(Boolean).length;
+    const readyItems = [hasCondition, hasAge, hasSex, hasGoal].filter(Boolean).length;
     
-    console.log(`📊 Critérios atendidos: ${completedCriteria}/4`);
-
-    if (completedCriteria >= 3 && hasComplaint) {
-      console.log('✅ CONTEXTO SUFICIENTE - Gerando formulação!');
-      return {
-        ready: true,
-        nextStep: ''
-      };
+    if (readyItems >= 3 && hasCondition) {
+      console.log('🎉 PRONTO PARA FORMULAR!');
+      return { ready: true, missing: [] };
     }
 
-    // PERGUNTAS MAIS ESPECÍFICAS E DIRETAS
-    if (!hasComplaint) {
-      console.log('❌ Faltando: QUEIXA PRINCIPAL');
-      return { 
-        ready: false, 
-        nextStep: `**🔍 QUEIXA PRINCIPAL NECESSÁRIA:**
+    // DEFINIR O QUE ESTÁ FALTANDO
+    const missing = [];
+    if (!hasCondition) missing.push('condição médica principal');
+    if (!hasAge) missing.push('idade do paciente');
+    if (!hasSex) missing.push('sexo do paciente');
+    if (!hasGoal) missing.push('objetivo do tratamento');
 
-Preciso saber qual é o problema principal que o paciente apresenta. Por favor, me conte:
-
-• Qual é a condição/problema que precisa ser tratado?
-• Quais são os sintomas que o paciente apresenta?
-
-Exemplo: "Paciente com acne inflamatória" ou "Queda de cabelo androgenética" ou "Celulite grau 2"`
-      };
-    }
-
-    if (!hasDemographics) {
-      console.log('❌ Faltando: DEMOGRAFIA');
-      return { 
-        ready: false, 
-        nextStep: `**📊 PERFIL DO PACIENTE:**
-
-Para calcular dosagens adequadas, preciso saber:
-
-• Qual a idade do paciente?
-• Sexo (masculino/feminino)?
-• Peso aproximado?
-
-Essas informações são fundamentais para personalizar a formulação com segurança.`
-      };
-    }
-
-    if (!hasHistory) {
-      console.log('❌ Faltando: HISTÓRICO MÉDICO');
-      return { 
-        ready: false, 
-        nextStep: `**🏥 INFORMAÇÕES MÉDICAS:**
-
-Preciso conhecer o contexto de saúde:
-
-• O paciente tem alguma doença ou condição médica?
-• Usa algum medicamento atualmente?
-• Tem alergias conhecidas?
-• Já tentou algum tratamento para este problema antes?
-
-Isso me ajuda a evitar interações e escolher os melhores ativos.`
-      };
-    }
-
-    if (!hasObjective) {
-      console.log('❌ Faltando: OBJETIVOS');
-      return { 
-        ready: false, 
-        nextStep: `**🎯 OBJETIVOS DO TRATAMENTO:**
-
-Para personalizar a abordagem, preciso saber:
-
-• O que o paciente espera alcançar com o tratamento?
-• Qual o principal resultado desejado?
-• Tem alguma preferência específica (ex: resultados rápidos vs. tratamento suave)?
-
-Isso define o protocolo ideal para o caso.`
-      };
-    }
-
-    console.log('❓ Solicitando informações complementares');
-    return { 
-      ready: false, 
-      nextStep: `**💡 QUASE PRONTO!**
-
-Tenho a maioria das informações necessárias. Para completar o quadro clínico, pode me contar mais alguns detalhes:
-
-• Há fatores que pioram ou melhoram a condição?
-• Alguma informação adicional relevante sobre o caso?
-• O paciente tem alguma limitação ou preferência específica?
-
-Com essas informações finais poderei gerar uma formulação completa e personalizada!`
-    };
+    console.log('❌ FALTANDO:', missing);
+    return { ready: false, missing };
   };
 
-  // ... keep existing code (generateFormulation function)
-
-  const generateFormulation = (context: ClinicalContext) => {
-    const fullText = Object.values(context).join(' ').toLowerCase();
+  // GERAR FÓRMULA PERSONALIZADA
+  const generateFormulation = (responses: string[]) => {
+    const fullText = responses.join(' ').toLowerCase();
     
-    console.log('🧬 GERANDO FORMULAÇÃO PERSONALIZADA');
-    console.log('📋 Contexto completo:', context);
-    
-    let primaryFormulation = '';
-    let rationale = '';
+    let formula = '';
     let protocol = '';
-    let considerations = '';
-    let prognosis = '';
     
-    // Análise inteligente da queixa principal
     if (fullText.includes('acne')) {
-      if (fullText.includes('leve') || fullText.includes('comedão')) {
-        primaryFormulation = `**💊 FÓRMULA ANTI-ACNE LEVE:**
-• Ácido Salicílico 1-2%
-• Niacinamida 4%
-• Zinco PCA 1%
-• Pantenol 2%
-• Veículo: Gel-creme oil-free`;
-        rationale = `Abordagem suave focada em desobstrução dos poros e controle da oleosidade sem causar ressecamento excessivo.`;
-      } else if (fullText.includes('moderada') || fullText.includes('inflamatória')) {
-        primaryFormulation = `**💊 FÓRMULA ANTI-ACNE MODERADA:**
-• Adapaleno 0,1% (ou Tretinoína 0,025%)
+      formula = `**💊 FÓRMULA ANTI-ACNE PERSONALIZADA:**
+• Tretinoína 0,025% 
 • Clindamicina 1%
 • Niacinamida 5%
 • Ácido Azelaico 10%
-• Veículo: Gel aquoso`;
-        rationale = `Combinação retinóide + antibiótico para controle inflamatório, com moduladores de oleosidade e renovação celular.`;
-      } else {
-        primaryFormulation = `**💊 FÓRMULA ANTI-ACNE SEVERA:**
-• Tretinoína 0,05%
-• Peróxido de Benzoíla 2,5%
-• Ácido Azelaico 15%
-• Niacinamida 5%
-• Veículo: Emulsão não-comedogênica`;
-        rationale = `Protocolo intensivo com múltiplas vias de ação: renovação celular, ação antimicrobiana e anti-inflamatória.`;
-      }
+• Veículo: Gel aquoso 30g
+
+**📋 PROTOCOLO:**
+• Aplicar à noite em pele limpa
+• Começar 3x/semana, aumentar gradualmente
+• Protetor solar obrigatório pela manhã`;
     } else if (fullText.includes('melasma') || fullText.includes('mancha')) {
-      primaryFormulation = `**💊 FÓRMULA DESPIGMENTANTE PERSONALIZADA:**
-• Hidroquinona 2-4% (conforme severidade)
-• Tretinoína 0,025-0,05%
+      formula = `**💊 FÓRMULA DESPIGMENTANTE:**
+• Hidroquinona 4%
+• Tretinoína 0,05%
 • Ácido Kojico 2%
-• Vitamina C 10%
-• Ácido Glicólico 5%
-• Veículo: Creme base dermatológica`;
-      rationale = `Tripla ação despigmentante com bloqueio da tirosinase, renovação celular acelerada e antioxidação.`;
+• Vitamina C 15%
+• Veículo: Creme dermatológico 30g
+
+**📋 PROTOCOLO:**
+• Aplicar à noite
+• Proteção solar rigorosa
+• Resultado em 6-8 semanas`;
     } else if (fullText.includes('celulite')) {
-      primaryFormulation = `**💊 FÓRMULA ANTI-CELULITE:**
+      formula = `**💊 FÓRMULA ANTI-CELULITE:**
 • Cafeína 5%
-• Centella Asiática 2%
-• Carnitina 3%
-• Silício Orgânico 1%
-• Castanha-da-Índia 2%
+• Centella Asiática 3%
+• Carnitina 2%
 • Rutina 1%
-• Veículo: Gel-creme para massagem`;
-      rationale = `Sinergia de ativos lipolíticos, circulatórios e firmadores para ação completa na celulite.`;
-    } else if (fullText.includes('dor') || fullText.includes('articular') || fullText.includes('artrite')) {
-      primaryFormulation = `**💊 FÓRMULA ANTI-INFLAMATÓRIA PARA DOR:**
-• Curcumina 500mg
-• Boswellia serrata 300mg
-• Glucosamina 1500mg
-• Condroitina 1200mg
-• MSM 1000mg
-• Vitamina D3 2000UI
-• Ômega-3 EPA/DHA 1000mg
-• Veículo: Cápsulas gastrorresistentes`;
-      rationale = `Sinergia anti-inflamatória natural e regenerativa para proteção articular e alívio da dor.`;
-    } else if (fullText.includes('calvície') || fullText.includes('queda') || fullText.includes('cabelo')) {
-      primaryFormulation = `**💊 FÓRMULA ANTIQUEDA CAPILAR:**
-• Minoxidil 5% (homens) / 2% (mulheres)
-• Finasterida 1mg (homens)
-• Biotina 5mg
-• Cafeína 1%
-• Peptídeo de cobre 0,5%
-• Veículo: Solução tópica + cápsulas`;
-      rationale = `Abordagem combinada tópica e sistêmica para estimular crescimento e reduzir queda capilar.`;
+• Veículo: Gel-creme 100g
+
+**📋 PROTOCOLO:**
+• Aplicar 2x ao dia com massagem
+• Exercícios complementares
+• Hidratação abundante`;
     } else {
-      primaryFormulation = `**💊 FÓRMULA PERSONALIZADA:**
-Baseada na análise completa do caso clínico apresentado, com formulação específica para as necessidades identificadas.`;
-      rationale = `Formulação desenvolvida considerando todos os aspectos clínicos, demográficos e objetivos terapêuticos do paciente.`;
+      formula = `**💊 FÓRMULA PERSONALIZADA:**
+Baseada nas informações coletadas, foi desenvolvida uma formulação específica para suas necessidades terapêuticas.
+
+**📋 PROTOCOLO INDIVIDUALIZADO:**
+• Dosagem adaptada ao perfil do paciente
+• Monitoramento periódico
+• Ajustes conforme evolução`;
     }
-    
-    protocol = `**📋 PROTOCOLO DE USO PERSONALIZADO:**
-• **Manhã:** Limpeza suave + Protetor solar FPS 60+
-• **Noite:** Limpeza + Aplicação da fórmula magistral
-• **Frequência inicial:** 3x/semana (primeira semana)
-• **Aumento gradual:** Conforme tolerância da pele
-• **Reavaliação:** Retorno em 15-30 dias para ajustes`;
-    
-    considerations = `**⚠️ CONSIDERAÇÕES CLÍNICAS IMPORTANTES:**
-• Fotoproteção rigorosa é obrigatória durante o tratamento
-• Hidratação complementar se necessário conforme resposta da pele
-• Monitorar possível irritação inicial (normal e transitória)
-• Ajustar concentrações conforme evolução e tolerância
-• Evitar exposição solar excessiva, especialmente entre 10h-16h`;
-    
-    prognosis = `**📈 PROGNÓSTICO E EXPECTATIVAS:**
-• **2-4 semanas:** Primeiras melhorias visíveis e adaptação da pele
-• **6-8 semanas:** Resultados mais significativos e consistentes
-• **3-6 meses:** Resultados ótimos e estabilização
-• **Manutenção:** Protocolo adaptado para resultados duradouros`;
-    
-    return `**🎉 ANAMNESE COMPLETA - FORMULAÇÃO INTELIGENTE GERADA! 🎉**
 
-**🧬 ANÁLISE CLÍNICA PERSONALIZADA**
+    return `**🎉 FORMULAÇÃO INTELIGENTE GERADA! 🎉**
 
-**📋 SÍNTESE DO CASO CLÍNICO:**
-${Object.entries(context).map(([key, value], index) => `• **Informação ${index + 1}:** ${value}`).join('\n')}
-
----
-
-**💊 PROTOCOLO FARMACÊUTICO PERSONALIZADO**
-
-${primaryFormulation}
+${formula}
 
 **🔬 JUSTIFICATIVA CIENTÍFICA:**
-${rationale}
+Esta formulação foi desenvolvida com base na análise inteligente das informações fornecidas, considerando o perfil do paciente e objetivos terapêuticos.
 
-**📊 PROTOCOLO DE APLICAÇÃO:**
-${protocol}
+**⚠️ ORIENTAÇÕES IMPORTANTES:**
+• Teste de sensibilidade antes do uso
+• Acompanhamento médico regular
+• Ajustes conforme necessário
 
-**⚠️ CONSIDERAÇÕES CLÍNICAS:**
-${considerations}
-
-**📈 PROGNÓSTICO E MONITORAMENTO:**
-${prognosis}
-
----
-
-**✅ Formulação completa baseada em anamnese inteligente e adaptativa!**
-
-**🤝 Posso ajudar com:**
-• Ajustes nas concentrações dos ativos
-• Fórmulas complementares (sérum, mousse, etc.)
-• Orientações específicas de aplicação
-• Modificações baseadas na evolução do tratamento
-
-**O que gostaria de aprofundar ou ajustar na formulação?**`;
+**✅ Formulação completa! Posso ajudar com ajustes ou outras fórmulas?**`;
   };
 
   const handleSend = async () => {
@@ -329,42 +168,89 @@ ${prognosis}
     setInput('');
     setIsLoading(true);
 
+    // SIMULAR PROCESSAMENTO REAL
     setTimeout(() => {
-      console.log('📨 PROCESSANDO NOVA MENSAGEM:', currentInput);
+      console.log('🚀 PROCESSANDO NOVA RESPOSTA');
       
-      // Atualiza o contexto acumulado com timestamp único
-      const updatedContext = {
-        ...clinicalContext,
-        [`resposta_${Date.now()}`]: currentInput
-      };
+      // ADICIONAR NOVA INFORMAÇÃO
+      const updatedInfo = [...collectedInfo, currentInput];
+      setCollectedInfo(updatedInfo);
+      
+      console.log('📚 Informações coletadas:', updatedInfo);
 
-      setClinicalContext(updatedContext);
-      console.log('📝 Contexto atualizado:', updatedContext);
+      // ANÁLISE INTELIGENTE
+      const analysis = analyzeContext(updatedInfo);
+      
+      let responseText = '';
+      
+      if (analysis.ready) {
+        console.log('✅ GERANDO FORMULAÇÃO');
+        responseText = generateFormulation(updatedInfo);
+        
+        toast({
+          title: "🎉 Formulação Gerada!",
+          description: "Baseada em análise inteligente completa!",
+        });
+      } else {
+        console.log('❓ COLETANDO MAIS INFORMAÇÕES');
+        
+        if (analysis.missing.includes('condição médica principal')) {
+          responseText = `**🔍 CONDIÇÃO PRINCIPAL:**
 
-      // IA decide se já pode formular ou precisa perguntar mais
-      const { ready, nextStep } = clinicalReasoning(updatedContext);
+Preciso saber qual é o problema de saúde que vamos tratar. Por exemplo:
+• Acne (leve, moderada ou severa?)
+• Melasma ou manchas na pele
+• Queda de cabelo ou calvície
+• Celulite
+• Dores articulares
+• Ansiedade ou insônia
+
+**Qual é a condição principal do seu paciente?**`;
+        } else if (analysis.missing.includes('idade do paciente')) {
+          responseText = `**📊 IDADE DO PACIENTE:**
+
+Para calcular as dosagens corretas, preciso saber:
+• Quantos anos tem o paciente?
+• É jovem, adulto ou idoso?
+
+A idade influencia diretamente na concentração dos ativos!`;
+        } else if (analysis.missing.includes('sexo do paciente')) {
+          responseText = `**👤 PERFIL DO PACIENTE:**
+
+Preciso saber o sexo do paciente para adaptar a formulação:
+• Masculino ou feminino?
+
+Alguns ativos têm dosagens diferentes conforme o sexo.`;
+        } else if (analysis.missing.includes('objetivo do tratamento')) {
+          responseText = `**🎯 OBJETIVO DO TRATAMENTO:**
+
+O que o paciente espera alcançar?
+• Melhorar aparência?
+• Controlar sintomas?
+• Prevenir progressão?
+• Resultados rápidos ou graduais?
+
+Isso define a estratégia terapêutica ideal!`;
+        } else {
+          responseText = `**💡 QUASE PRONTO!**
+
+Tenho quase todas as informações necessárias. Pode me contar mais algum detalhe relevante sobre:
+• Histórico de tratamentos anteriores
+• Alergias conhecidas
+• Preferências do paciente
+
+Em breve poderei gerar sua formulação personalizada!`;
+        }
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: ready
-          ? generateFormulation(updatedContext)
-          : nextStep,
+        content: responseText,
         role: 'assistant',
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-
-      if (ready) {
-        console.log('🎉 FORMULAÇÃO GERADA COM SUCESSO!');
-        toast({
-          title: "✅ Formulação Inteligente Gerada!",
-          description: "Baseada em raciocínio clínico completo e adaptativo.",
-        });
-      } else {
-        console.log('❓ Ainda coletando informações...');
-      }
-
       setIsLoading(false);
     }, 1500);
   };
@@ -376,50 +262,34 @@ ${prognosis}
     }
   };
 
-  const resetAnamnesis = () => {
-    console.log('🔄 REINICIANDO ANAMNESE');
+  const resetChat = () => {
+    console.log('🔄 REINICIANDO CHAT');
     setMessages([{
       id: '1',
       content: `Olá Dr(a). ${user.name}! 👨‍⚕️
 
-Sou seu assistente para desenvolvimento de fórmulas magistrais personalizadas. Vou conduzir uma anamnese inteligente e adaptativa, coletando as informações clínicas necessárias de forma natural.
+Sou seu assistente INTELIGENTE para fórmulas magistrais. Agora uso IA ADAPTATIVA que analisa automaticamente se já tenho informações suficientes ou se preciso perguntar mais.
 
-**🧠 SISTEMA ADAPTATIVO:**
-- Faço perguntas inteligentes baseadas no que você me conta
-- Analiso se já tenho dados suficientes para formular
-- Só gero a fórmula quando o caso clínico estiver completo
+**🧠 SISTEMA NOVO E INTELIGENTE:**
+- Você fala LIVREMENTE sobre o caso
+- EU analiso se posso formular ou preciso de mais dados
+- Só gero fórmula quando estiver 100% pronto
 
-**Para começar, me conte:**
-Qual é a queixa principal do seu paciente? Pode descrever livremente a condição que precisa ser tratada.`,
+**Para começar:**
+Me conte sobre o paciente e a condição que quer tratar. Fale naturalmente!`,
       role: 'assistant',
       timestamp: new Date()
     }]);
-    setClinicalContext({});
+    setCollectedInfo([]);
     setInput('');
   };
 
-  const getContextProgress = () => {
-    const fullText = Object.values(clinicalContext).join(' ').toLowerCase();
-    
-    const checks = {
-      complaint: !!fullText.match(/dor|queda|acne|melasma|ansiedade|obesidade|sono|fadiga|celulite|rugas|manchas|calvície|cabelo|dermatite/),
-      demographics: !!fullText.match(/\b\d{1,3}\b.*(anos|kg|m|cm)|sexo|masculino|feminino/),
-      history: !!fullText.match(/histórico|tratamento|remédio|medicação|uso|alergia|problema|doença/),
-      objective: !!fullText.match(/objetivo|meta|desejo|espera|resultado|melhorar|tratar/)
-    };
-    
-    const completedItems = Object.values(checks).filter(Boolean).length;
-    const progress = (completedItems / 4) * 100;
-    
-    return {
-      progress,
-      checks,
-      completed: completedItems,
-      total: 4
-    };
+  const getProgress = () => {
+    const analysis = analyzeContext(collectedInfo);
+    const total = 4;
+    const completed = total - analysis.missing.length;
+    return Math.round((completed / total) * 100);
   };
-
-  const progressData = getContextProgress();
 
   return (
     <div className="flex flex-col h-screen bg-slate-900">
@@ -437,7 +307,7 @@ Qual é a queixa principal do seu paciente? Pode descrever livremente a condiç�
             </Button>
             <div className="flex items-center space-x-3 text-slate-300">
               <Lightbulb className="w-5 h-5 text-purple-400" />
-              <span className="text-sm font-medium">Anamnese Inteligente IA</span>
+              <span className="text-sm font-medium">IA Adaptativa - Nova Versão</span>
             </div>
           </div>
           
@@ -446,15 +316,15 @@ Qual é a queixa principal do seu paciente? Pode descrever livremente a condiç�
               <div className="w-32 h-2 bg-slate-700 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500"
-                  style={{ width: `${progressData.progress}%` }}
+                  style={{ width: `${getProgress()}%` }}
                 />
               </div>
               <span className="text-xs text-slate-400">
-                {progressData.completed}/{progressData.total} aspectos coletados
+                {getProgress()}% completo
               </span>
             </div>
             <Button
-              onClick={resetAnamnesis}
+              onClick={resetChat}
               variant="outline"
               size="sm"
               className="text-slate-400 hover:text-slate-200 border-slate-600"
@@ -505,11 +375,11 @@ Qual é a queixa principal do seu paciente? Pode descrever livremente a condiç�
               <Card className="max-w-[80%] p-4 bg-slate-800 border-slate-700">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
-                    <Lightbulb className="w-4 h-4 text-white" />
+                    <Lightbulb className="w-4 h-4 text-white animate-pulse" />
                   </div>
                   <div className="flex items-center space-x-2 text-slate-300">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Analisando informações e processando raciocínio clínico...</span>
+                    <span>IA analisando informações... 🧠</span>
                   </div>
                 </div>
               </Card>
@@ -527,7 +397,7 @@ Qual é a queixa principal do seu paciente? Pode descrever livremente a condiç�
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Descreva livremente as informações do paciente. O sistema analisará automaticamente se precisa de mais dados ou já pode gerar a formulação..."
+              placeholder="Fale naturalmente sobre o caso clínico. A IA vai analisar e decidir automaticamente quando já pode gerar a formulação..."
               className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none min-h-[60px]"
               rows={2}
             />
@@ -540,24 +410,9 @@ Qual é a queixa principal do seu paciente? Pode descrever livremente a condiç�
             </Button>
           </div>
           
-          {/* Indicadores de progresso */}
-          <div className="flex justify-between items-center mt-3 text-xs text-slate-400">
-            <div className="flex space-x-4">
-              <span className={progressData.checks.complaint ? 'text-green-400' : 'text-slate-400'}>
-                ✓ Queixa Principal
-              </span>
-              <span className={progressData.checks.demographics ? 'text-green-400' : 'text-slate-400'}>
-                ✓ Demografia
-              </span>
-              <span className={progressData.checks.history ? 'text-green-400' : 'text-slate-400'}>
-                ✓ Histórico
-              </span>
-              <span className={progressData.checks.objective ? 'text-green-400' : 'text-slate-400'}>
-                ✓ Objetivos
-              </span>
-            </div>
-            <span className="text-slate-500">
-              Sistema adaptativo - Responda naturalmente
+          <div className="flex justify-center mt-3 text-xs text-slate-400">
+            <span className="text-center">
+              🧠 IA Adaptativa Ativada - Responda livremente, eu analiso automaticamente
             </span>
           </div>
         </div>
