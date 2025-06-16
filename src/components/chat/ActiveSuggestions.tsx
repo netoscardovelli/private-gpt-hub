@@ -17,13 +17,15 @@ interface SuggestedActive {
 interface ActiveSuggestionsProps {
   messageId: string;
   onRequestSuggestions: () => void;
+  onAddActiveToFormula: (active: SuggestedActive) => void;
   suggestions?: SuggestedActive[];
   isLoading?: boolean;
 }
 
 const ActiveSuggestions = ({ 
   messageId, 
-  onRequestSuggestions, 
+  onRequestSuggestions,
+  onAddActiveToFormula,
   suggestions = [], 
   isLoading = false 
 }: ActiveSuggestionsProps) => {
@@ -39,34 +41,30 @@ const ActiveSuggestions = ({
       existing.name.toLowerCase() === active.name.toLowerCase()
     );
 
-    if (alreadyExists) {
-      toast({
-        title: "Ativo já cadastrado",
-        description: `${active.name} já está na sua lista de ativos personalizados.`,
-        variant: "default"
-      });
-      return;
+    if (!alreadyExists) {
+      // Adicionar novo ativo aos personalizados
+      const newActive = {
+        id: Date.now().toString(),
+        name: active.name,
+        concentration: active.concentration,
+        conditions: active.synergyWith,
+        description: `${active.benefit}. ${active.mechanism}`,
+        formulationType: 'cápsula'
+      };
+
+      const updatedActives = [...existingActives, newActive];
+      localStorage.setItem('customActives', JSON.stringify(updatedActives));
     }
-
-    // Adicionar novo ativo
-    const newActive = {
-      id: Date.now().toString(),
-      name: active.name,
-      concentration: active.concentration,
-      conditions: active.synergyWith,
-      description: `${active.benefit}. ${active.mechanism}`,
-      formulationType: 'cápsula'
-    };
-
-    const updatedActives = [...existingActives, newActive];
-    localStorage.setItem('customActives', JSON.stringify(updatedActives));
 
     // Marcar como adicionado
     setAddedActives(prev => new Set([...prev, active.name]));
 
+    // Solicitar nova análise da fórmula com o ativo incluído
+    onAddActiveToFormula(active);
+
     toast({
       title: "Ativo adicionado!",
-      description: `${active.name} foi adicionado aos seus ativos personalizados.`,
+      description: `${active.name} foi incluído na fórmula. Gerando nova versão...`,
     });
   };
 
@@ -140,7 +138,7 @@ const ActiveSuggestions = ({
                 ) : (
                   <>
                     <Plus className="w-3 h-3 mr-1" />
-                    Adicionar
+                    Incluir na Fórmula
                   </>
                 )}
               </Button>

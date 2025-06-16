@@ -160,6 +160,79 @@ Use a seção "💡 Sugestões de Otimização" conforme definido no prompt.`;
     }
   };
 
+  const handleAddActiveToFormula = async (originalFormula: string, addedActive: any) => {
+    const enhancedMessage = `Com base na análise anterior, inclua o ativo ${addedActive.name} ${addedActive.concentration} na fórmula e refaça a análise completa:
+
+FÓRMULA ORIGINAL:
+${originalFormula}
+
+ATIVO A INCLUIR:
+- ${addedActive.name} ${addedActive.concentration}
+- Benefício: ${addedActive.benefit}
+- Mecanismo: ${addedActive.mechanism}
+
+INSTRUÇÃO: Refaça a análise da fórmula incluindo este novo ativo, mostrando como ele se integra com os demais componentes e potencializa os resultados. Use o formato padrão de análise com composição atualizada e nova explicação.`;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: `Incluir ${addedActive.name} na fórmula e reanalizar`,
+      role: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
+
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      const { data, error } = await supabase.functions.invoke('chat-ai', {
+        body: {
+          message: enhancedMessage,
+          conversationHistory,
+          customActives,
+          userId: user.id,
+          specialty: selectedSpecialty
+        }
+      });
+
+      if (error || data?.error || !data?.response) {
+        throw new Error(data?.details || error?.message || 'Erro desconhecido');
+      }
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: data.response,
+        role: 'assistant',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error: any) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: `🚫 Ocorreu um erro ao incluir o ativo na fórmula. Tente novamente.\n\nErro: ${error.message}`,
+        role: 'assistant',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+
+      toast({
+        title: "Erro ao incluir ativo",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -271,6 +344,7 @@ INSTRUÇÃO ESPECIAL: Ao explicar fórmulas, faça uma explicação conversacion
             message={message}
             index={index}
             onQuickAction={handleQuickAction}
+            onAddActiveToFormula={handleAddActiveToFormula}
             userId={user.id}
           />
         ))}

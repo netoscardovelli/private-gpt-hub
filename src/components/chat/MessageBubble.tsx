@@ -18,10 +18,11 @@ interface MessageBubbleProps {
   message: Message;
   index: number;
   onQuickAction: (action: string) => void;
+  onAddActiveToFormula: (messageContent: string, active: any) => void;
   userId?: string;
 }
 
-const MessageBubble = ({ message, index, onQuickAction, userId }: MessageBubbleProps) => {
+const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, userId }: MessageBubbleProps) => {
   const { toast } = useToast();
   const [showFeedback, setShowFeedback] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -74,6 +75,10 @@ const MessageBubble = ({ message, index, onQuickAction, userId }: MessageBubbleP
     }, 2000);
   };
 
+  const handleAddActiveToFormula = (active: any) => {
+    onAddActiveToFormula(message.content, active);
+  };
+
   // Verificar se a mensagem contém análise de fórmulas
   const containsFormulaAnalysis = message.role === 'assistant' && 
     (message.content.includes('Composição:') || 
@@ -120,6 +125,7 @@ const MessageBubble = ({ message, index, onQuickAction, userId }: MessageBubbleP
               <ActiveSuggestions
                 messageId={message.id}
                 onRequestSuggestions={handleRequestSuggestions}
+                onAddActiveToFormula={handleAddActiveToFormula}
                 suggestions={suggestions}
                 isLoading={isLoadingSuggestions}
               />
