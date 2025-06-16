@@ -66,6 +66,19 @@ const Index = () => {
     setCurrentView('chat');
   };
 
+  // Nova função para lidar com o clique em Sugestões
+  const handleSuggestionsClick = () => {
+    if (isAuthenticated) {
+      setCurrentView('suggestions');
+    } else {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para acessar as sugestões de fórmulas.",
+      });
+      setShowAuthModal(true);
+    }
+  };
+
   const renderCurrentView = () => {
     switch (currentView) {
       case 'chat':
@@ -83,11 +96,11 @@ const Index = () => {
               {/* Botões de ação no topo */}
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Button
-                  onClick={() => setCurrentView('suggestions')}
+                  onClick={handleSuggestionsClick}
                   className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
                 >
                   <Lightbulb className="w-4 h-4 mr-2" />
-                  Sugestões de Melhoria
+                  Sugestões de Fórmulas
                 </Button>
                 <Button
                   onClick={() => setCurrentView('support')}
