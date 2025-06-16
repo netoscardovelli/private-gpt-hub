@@ -79,7 +79,7 @@ export const exportChatToPDF = (messages: Message[]) => {
   pdf.setTextColor(white[0], white[1], white[2]);
   pdf.setFontSize(16);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('ORIENTACOES GERAIS DAS FORMULAS', margin + 5, yPosition + 8);
+  pdf.text('ORIENTACOES GERAIS DOS MANIPULADOS', margin + 5, yPosition + 8);
   yPosition += 30;
 
   // Orientações detalhadas
@@ -186,7 +186,7 @@ export const exportChatToPDF = (messages: Message[]) => {
     pdf.text('Nenhuma analise farmaceutica foi realizada nesta sessao.', margin + 5, yPosition);
     yPosition += 20;
   } else {
-    // Processar análises
+    // Processar análises com nova estrutura
     analysisMessages.forEach((message, index) => {
       // Verificar se precisa de nova página
       if (yPosition > pageHeight - 80) {
@@ -204,12 +204,75 @@ export const exportChatToPDF = (messages: Message[]) => {
       pdf.text(`ANALISE TECNICA ${index + 1}`, margin + 5, yPosition + 8);
       yPosition += 25;
 
-      // Conteúdo da análise
+      const content = message.content;
+      
+      // Extrair nome da fórmula e ativos do conteúdo
+      const formulaNameMatch = content.match(/(?:fórmula|formula|medicamento|composição)[\s\w]*:?\s*([A-Za-zÀ-ÿ\s\d\-\/\+]+)/i);
+      const formulaName = formulaNameMatch ? formulaNameMatch[1].trim() : `Formula ${index + 1}`;
+      
+      // Tentar extrair ativos do conteúdo
+      const activeMatches = content.match(/(\w+\s*\d+(?:mg|g|ml|%|ui|mcg))/gi) || [];
+      const uniqueActives = [...new Set(activeMatches)];
+
+      // SEÇÃO 1: COMPOSIÇÃO DA FÓRMULA
+      pdf.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+      pdf.rect(margin, yPosition - 3, pageWidth - (margin * 2), 15, 'F');
+      
+      pdf.setTextColor(white[0], white[1], white[2]);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('COMPOSICAO DA FORMULA', margin + 5, yPosition + 8);
+      yPosition += 20;
+
+      // Nome da fórmula
       pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
       pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`FORMULA: ${formulaName.toUpperCase()}`, margin + 5, yPosition);
+      yPosition += 12;
+
+      // Lista de ativos
+      if (uniqueActives.length > 0) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('ATIVOS:', margin + 5, yPosition);
+        yPosition += 8;
+        
+        pdf.setFont('helvetica', 'normal');
+        uniqueActives.forEach((ativo) => {
+          if (yPosition > pageHeight - 40) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(`• ${ativo}`, margin + 10, yPosition);
+          yPosition += 7;
+        });
+      } else {
+        // Se não conseguir extrair ativos automaticamente, usar uma abordagem mais simples
+        pdf.setFont('helvetica', 'normal');
+        const compositionLines = pdf.splitTextToSize('Composicao conforme prescricao medica apresentada.', maxWidth - 20);
+        compositionLines.forEach((line: string) => {
+          pdf.text(line, margin + 10, yPosition);
+          yPosition += 7;
+        });
+      }
+      
+      yPosition += 10;
+
+      // SEÇÃO 2: EXPLICAÇÃO TÉCNICA
+      pdf.setFillColor(orangeWarning[0], orangeWarning[1], orangeWarning[2]);
+      pdf.rect(margin, yPosition - 3, pageWidth - (margin * 2), 15, 'F');
+      
+      pdf.setTextColor(white[0], white[1], white[2]);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('EXPLICACAO TECNICA', margin + 5, yPosition + 8);
+      yPosition += 20;
+
+      // Conteúdo da explicação
+      pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+      pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
       
-      const content = message.content;
       const lines = pdf.splitTextToSize(content, maxWidth - 10);
       
       lines.forEach((line: string) => {
@@ -224,14 +287,10 @@ export const exportChatToPDF = (messages: Message[]) => {
             line.toLowerCase().includes('importante')) {
           pdf.setFont('helvetica', 'bold');
           pdf.setTextColor(redAlert[0], redAlert[1], redAlert[2]);
-        } else if (line.includes('•') || line.includes('▪') || line.includes('-') || 
-                   line.includes('✓') || line.includes('→')) {
+        } else if (line.includes('OBSERVACOES') || line.includes('POSOLOGIA') || 
+                   line.includes('ORIENTACOES')) {
           pdf.setFont('helvetica', 'bold');
           pdf.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
-        } else if (line.includes('COMPOSICAO') || line.includes('POSOLOGIA') || 
-                   line.includes('ORIENTACOES') || line.includes('OBSERVACOES')) {
-          pdf.setFont('helvetica', 'bold');
-          pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
         } else {
           pdf.setFont('helvetica', 'normal');
           pdf.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
