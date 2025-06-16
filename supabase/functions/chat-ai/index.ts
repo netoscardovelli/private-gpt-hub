@@ -36,10 +36,10 @@ const callOpenAI = async (messages: any[], apiKey: string) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini', // Modelo mais rápido
+      model: 'gpt-4.1-2025-04-14', // Modelo mais avançado para análises profundas
       messages: messages,
-      temperature: 0.7,
-      max_tokens: 3000, // Reduzido para acelerar
+      temperature: 0.3, // Menor para mais precisão científica
+      max_tokens: 4000, // Aumentado para análises detalhadas
     }),
   });
 
@@ -142,16 +142,13 @@ serve(async (req) => {
       throw new Error('Chave da API OpenAI não configurada');
     }
 
-    // Buscar perfil do médico de forma otimizada (mais rápido ou skip se userId não existir)
+    // Buscar perfil do médico
     let doctorProfile = null;
     if (userId) {
       try {
-        doctorProfile = await Promise.race([
-          getDoctorProfile(userId),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)) // timeout de 2s
-        ]);
+        doctorProfile = await getDoctorProfile(userId);
       } catch (error) {
-        console.log('Perfil não carregado ou timeout, continuando sem personalização');
+        console.log('Perfil não carregado, continuando sem personalização');
       }
     }
 
@@ -163,10 +160,10 @@ serve(async (req) => {
       content: buildSystemPrompt(customActives, doctorProfile)
     };
 
-    // Limitar histórico para acelerar
+    // Histórico mais extenso para análises complexas
     const messages = [
       systemMessage,
-      ...conversationHistory.slice(-6), // Apenas últimas 6 mensagens
+      ...conversationHistory.slice(-4), // Últimas 4 mensagens para contexto
       { role: 'user', content: message }
     ];
 
@@ -180,7 +177,7 @@ serve(async (req) => {
 
     const aiResponse = data.choices[0].message.content;
 
-    console.log('Análise concluída');
+    console.log('Análise detalhada concluída');
 
     return new Response(JSON.stringify({ 
       response: aiResponse,
