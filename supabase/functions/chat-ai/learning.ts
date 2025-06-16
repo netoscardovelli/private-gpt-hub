@@ -1,10 +1,10 @@
 
-import { supabase } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 
 const supabaseUrl = 'https://graumqipaeijtrnldhpq.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyYXVtcWlwYWVpanRybmxkaHBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4NDkzMzUsImV4cCI6MjA2NTQyNTMzNX0.pan6g_v-RKsu98BXjdlvDXWZsb3QnfMLyjLM1S5k_x8';
 
-const supabaseClient = supabase(supabaseUrl, supabaseKey);
+const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
 export const getDoctorProfile = async (userId: string) => {
   try {
