@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Check, Lightbulb, Target, Send } from 'lucide-react';
+import { Plus, Check, Lightbulb, Target, Send, Pill, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface SuggestedActive {
@@ -14,6 +14,8 @@ interface SuggestedActive {
   synergyWith: string[];
   targetFormula: string;
   targetFormulaReason: string;
+  suggestedForm?: 'capsule' | 'powder' | 'new-formula';
+  practicalNote?: string;
 }
 
 interface ActiveSuggestionsProps {
@@ -37,7 +39,36 @@ const ActiveSuggestions = ({
   const [parsedSuggestions, setParsedSuggestions] = useState<SuggestedActive[]>([]);
   const { toast } = useToast();
 
-  // Função para extrair sugestões do texto da análise
+  // Função para analisar a viabilidade da cápsula baseada no peso total
+  const analyzeCapsuleViability = (currentFormula: string, newActive: string, concentration: string): string => {
+    // Extrair ativos atuais e suas concentrações
+    const activeMatches = currentFormula.match(/• ([^\d]+)\s+(\d+(?:\.\d+)?)\s*mg/g) || [];
+    let totalWeight = 0;
+    
+    activeMatches.forEach(match => {
+      const concMatch = match.match(/(\d+(?:\.\d+)?)\s*mg/);
+      if (concMatch) {
+        totalWeight += parseFloat(concMatch[1]);
+      }
+    });
+
+    // Adicionar o peso do novo ativo
+    const newActiveWeight = parseFloat(concentration.replace(/[^\d.]/g, ''));
+    const newTotalWeight = totalWeight + newActiveWeight;
+    
+    // Calcular número de cápsulas necessárias (considerando 500mg por cápsula)
+    const capsulesNeeded = Math.ceil(newTotalWeight / 500);
+    
+    if (capsulesNeeded > 4) {
+      return `ATENÇÃO: Resultaria em ${capsulesNeeded} cápsulas por dose (impraticável)`;
+    } else if (capsulesNeeded > 2) {
+      return `Resultaria em ${capsulesNeeded} cápsulas por dose`;
+    }
+    
+    return '';
+  };
+
+  // Função para extrair sugestões do texto da análise com análise de viabilidade
   const extractSuggestionsFromText = (text: string): SuggestedActive[] => {
     const suggestions: SuggestedActive[] = [];
     
@@ -54,6 +85,25 @@ const ActiveSuggestions = ({
     while ((match = suggestionRegex.exec(suggestionsText)) !== null) {
       const [, name, concentration, targetFormula, benefit, mechanism, synergy, reason] = match;
       
+      // Analisar se a fórmula alvo existe no texto original
+      const formulaExists = text.includes(targetFormula.trim());
+      let practicalNote = '';
+      let suggestedForm: 'capsule' | 'powder' | 'new-formula' = 'capsule';
+      
+      if (formulaExists) {
+        // Verificar viabilidade da cápsula
+        const viabilityNote = analyzeCapsuleViability(text, name.trim(), concentration.trim());
+        if (viabilityNote.includes('impraticável')) {
+          suggestedForm = 'powder';
+          practicalNote = `${viabilityNote}. Sugerimos reformulação em pó ou sachê.`;
+        } else if (viabilityNote) {
+          practicalNote = viabilityNote;
+        }
+      } else {
+        suggestedForm = 'new-formula';
+        practicalNote = 'Nova fórmula específica recomendada';
+      }
+
       suggestions.push({
         name: name.trim(),
         concentration: concentration.trim(),
@@ -61,7 +111,9 @@ const ActiveSuggestions = ({
         benefit: benefit.trim(),
         mechanism: mechanism.trim(),
         synergyWith: synergy.split(',').map(s => s.trim()),
-        targetFormulaReason: reason.trim()
+        targetFormulaReason: reason.trim(),
+        suggestedForm,
+        practicalNote
       });
     }
 
@@ -103,7 +155,7 @@ const ActiveSuggestions = ({
 
     // Adicionar aos ativos personalizados
     const existingActives = JSON.parse(localStorage.getItem('customActives') || '[]');
-    const newActives = [];
+    const newActives: any[] = [];
 
     selectedActivesData.forEach(active => {
       const alreadyExists = existingActives.some((existing: any) => 
@@ -117,7 +169,7 @@ const ActiveSuggestions = ({
           concentration: active.concentration,
           conditions: active.synergyWith,
           description: `${active.benefit}. ${active.mechanism}`,
-          formulationType: 'cápsula'
+          formulationType: active.suggestedForm === 'powder' ? 'pó' : 'cápsula'
         });
       }
     });
@@ -140,6 +192,28 @@ const ActiveSuggestions = ({
   };
 
   const isSelected = (activeName: string) => selectedActives.has(activeName);
+
+  const getFormIcon = (form: string | undefined) => {
+    switch (form) {
+      case 'powder':
+        return <Package className="w-3 h-3 text-orange-400" />;
+      case 'new-formula':
+        return <Plus className="w-3 h-3 text-blue-400" />;
+      default:
+        return <Pill className="w-3 h-3 text-green-400" />;
+    }
+  };
+
+  const getFormBadge = (form: string | undefined) => {
+    switch (form) {
+      case 'powder':
+        return <Badge className="bg-orange-600/30 text-orange-300 text-xs">Pó/Sachê</Badge>;
+      case 'new-formula':
+        return <Badge className="bg-blue-600/30 text-blue-300 text-xs">Nova Fórmula</Badge>;
+      default:
+        return <Badge className="bg-green-600/30 text-green-300 text-xs">Cápsula</Badge>;
+    }
+  };
 
   // Usar sugestões extraídas do texto se disponíveis, senão usar as passadas via props
   const activeSuggestions = parsedSuggestions.length > 0 ? parsedSuggestions : suggestions;
@@ -170,6 +244,7 @@ const ActiveSuggestions = ({
         <div className="flex items-center gap-2">
           <Lightbulb className="w-4 h-4 text-amber-400" />
           <h4 className="text-sm font-semibold text-slate-200">Sugestões de Otimização</h4>
+          <Badge className="bg-slate-700 text-slate-300 text-xs">Análise Farmacotécnica</Badge>
         </div>
         
         {selectedActives.size > 0 && (
@@ -194,6 +269,7 @@ const ActiveSuggestions = ({
                   <Badge variant="outline" className="border-emerald-400 text-emerald-400 text-xs">
                     {active.concentration}
                   </Badge>
+                  {getFormBadge(active.suggestedForm)}
                 </div>
 
                 {/* Indicação da fórmula alvo */}
@@ -202,7 +278,19 @@ const ActiveSuggestions = ({
                   <Badge className="bg-blue-600/30 text-blue-300 text-xs font-medium">
                     → {active.targetFormula}
                   </Badge>
+                  {getFormIcon(active.suggestedForm)}
                 </div>
+
+                {/* Nota prática sobre viabilidade */}
+                {active.practicalNote && (
+                  <div className="mb-2 p-2 bg-amber-900/30 border border-amber-700/50 rounded text-xs">
+                    <div className="flex items-center gap-1 text-amber-300">
+                      <Package className="w-3 h-3" />
+                      <span className="font-medium">Análise Farmacotécnica:</span>
+                    </div>
+                    <p className="text-amber-200 mt-1">{active.practicalNote}</p>
+                  </div>
+                )}
 
                 <p className="text-xs text-slate-300 mb-2">{active.benefit}</p>
                 
