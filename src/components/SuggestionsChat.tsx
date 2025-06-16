@@ -51,13 +51,12 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [clinicalContext, setClinicalContext] = useState<Partial<ClinicalContext>>({});
-  const [conversationStage, setConversationStage] = useState('complaint');
-  const [questionNumber, setQuestionNumber] = useState(1);
+  const [currentQuestionNumber, setCurrentQuestionNumber] = useState(1);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   // CONTROLE RIGOROSO - NUNCA pular etapas
-  const REQUIRED_STAGES = [
+  const ANAMNESIS_STAGES = [
     'complaint',
     'demographics', 
     'severity',
@@ -77,105 +76,62 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
     scrollToBottom();
   }, [messages]);
 
-  const analyzeResponseAndGenerateNextQuestion = (userResponse: string, context: Partial<ClinicalContext>, currentStage: string) => {
-    console.log('🔍 Etapa atual:', currentStage);
-    console.log('📊 Contexto coletado:', context);
+  const generateNextQuestion = (userResponse: string, currentStage: number) => {
+    console.log(`🔍 Pergunta atual: ${currentStage}/9`);
+    console.log(`📝 Resposta recebida: ${userResponse}`);
     
-    const currentStageIndex = REQUIRED_STAGES.indexOf(currentStage);
-    const nextStageIndex = currentStageIndex + 1;
-    const nextStage = REQUIRED_STAGES[nextStageIndex];
-    const nextQuestionNum = questionNumber + 1;
+    // Atualizar contexto clínico baseado na pergunta atual
+    const stageKey = ANAMNESIS_STAGES[currentStage - 1];
+    const updatedContext = { ...clinicalContext, [stageKey]: userResponse };
+    setClinicalContext(updatedContext);
     
-    console.log('➡️ Próxima etapa:', nextStage);
-    console.log('🔢 Pergunta número:', nextQuestionNum);
-    
-    // NUNCA GERAR FORMULAÇÃO até completar TODAS as 9 perguntas
-    if (nextStageIndex >= REQUIRED_STAGES.length) {
-      // SÓ AGORA podemos gerar a formulação
-      const finalContext = { ...context, objectives: userResponse };
+    // Se chegou na pergunta 9, gerar formulação após a resposta
+    if (currentStage === 9) {
       console.log('✅ ANAMNESE COMPLETA! Gerando formulação...');
       return {
-        nextQuestion: generateFormulation(finalContext as ClinicalContext),
-        contextUpdate: { objectives: userResponse },
-        stage: 'formulation',
-        questionNumber: 10
+        content: generateFormulation(updatedContext as ClinicalContext),
+        nextQuestionNumber: 10
       };
     }
 
-    // Continuar com as perguntas obrigatórias
-    switch (currentStage) {
-      case 'complaint':
-        return {
-          nextQuestion: generateDemographicsQuestion(userResponse),
-          contextUpdate: { complaint: userResponse },
-          stage: 'demographics',
-          questionNumber: nextQuestionNum
-        };
-        
-      case 'demographics':
-        return {
-          nextQuestion: generateSeverityQuestion(userResponse, context),
-          contextUpdate: { demographics: userResponse },
-          stage: 'severity',
-          questionNumber: nextQuestionNum
-        };
-        
-      case 'severity':
-        return {
-          nextQuestion: generateTimelineQuestion(userResponse, context),
-          contextUpdate: { severity: userResponse },
-          stage: 'timeline',
-          questionNumber: nextQuestionNum
-        };
-        
-      case 'timeline':
-        return {
-          nextQuestion: generateMedicalHistoryQuestion(userResponse, context),
-          contextUpdate: { timeline: userResponse },
-          stage: 'medical_history',
-          questionNumber: nextQuestionNum
-        };
-        
-      case 'medical_history':
-        return {
-          nextQuestion: generateCurrentTreatmentsQuestion(userResponse, context),
-          contextUpdate: { medicalHistory: userResponse },
-          stage: 'current_treatments',
-          questionNumber: nextQuestionNum
-        };
-        
-      case 'current_treatments':
-        return {
-          nextQuestion: generateAllergiesQuestion(userResponse, context),
-          contextUpdate: { currentTreatments: userResponse },
-          stage: 'allergies',
-          questionNumber: nextQuestionNum
-        };
-        
-      case 'allergies':
-        return {
-          nextQuestion: generateLifestyleQuestion(userResponse, context),
-          contextUpdate: { allergies: userResponse },
-          stage: 'lifestyle',
-          questionNumber: nextQuestionNum
-        };
-        
-      case 'lifestyle':
-        return {
-          nextQuestion: generateObjectivesQuestion(userResponse, context),
-          contextUpdate: { lifestyle: userResponse },
-          stage: 'objectives',
-          questionNumber: nextQuestionNum
-        };
-        
+    // Continuar com as perguntas sequenciais
+    const nextQuestionNumber = currentStage + 1;
+    let nextQuestion = '';
+    
+    switch (nextQuestionNumber) {
+      case 2:
+        nextQuestion = generateDemographicsQuestion(userResponse);
+        break;
+      case 3:
+        nextQuestion = generateSeverityQuestion(userResponse, updatedContext);
+        break;
+      case 4:
+        nextQuestion = generateTimelineQuestion(userResponse, updatedContext);
+        break;
+      case 5:
+        nextQuestion = generateMedicalHistoryQuestion(userResponse, updatedContext);
+        break;
+      case 6:
+        nextQuestion = generateCurrentTreatmentsQuestion(userResponse, updatedContext);
+        break;
+      case 7:
+        nextQuestion = generateAllergiesQuestion(userResponse, updatedContext);
+        break;
+      case 8:
+        nextQuestion = generateLifestyleQuestion(userResponse, updatedContext);
+        break;
+      case 9:
+        nextQuestion = generateObjectivesQuestion(userResponse, updatedContext);
+        break;
       default:
-        return {
-          nextQuestion: generateFollowUpResponse(userResponse, context),
-          contextUpdate: {},
-          stage: 'follow_up',
-          questionNumber: questionNumber
-        };
+        nextQuestion = generateFollowUpResponse(userResponse, updatedContext);
+        break;
     }
+    
+    return {
+      content: nextQuestion,
+      nextQuestionNumber: nextQuestionNumber
+    };
   };
 
   const generateDemographicsQuestion = (complaint: string) => {
@@ -420,7 +376,6 @@ ${formulationElements.prognosis}
 **✅ Formulação completa baseada em anamnese criteriosa com TODAS as informações necessárias coletadas! Alguma dúvida ou ajuste necessário?**`;
   };
 
-  // ... keep existing code (analyzeComplexCase function)
   const analyzeComplexCase = (context: ClinicalContext) => {
     const complaint = context.complaint.toLowerCase();
     const demographics = context.demographics.toLowerCase();
@@ -554,32 +509,42 @@ Baseada na análise completa do seu caso específico com todos os dados coletado
     setIsLoading(true);
 
     setTimeout(() => {
-      const analysis = analyzeResponseAndGenerateNextQuestion(currentInput, clinicalContext, conversationStage);
-      
-      setClinicalContext(prev => ({
-        ...prev,
-        ...analysis.contextUpdate
-      }));
-      
-      setConversationStage(analysis.stage);
-      setQuestionNumber(analysis.questionNumber);
+      // NUNCA gerar formulação antes de completar as 9 perguntas
+      if (currentQuestionNumber <= 9) {
+        const nextQuestionData = generateNextQuestion(currentInput, currentQuestionNumber);
+        
+        setCurrentQuestionNumber(nextQuestionData.nextQuestionNumber);
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: analysis.nextQuestion,
-        role: 'assistant',
-        timestamp: new Date()
-      };
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: nextQuestionData.content,
+          role: 'assistant',
+          timestamp: new Date()
+        };
 
-      setMessages(prev => [...prev, assistantMessage]);
-      setIsLoading(false);
-      
-      if (analysis.stage === 'formulation') {
-        toast({
-          title: "✅ Anamnese Completa Finalizada!",
-          description: "Formulação personalizada baseada em análise clínica criteriosa com TODAS as informações coletadas.",
-        });
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        if (nextQuestionData.nextQuestionNumber === 10) {
+          toast({
+            title: "✅ Anamnese Completa Finalizada!",
+            description: "Formulação personalizada baseada em análise clínica criteriosa com TODAS as informações coletadas.",
+          });
+        }
+      } else {
+        // Após a formulação, responder com follow-ups
+        const followUpResponse = generateFollowUpResponse(currentInput, clinicalContext);
+        
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: followUpResponse,
+          role: 'assistant',
+          timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, assistantMessage]);
       }
+      
+      setIsLoading(false);
     }, 2000);
   };
 
@@ -604,26 +569,25 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
       role: 'assistant',
       timestamp: new Date()
     }]);
-    setConversationStage('complaint');
-    setQuestionNumber(1);
+    setCurrentQuestionNumber(1);
     setClinicalContext({});
     setInput('');
   };
 
   const getProgressIndicator = () => {
-    const progress = Math.min((questionNumber / 9) * 100, 100);
+    const progress = Math.min((currentQuestionNumber / 9) * 100, 100);
     
-    const stageLabels: Record<string, string> = {
-      'complaint': 'Queixa Principal',
-      'demographics': 'Demografia',  
-      'severity': 'Severidade',
-      'timeline': 'Cronologia',
-      'medical_history': 'Histórico Médico',
-      'current_treatments': 'Tratamentos Atuais',
-      'allergies': 'Alergias',
-      'lifestyle': 'Estilo de Vida',
-      'objectives': 'Objetivos',
-      'formulation': 'Formulação Gerada'
+    const stageLabels: Record<number, string> = {
+      1: 'Queixa Principal',
+      2: 'Demografia',  
+      3: 'Severidade',
+      4: 'Cronologia',
+      5: 'Histórico Médico',
+      6: 'Tratamentos Atuais',
+      7: 'Alergias',
+      8: 'Estilo de Vida',
+      9: 'Objetivos',
+      10: 'Formulação Gerada'
     };
     
     return (
@@ -635,7 +599,7 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
           />
         </div>
         <span className="text-xs text-slate-400">
-          {questionNumber <= 9 ? `${questionNumber}/9 - ${stageLabels[conversationStage] || 'Processando...'}` : 'Completo'}
+          {currentQuestionNumber <= 9 ? `${currentQuestionNumber}/9 - ${stageLabels[currentQuestionNumber] || 'Processando...'}` : 'Completo'}
         </span>
       </div>
     );
@@ -738,9 +702,9 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder={
-                conversationStage === 'formulation' 
+                currentQuestionNumber > 9
                   ? "Tem alguma dúvida sobre a formulação ou quer ajustes?"
-                  : `Responda à pergunta ${questionNumber}/9 para continuar a anamnese...`
+                  : `Responda à pergunta ${currentQuestionNumber}/9 para continuar a anamnese...`
               }
               className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none min-h-[60px]"
               rows={2}
