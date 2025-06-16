@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, RotateCcw } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import SpecialtySelector from './SpecialtySelector';
 
 interface ChatInputProps {
   input: string;
@@ -12,6 +13,8 @@ interface ChatInputProps {
   isLoading: boolean;
   remainingMessages: number;
   placeholder?: string;
+  selectedSpecialty: string;
+  onSpecialtyChange: (specialty: string) => void;
 }
 
 const ChatInput = ({ 
@@ -21,7 +24,9 @@ const ChatInput = ({
   onReset, 
   isLoading, 
   remainingMessages,
-  placeholder = "Cole suas fórmulas para análise..."
+  placeholder = "Cole suas fórmulas para análise...",
+  selectedSpecialty,
+  onSpecialtyChange
 }: ChatInputProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -81,11 +86,20 @@ const ChatInput = ({
           <Send className="w-4 h-4" />
         </Button>
       </div>
-      {remainingMessages <= 0 && (
-        <p className="text-xs sm:text-sm text-red-400 mt-2 text-center">
-          Limite diário atingido. Faça upgrade do seu plano para continuar analisando formulações.
-        </p>
-      )}
+      
+      {/* Seletor de Especialidade */}
+      <div className="flex justify-between items-center mt-3">
+        <SpecialtySelector 
+          selectedSpecialty={selectedSpecialty}
+          onSpecialtyChange={onSpecialtyChange}
+        />
+        
+        {remainingMessages <= 0 && (
+          <p className="text-xs sm:text-sm text-red-400">
+            Limite diário atingido. Faça upgrade do seu plano para continuar analisando formulações.
+          </p>
+        )}
+      </div>
     </div>
   );
 };

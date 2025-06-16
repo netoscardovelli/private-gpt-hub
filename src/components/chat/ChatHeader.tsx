@@ -1,14 +1,11 @@
 
 import { FlaskConical } from 'lucide-react';
-import SpecialtySelector from './SpecialtySelector';
 
 interface ChatHeaderProps {
   user: { name: string; plan: string; dailyLimit: number; usageToday: number };
-  selectedSpecialty: string;
-  onSpecialtyChange: (specialty: string) => void;
 }
 
-const ChatHeader = ({ user, selectedSpecialty, onSpecialtyChange }: ChatHeaderProps) => {
+const ChatHeader = ({ user }: ChatHeaderProps) => {
   const remainingMessages = user.dailyLimit - user.usageToday;
 
   return (
@@ -21,26 +18,13 @@ const ChatHeader = ({ user, selectedSpecialty, onSpecialtyChange }: ChatHeaderPr
           <span className="text-xs sm:text-sm">Assistente de Manipulação Farmacêutica - Plano {user.plan}</span>
         </div>
         
-        {/* Área direita com seletor e contador */}
-        <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-4">
-          
-          {/* Seletor de Especialidade */}
-          <div className="order-1 sm:order-1">
-            <SpecialtySelector 
-              selectedSpecialty={selectedSpecialty}
-              onSpecialtyChange={onSpecialtyChange}
-            />
-          </div>
-          
-          {/* Contador de mensagens */}
-          <div className="text-xs sm:text-sm text-slate-400 order-2 sm:order-2">
-            {remainingMessages > 0 ? (
-              <span>{remainingMessages} análises restantes hoje</span>
-            ) : (
-              <span className="text-red-400">Limite diário atingido</span>
-            )}
-          </div>
-          
+        {/* Contador de mensagens */}
+        <div className="text-xs sm:text-sm text-slate-400">
+          {remainingMessages > 0 ? (
+            <span>{remainingMessages} análises restantes hoje</span>
+          ) : (
+            <span className="text-red-400">Limite diário atingido</span>
+          )}
         </div>
       </div>
     </div>

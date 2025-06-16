@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -180,11 +179,7 @@ Escolha uma das opções abaixo:`,
 
   return (
     <div className="flex flex-col h-screen bg-slate-900">
-      <ChatHeader 
-        user={user} 
-        selectedSpecialty={selectedSpecialty}
-        onSpecialtyChange={setSelectedSpecialty}
-      />
+      <ChatHeader user={user} />
 
       {/* Botão de exportar PDF */}
       <div className="flex justify-end px-4 pt-2">
@@ -221,6 +216,8 @@ Escolha uma das opções abaixo:`,
         isLoading={isLoading}
         remainingMessages={remainingMessages}
         placeholder={getPlaceholder()}
+        selectedSpecialty={selectedSpecialty}
+        onSpecialtyChange={setSelectedSpecialty}
       />
     </div>
   );
