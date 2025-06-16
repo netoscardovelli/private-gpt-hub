@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,7 +28,7 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
       id: '1',
       content: `Olá ${user.name}! Sou seu assistente especializado em análise de fórmulas de manipulação farmacêutica.
 
-Escolha uma das opções abaixo:`,
+Cole suas fórmulas aqui e eu farei uma análise completa para você!`,
       role: 'assistant',
       timestamp: new Date()
     }
@@ -36,7 +37,7 @@ Escolha uma das opções abaixo:`,
   const [messages, setMessages] = useState<Message[]>(getInitialMessages());
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationMode, setConversationMode] = useState<'initial' | 'analysis' | 'suggestion'>('initial');
+  const [conversationMode, setConversationMode] = useState<'initial' | 'analysis'>('initial');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -59,35 +60,31 @@ Escolha uma das opções abaixo:`,
   };
 
   const handleQuickAction = async (action: string) => {
-    const message =
-      action === 'analise'
-        ? 'Quero fazer análise de fórmulas magistrais'
-        : 'Preciso de sugestões de fórmulas magistrais';
+    if (action === 'analise') {
+      const message = 'Quero fazer análise de fórmulas magistrais';
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: message,
-      role: 'user',
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-    setConversationMode(action === 'analise' ? 'analysis' : 'suggestion');
-
-    setTimeout(() => {
-      const response: Message = {
-        id: (Date.now() + 1).toString(),
-        content:
-          action === 'analise'
-            ? 'Perfeito! Cole suas fórmulas aqui e eu farei uma análise completa, incluindo:\n\n• Compatibilidade entre ativos\n• Concentrações adequadas\n• Possíveis incompatibilidades\n• Sugestões de melhorias\n• Observações técnicas importantes\n\nCole sua fórmula e vamos começar!'
-            : 'Qual é o objetivo terapêutico da formulação que você deseja? (Ex: anti-idade, clareamento, hidratação, tratamento de acne, etc.)',
-        role: 'assistant',
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: message,
+        role: 'user',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, response]);
-      setIsLoading(false);
-    }, 1000);
+
+      setMessages(prev => [...prev, userMessage]);
+      setIsLoading(true);
+      setConversationMode('analysis');
+
+      setTimeout(() => {
+        const response: Message = {
+          id: (Date.now() + 1).toString(),
+          content: 'Perfeito! Cole suas fórmulas aqui e eu farei uma análise completa, incluindo:\n\n• Compatibilidade entre ativos\n• Concentrações adequadas\n• Possíveis incompatibilidades\n• Sugestões de melhorias\n• Observações técnicas importantes\n\nCole sua fórmula e vamos começar!',
+          role: 'assistant',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, response]);
+        setIsLoading(false);
+      }, 1000);
+    }
   };
 
   const handleSend = async () => {
@@ -128,7 +125,7 @@ Escolha uma das opções abaixo:`,
           conversationHistory,
           customActives,
           userId: user.id,
-          specialty: selectedSpecialty // Enviar especialidade selecionada
+          specialty: selectedSpecialty
         }
       });
 
@@ -170,8 +167,6 @@ Escolha uma das opções abaixo:`,
     switch (conversationMode) {
       case 'analysis':
         return 'Cole suas fórmulas para análise...';
-      case 'suggestion':
-        return 'Vamos falar sobre seu caso clínico...';
       default:
         return 'Digite sua mensagem...';
     }
@@ -181,7 +176,6 @@ Escolha uma das opções abaixo:`,
     <div className="flex flex-col h-screen bg-slate-900">
       <ChatHeader user={user} />
 
-      {/* Botão de exportar PDF */}
       <div className="flex justify-end px-4 pt-2">
         <button
           onClick={() => exportChatToPDF(messages)}
@@ -192,7 +186,6 @@ Escolha uma das opções abaixo:`,
         </button>
       </div>
 
-      {/* Área das mensagens */}
       <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4">
         {messages.map((message, index) => (
           <MessageBubble

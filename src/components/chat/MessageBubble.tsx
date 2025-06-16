@@ -58,7 +58,6 @@ const MessageBubble = ({ message, index, onQuickAction, userId }: MessageBubbleP
           <div className="flex-1 min-w-0">
             <p className="text-sm sm:text-base whitespace-pre-wrap break-words">{message.content}</p>
             
-            {/* Quick action buttons - only show on first assistant message */}
             {message.role === 'assistant' && index === 0 && (
               <div className="flex flex-col gap-2 mt-3 sm:mt-4">
                 <Button
@@ -67,13 +66,6 @@ const MessageBubble = ({ message, index, onQuickAction, userId }: MessageBubbleP
                   size="sm"
                 >
                   🧪 Análise de Fórmulas
-                </Button>
-                <Button
-                  onClick={() => onQuickAction('sugestao')}
-                  className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-xs sm:text-sm px-3 py-2 h-auto"
-                  size="sm"
-                >
-                  💡 Sugestão de Fórmulas
                 </Button>
               </div>
             )}
@@ -124,7 +116,6 @@ const MessageBubble = ({ message, index, onQuickAction, userId }: MessageBubbleP
           </div>
         </div>
         
-        {/* Painel de feedback */}
         {showFeedback && message.role === 'assistant' && (
           <FeedbackPanel
             messageId={message.id}
