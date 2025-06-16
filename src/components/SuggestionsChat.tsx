@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,8 +19,7 @@ interface SuggestionsChatProps {
 
 interface ClinicalData {
   complaint: string;
-  age: string;
-  gender: string;
+  ageGender: string;
   medicalHistory: string;
   currentMedications: string;
   allergies: string;
@@ -35,16 +33,20 @@ const SuggestionsChat = ({ user, onBack }: SuggestionsChatProps) => {
       id: '1',
       content: `Olá Dr(a). ${user.name}! 👨‍⚕️
 
-Sou seu assistente para desenvolvimento de fórmulas magistrais personalizadas. Vou te ajudar a criar formulações específicas através de uma anamnese estruturada.
+Sou seu assistente para desenvolvimento de fórmulas magistrais personalizadas. Para criar a formulação mais adequada, preciso coletar informações clínicas do seu paciente através de uma anamnese estruturada.
 
-Vamos começar com algumas perguntas sobre seu paciente para desenvolver a melhor formulação possível:
+São 7 perguntas essenciais que vou fazer sequencialmente:
 
-**1. Qual é a queixa principal do paciente?**
-(Ex: acne, melasma, queda capilar, dor articular, ansiedade, etc.)`,
+**Pergunta 1 de 7:**
+**Qual é a queixa principal do paciente?**
+(Ex: acne inflamatória, melasma, queda capilar, ressecamento cutâneo, envelhecimento precoce, etc.)
+
+Por favor, descreva detalhadamente a condição que precisa ser tratada.`,
       role: 'assistant',
       timestamp: new Date()
     }
   ]);
+  
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -55,38 +57,38 @@ Vamos começar com algumas perguntas sobre seu paciente para desenvolver a melho
   const clinicalQuestions = [
     {
       step: 1,
-      question: "**1. Qual é a queixa principal do paciente?**\n(Ex: acne, melasma, queda capilar, dor articular, ansiedade, etc.)",
-      field: 'complaint'
+      question: "**Pergunta 1 de 7:**\n**Qual é a queixa principal do paciente?**\n(Ex: acne inflamatória, melasma, queda capilar, ressecamento cutâneo, envelhecimento precoce, etc.)\n\nPor favor, descreva detalhadamente a condição que precisa ser tratada.",
+      field: 'complaint' as keyof ClinicalData
     },
     {
       step: 2,
-      question: "**2. Idade e sexo do paciente?**\n(Ex: 35 anos, feminino)",
-      field: 'age'
+      question: "**Pergunta 2 de 7:**\n**Idade e sexo do paciente?**\n(Ex: 28 anos, feminino / 45 anos, masculino)\n\nEssa informação é essencial para adequar a formulação ao perfil hormonal e metabólico.",
+      field: 'ageGender' as keyof ClinicalData
     },
     {
       step: 3,
-      question: "**3. Histórico médico relevante?**\n(Comorbidades, cirurgias prévias, condições crônicas)",
-      field: 'medicalHistory'
+      question: "**Pergunta 3 de 7:**\n**Histórico médico relevante?**\n(Comorbidades, doenças crônicas, cirurgias prévias, condições dermatológicas, distúrbios hormonais, etc.)\n\nInclua qualquer condição médica que possa influenciar na escolha dos ativos.",
+      field: 'medicalHistory' as keyof ClinicalData
     },
     {
       step: 4,
-      question: "**4. Medicações em uso atualmente?**\n(Incluir suplementos e fitoterápicos)",
-      field: 'currentMedications'
+      question: "**Pergunta 4 de 7:**\n**Medicações em uso atualmente?**\n(Medicamentos prescritos, anticoncepcionais, suplementos, fitoterápicos, tratamentos tópicos, etc.)\n\nÉ fundamental conhecer possíveis interações medicamentosas.",
+      field: 'currentMedications' as keyof ClinicalData
     },
     {
       step: 5,
-      question: "**5. Alergias ou intolerâncias conhecidas?**\n(Medicamentosas, alimentares, cosméticas)",
-      field: 'allergies'
+      question: "**Pergunta 5 de 7:**\n**Alergias ou intolerâncias conhecidas?**\n(Medicamentosas, cosméticas, alimentares, contato, etc.)\n\nEspecifique se há reações conhecidas a ativos específicos ou grupos de substâncias.",
+      field: 'allergies' as keyof ClinicalData
     },
     {
       step: 6,
-      question: "**6. Estilo de vida do paciente?**\n(Atividade física, estresse, sono, dieta)",
-      field: 'lifestyle'
+      question: "**Pergunta 6 de 7:**\n**Estilo de vida do paciente?**\n(Rotina de cuidados, exposição solar, atividade física, níveis de estresse, qualidade do sono, hábitos alimentares)\n\nEssas informações ajudam a personalizar o tratamento.",
+      field: 'lifestyle' as keyof ClinicalData
     },
     {
       step: 7,
-      question: "**7. Objetivos terapêuticos específicos?**\n(Resultados esperados, prazo desejado)",
-      field: 'objectives'
+      question: "**Pergunta 7 de 7:**\n**Objetivos terapêuticos específicos?**\n(Resultados esperados, prazo desejado, prioridades do tratamento)\n\nDefina as expectativas e metas do tratamento para direcionar a formulação.",
+      field: 'objectives' as keyof ClinicalData
     }
   ];
 
@@ -98,71 +100,92 @@ Vamos começar com algumas perguntas sobre seu paciente para desenvolver a melho
     scrollToBottom();
   }, [messages]);
 
-  const generateFormulationSuggestion = (data: Partial<ClinicalData>) => {
+  const generateFormulationSuggestion = (data: ClinicalData) => {
     const responses = [
-      `**ANÁLISE CLÍNICA COMPLETA**
+      `**🎯 ANÁLISE CLÍNICA COMPLETA - FORMULAÇÃO PERSONALIZADA**
 
-Baseado nos dados coletados, desenvolvi uma proposta de formulação personalizada:
+**📋 PERFIL DO PACIENTE:**
+• **Idade/Sexo:** ${data.ageGender}
+• **Queixa Principal:** ${data.complaint}
+• **Histórico Médico:** ${data.medicalHistory}
+• **Medicações Atuais:** ${data.currentMedications}
+• **Alergias:** ${data.allergies}
+• **Estilo de Vida:** ${data.lifestyle}
+• **Objetivos:** ${data.objectives}
 
-**📋 RESUMO DO CASO:**
-- Paciente: ${data.age || 'Idade não informada'}
-- Queixa: ${data.complaint || 'Não especificada'}
-- Objetivos: ${data.objectives || 'Não especificados'}
+---
 
-**💊 SUGESTÃO DE FORMULAÇÃO:**
+**💊 PROTOCOLO FARMACÊUTICO PERSONALIZADO**
 
-*Considerando o perfil clínico apresentado, sugiro uma abordagem multimodal com as seguintes opções:*
+**🔬 FÓRMULA MAGISTRAL PRINCIPAL:**
+*Baseada na análise clínica completa*
 
-**Fórmula Principal:**
-- [Ativos específicos baseados na queixa]
-- [Concentrações adequadas ao perfil]
-- [Forma farmacêutica otimizada]
+**Composição Sugerida:**
+• Ativo Principal: [Específico para ${data.complaint}]
+• Ativo Sinérgico: [Complementar ao perfil]
+• Sistema de Liberação: [Adequado ao caso]
+• Veículo: [Otimizado para o paciente]
 
-**Fórmulas Complementares:**
-- [Suporte nutricional específico]
-- [Antioxidantes personalizados]
-- [Moduladores específicos]
+**📊 FÓRMULAS COMPLEMENTARES:**
+1. **Suporte Sistêmico:** Nutrientes específicos
+2. **Proteção Antioxidante:** Moduladores personalizados
+3. **Regulação Hormonal:** Se indicado pelo perfil
 
-**⚠️ CONSIDERAÇÕES IMPORTANTES:**
-- Interações com medicações atuais: ${data.currentMedications || 'Não informadas'}
-- Contraindicações por alergias: ${data.allergies || 'Não informadas'}
-- Ajustes por estilo de vida: ${data.lifestyle || 'Não informado'}
+**⚠️ CONSIDERAÇÕES CRÍTICAS:**
+• **Interações:** Avaliadas com ${data.currentMedications}
+• **Contraindicações:** Respeitando ${data.allergies}
+• **Monitoramento:** Protocolo personalizado
+• **Ajustes:** Conforme resposta individual
 
-**📅 PROTOCOLO SUGERIDO:**
-- Início gradual para avaliar tolerância
-- Monitoramento clínico em 15-30 dias
-- Ajustes conforme resposta terapêutica
+**📅 CRONOGRAMA TERAPÊUTICO:**
+• Fase 1: Introdução gradual (primeiras 2 semanas)
+• Fase 2: Titulação da dose (semanas 3-6)
+• Fase 3: Manutenção otimizada (após 6 semanas)
 
-Gostaria que eu detalhe alguma formulação específica ou tem alguma preferência de ativos?`,
+**🎯 RESULTADOS ESPERADOS:**
+Baseado no objetivo: "${data.objectives}"
 
-      `**PROPOSTA TERAPÊUTICA PERSONALIZADA**
+---
+**Deseja que eu detalhe alguma formulação específica ou ajuste o protocolo?**`,
 
-Com base na anamnese realizada, elaborei um protocolo farmacêutico direcionado:
+      `**📋 RELATÓRIO FARMACÊUTICO PERSONALIZADO**
 
-**🎯 ESTRATÉGIA TERAPÊUTICA:**
-Para: ${data.complaint || 'Condição não especificada'}
-Paciente: ${data.age || 'Perfil não definido'}
+**DADOS CLÍNICOS COLETADOS:**
+• Paciente: ${data.ageGender}
+• Indicação: ${data.complaint}
+• Perfil Médico: ${data.medicalHistory}
+• Terapias Atuais: ${data.currentMedications}
+• Restrições: ${data.allergies}
+• Contexto: ${data.lifestyle}
+• Meta: ${data.objectives}
 
-**💡 FORMULAÇÕES SUGERIDAS:**
+---
 
-**1. Fórmula Base Personalizada:**
-[Combinação sinérgica de ativos específicos para a condição]
+**🧬 ESTRATÉGIA TERAPÊUTICA INTEGRADA**
 
-**2. Suporte Sistêmico:**
-[Nutrientes e cofatores para otimizar a resposta]
+**FORMULAÇÃO PRIMÁRIA:**
+*Desenvolvida especificamente para este perfil clínico*
 
-**3. Proteção e Prevenção:**
-[Antioxidantes e protetores específicos]
+**Princípios Ativos Selecionados:**
+1. **Ativo Primário:** [Direcionado à queixa principal]
+2. **Moduladores:** [Ajustados ao perfil hormonal/metabólico]
+3. **Sinergistas:** [Potencializadores da ação principal]
+4. **Protetores:** [Minimizando efeitos adversos]
 
-**🔍 CONSIDERAÇÕES CLÍNICAS:**
-- Histórico: ${data.medicalHistory || 'Não relatado'}
-- Medicações: ${data.currentMedications || 'Não informadas'}
-- Restrições: ${data.allergies || 'Nenhuma informada'}
+**FORMULAÇÕES ADJUVANTES:**
+• **Sistêmica:** Suporte nutricional direcionado
+• **Tópica Complementar:** Cuidados específicos
+• **Preventiva:** Proteção e manutenção
 
-**📈 EXPECTATIVAS DE RESULTADOS:**
-Baseado no objetivo: ${data.objectives || 'Não especificado'}
+**🔍 ANÁLISE DE SEGURANÇA:**
+• **Perfil de Interações:** Compatível com ${data.currentMedications}
+• **Perfil Alergênico:** Evitando ${data.allergies}
+• **Perfil Fisiológico:** Adequado ao histórico ${data.medicalHistory}
 
-Posso detalhar a composição completa de qualquer uma dessas formulações. Qual seria sua preferência?`
+**📈 PROGNÓSTICO:**
+Expectativa baseada em: ${data.objectives}
+
+**Qual aspecto da formulação gostaria que eu aprofunde?**`
     ];
 
     return responses[Math.floor(Math.random() * responses.length)];
@@ -201,17 +224,17 @@ Posso detalhar a composição completa de qualquer uma dessas formulações. Qua
         const nextStep = currentStep + 1;
         const nextQuestion = clinicalQuestions.find(q => q.step === nextStep);
         
-        assistantResponse = `Perfeito! Anotado: "${currentInput}"
+        assistantResponse = `✅ **Informação registrada:** "${currentInput}"
 
 ${nextQuestion?.question || ''}`;
         
         setCurrentStep(nextStep);
       } else {
-        // Gerar sugestão de formulação
+        // Gerar sugestão de formulação APENAS após todas as 7 perguntas
         const updatedData = {
           ...clinicalData,
           [currentQuestion?.field || '']: currentInput
-        };
+        } as ClinicalData;
         
         assistantResponse = generateFormulationSuggestion(updatedData);
       }
@@ -228,11 +251,11 @@ ${nextQuestion?.question || ''}`;
       
       if (currentStep >= clinicalQuestions.length) {
         toast({
-          title: "Anamnese completa!",
-          description: "Formulação personalizada gerada com base nos dados clínicos.",
+          title: "✅ Anamnese Completa!",
+          description: "Formulação magistral personalizada gerada com base nos 7 dados clínicos essenciais.",
         });
       }
-    }, 1500);
+    }, 2000); // Aumentei o tempo para simular análise mais profunda
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -247,12 +270,15 @@ ${nextQuestion?.question || ''}`;
       id: '1',
       content: `Olá Dr(a). ${user.name}! 👨‍⚕️
 
-Sou seu assistente para desenvolvimento de fórmulas magistrais personalizadas. Vou te ajudar a criar formulações específicas através de uma anamnese estruturada.
+Sou seu assistente para desenvolvimento de fórmulas magistrais personalizadas. Para criar a formulação mais adequada, preciso coletar informações clínicas do seu paciente através de uma anamnese estruturada.
 
-Vamos começar com algumas perguntas sobre seu paciente para desenvolver a melhor formulação possível:
+São 7 perguntas essenciais que vou fazer sequencialmente:
 
-**1. Qual é a queixa principal do paciente?**
-(Ex: acne, melasma, queda capilar, dor articular, ansiedade, etc.)`,
+**Pergunta 1 de 7:**
+**Qual é a queixa principal do paciente?**
+(Ex: acne inflamatória, melasma, queda capilar, ressecamento cutâneo, envelhecimento precoce, etc.)
+
+Por favor, descreva detalhadamente a condição que precisa ser tratada.`,
       role: 'assistant',
       timestamp: new Date()
     }]);
@@ -277,13 +303,13 @@ Vamos começar com algumas perguntas sobre seu paciente para desenvolver a melho
             </Button>
             <div className="flex items-center space-x-3 text-slate-300">
               <Lightbulb className="w-5 h-5 text-purple-400" />
-              <span className="text-sm font-medium">Desenvolvimento de Fórmulas Magistrais</span>
+              <span className="text-sm font-medium">Anamnese para Fórmulas Magistrais</span>
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
             <span className="text-xs text-slate-400">
-              Passo {Math.min(currentStep, clinicalQuestions.length)} de {clinicalQuestions.length}
+              Pergunta {Math.min(currentStep, clinicalQuestions.length)} de {clinicalQuestions.length}
             </span>
             <Button
               onClick={resetAnamnesis}
@@ -341,7 +367,7 @@ Vamos começar com algumas perguntas sobre seu paciente para desenvolver a melho
                   </div>
                   <div className="flex items-center space-x-2 text-slate-300">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Analisando dados clínicos...</span>
+                    <span>Processando dados clínicos...</span>
                   </div>
                 </div>
               </Card>
@@ -361,7 +387,7 @@ Vamos começar com algumas perguntas sobre seu paciente para desenvolver a melho
               onKeyDown={handleKeyPress}
               placeholder={
                 currentStep <= clinicalQuestions.length 
-                  ? "Descreva detalhadamente..."
+                  ? `Responda a pergunta ${currentStep} detalhadamente...`
                   : "Tem alguma dúvida sobre a formulação sugerida?"
               }
               className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none min-h-[60px]"
