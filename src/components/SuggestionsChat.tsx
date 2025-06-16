@@ -36,9 +36,11 @@ const SuggestionsChat = ({ user, onBack }: SuggestionsChatProps) => {
       id: '1',
       content: `Olá Dr(a). ${user.name}! 👨‍⚕️
 
-Sou seu assistente para desenvolvimento de fórmulas magistrais personalizadas. Vou conduzir uma anamnese inteligente, coletando todas as informações clínicas necessárias antes de sugerir qualquer formulação.
+Sou seu assistente para desenvolvimento de fórmulas magistrais personalizadas. Vou conduzir uma anamnese inteligente, coletando **TODAS** as informações clínicas necessárias antes de sugerir qualquer formulação.
 
-**Vamos começar com a primeira pergunta:**
+**🔍 IMPORTANTE:** Vou fazer 9 perguntas obrigatórias sequenciais. Só após responder TODAS elas é que terei dados suficientes para criar uma formulação segura e eficaz.
+
+**PERGUNTA 1/9 - QUEIXA PRINCIPAL:**
 Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição que precisa ser tratada.`,
       role: 'assistant',
       timestamp: new Date()
@@ -49,8 +51,22 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
   const [isLoading, setIsLoading] = useState(false);
   const [clinicalContext, setClinicalContext] = useState<Partial<ClinicalContext>>({});
   const [conversationStage, setConversationStage] = useState('complaint');
+  const [questionNumber, setQuestionNumber] = useState(1);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // CONTROLE RIGOROSO - NUNCA pular etapas
+  const REQUIRED_STAGES = [
+    'complaint',
+    'demographics', 
+    'severity',
+    'timeline',
+    'medical_history',
+    'current_treatments',
+    'allergies',
+    'lifestyle',
+    'objectives'
+  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -61,84 +77,102 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
   }, [messages]);
 
   const analyzeResponseAndGenerateNextQuestion = (userResponse: string, context: Partial<ClinicalContext>, currentStage: string) => {
-    console.log('Analisando resposta na etapa:', currentStage);
-    console.log('Contexto atual:', context);
+    console.log('🔍 Etapa atual:', currentStage);
+    console.log('📊 Contexto coletado:', context);
     
-    // NUNCA gerar formulação até ter TODAS as informações necessárias
-    const requiredFields = ['complaint', 'demographics', 'severity', 'timeline', 'medicalHistory', 'currentTreatments', 'allergies', 'lifestyle', 'objectives'];
+    const currentStageIndex = REQUIRED_STAGES.indexOf(currentStage);
+    const nextStageIndex = currentStageIndex + 1;
+    const nextStage = REQUIRED_STAGES[nextStageIndex];
+    const nextQuestionNum = questionNumber + 1;
     
+    console.log('➡️ Próxima etapa:', nextStage);
+    console.log('🔢 Pergunta número:', nextQuestionNum);
+    
+    // NUNCA GERAR FORMULAÇÃO até completar TODAS as 9 perguntas
+    if (nextStageIndex >= REQUIRED_STAGES.length) {
+      // SÓ AGORA podemos gerar a formulação
+      const finalContext = { ...context, objectives: userResponse };
+      console.log('✅ ANAMNESE COMPLETA! Gerando formulação...');
+      return {
+        nextQuestion: generateFormulation(finalContext as ClinicalContext),
+        contextUpdate: { objectives: userResponse },
+        stage: 'formulation',
+        questionNumber: 10
+      };
+    }
+
+    // Continuar com as perguntas obrigatórias
     switch (currentStage) {
       case 'complaint':
         return {
           nextQuestion: generateDemographicsQuestion(userResponse),
           contextUpdate: { complaint: userResponse },
-          stage: 'demographics'
+          stage: 'demographics',
+          questionNumber: nextQuestionNum
         };
         
       case 'demographics':
         return {
           nextQuestion: generateSeverityQuestion(userResponse, context),
           contextUpdate: { demographics: userResponse },
-          stage: 'severity'
+          stage: 'severity',
+          questionNumber: nextQuestionNum
         };
         
       case 'severity':
         return {
           nextQuestion: generateTimelineQuestion(userResponse, context),
           contextUpdate: { severity: userResponse },
-          stage: 'timeline'
+          stage: 'timeline',
+          questionNumber: nextQuestionNum
         };
         
       case 'timeline':
         return {
           nextQuestion: generateMedicalHistoryQuestion(userResponse, context),
           contextUpdate: { timeline: userResponse },
-          stage: 'medical_history'
+          stage: 'medical_history',
+          questionNumber: nextQuestionNum
         };
         
       case 'medical_history':
         return {
           nextQuestion: generateCurrentTreatmentsQuestion(userResponse, context),
           contextUpdate: { medicalHistory: userResponse },
-          stage: 'current_treatments'
+          stage: 'current_treatments',
+          questionNumber: nextQuestionNum
         };
         
       case 'current_treatments':
         return {
           nextQuestion: generateAllergiesQuestion(userResponse, context),
           contextUpdate: { currentTreatments: userResponse },
-          stage: 'allergies'
+          stage: 'allergies',
+          questionNumber: nextQuestionNum
         };
         
       case 'allergies':
         return {
           nextQuestion: generateLifestyleQuestion(userResponse, context),
           contextUpdate: { allergies: userResponse },
-          stage: 'lifestyle'
+          stage: 'lifestyle',
+          questionNumber: nextQuestionNum
         };
         
       case 'lifestyle':
         return {
           nextQuestion: generateObjectivesQuestion(userResponse, context),
           contextUpdate: { lifestyle: userResponse },
-          stage: 'objectives'
-        };
-        
-      case 'objectives':
-        // SOMENTE AGORA que temos todas as informações, gerar a formulação
-        const finalContext = { ...context, objectives: userResponse };
-        console.log('Contexto completo para formulação:', finalContext);
-        return {
-          nextQuestion: generateFormulation(finalContext as ClinicalContext),
-          contextUpdate: { objectives: userResponse },
-          stage: 'formulation'
+          stage: 'objectives',
+          questionNumber: nextQuestionNum
         };
         
       default:
         return {
           nextQuestion: generateFollowUpResponse(userResponse, context),
           contextUpdate: {},
-          stage: 'follow_up'
+          stage: 'follow_up',
+          questionNumber: questionNumber
         };
     }
   };
@@ -156,36 +190,40 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
       specificQuestions = '\n• Padrão da calvície (difusa ou androgenética)?\n• Há histórico familiar?';
     } else if (complaintLower.includes('celulite')) {
       specificQuestions = '\n• Grau da celulite (leve, moderada, severa)?\n• Há quanto tempo percebeu o problema?';
+    } else if (complaintLower.includes('dor') || complaintLower.includes('articular') || complaintLower.includes('artrite')) {
+      specificQuestions = '\n• Há diagnóstico médico específico?\n• Quais articulações são mais afetadas?';
     }
     
-    return `**Queixa registrada:** ${complaint}
+    return `✅ **Queixa registrada:** ${complaint}
 
-**Agora preciso conhecer o perfil do paciente:**
+**PERGUNTA 2/9 - PERFIL DEMOGRÁFICO:**
+
+Preciso conhecer o perfil do paciente para calcular dosagens adequadas:
 
 • Qual a idade e sexo?
 • Peso aproximado e altura?${specificQuestions}
 
-Essas informações são fundamentais para determinar as concentrações adequadas dos ativos.`;
+**⚠️ IMPORTANTE:** Só passarei para a próxima pergunta após receber essas informações completas.`;
   };
 
   const generateSeverityQuestion = (demographics: string, context: Partial<ClinicalContext>) => {
     const complaint = context.complaint?.toLowerCase() || '';
     
     if (complaint.includes('acne')) {
-      return `**Perfil do paciente:** ${demographics}
+      return `✅ **Perfil registrado:** ${demographics}
 
-**Preciso entender a severidade da acne:**
+**PERGUNTA 3/9 - SEVERIDADE DA ACNE:**
 
 • **Acne grau I** - Apenas cravos (comedões)
 • **Acne grau II** - Cravos + espinhas pequenas (pápulas)  
 • **Acne grau III** - Espinhas inflamadas com pus (pústulas)
 • **Acne grau IV** - Nódulos dolorosos e cistos
 
-Qual melhor descreve o caso atual?`;
-    } else if (complaint.includes('melasma') || complaint.includes('mancha')) {
-      return `**Dados demográficos:** ${demographics}
+Qual melhor descreve o caso atual? Esta classificação é crucial para definir a potência dos ativos.`;
+    } else if (complaint.includes('melasma') || complaintLower.includes('mancha')) {
+      return `✅ **Perfil registrado:** ${demographics}
 
-**Sobre as manchas:**
+**PERGUNTA 3/9 - CARACTERÍSTICAS DAS MANCHAS:**
 
 • Qual a coloração (marrom claro, escuro, acinzentado)?
 • São superficiais ou bem profundas?
@@ -193,21 +231,21 @@ Qual melhor descreve o caso atual?`;
 • Pioram com sol mesmo usando protetor?
 
 Essas características definem o protocolo de tratamento.`;
-    } else if (complaint.includes('celulite')) {
-      return `**Perfil:** ${demographics}
+    } else if (complaint.includes('dor') || complaintLower.includes('articular')) {
+      return `✅ **Perfil registrado:** ${demographics}
 
-**Classificação da celulite:**
+**PERGUNTA 3/9 - INTENSIDADE DA DOR:**
 
-• **Grau I** - Visível apenas quando comprime a pele
-• **Grau II** - Visível naturalmente em pé
-• **Grau III** - Visível em pé e deitada, com nódulos palpáveis  
-• **Grau IV** - Muito aparente com deformidades e dor
+• Em uma escala de 0-10, qual a intensidade da dor?
+• A dor é constante ou apenas com movimento?
+• Há rigidez matinal? Por quanto tempo?
+• A dor melhora ou piora com atividade física?
 
-Qual grau melhor se adequa?`;
+Esta avaliação é fundamental para determinar a abordagem terapêutica.`;
     } else {
-      return `**Perfil registrado:** ${demographics}
+      return `✅ **Perfil registrado:** ${demographics}
 
-**Sobre a intensidade/severidade:**
+**PERGUNTA 3/9 - INTENSIDADE/SEVERIDADE:**
 
 • Como classificaria a condição: leve, moderada ou severa?
 • Está piorando, estável ou melhorando?
@@ -218,16 +256,16 @@ Isso me ajuda a calibrar a potência do tratamento.`;
   };
 
   const generateTimelineQuestion = (severity: string, context: Partial<ClinicalContext>) => {
-    return `**Severidade compreendida:** ${severity}
+    return `✅ **Severidade compreendida:** ${severity}
 
-**Cronologia da condição:**
+**PERGUNTA 4/9 - CRONOLOGIA DA CONDIÇÃO:**
 
 • Há quanto tempo o paciente apresenta este problema?
 • Foi gradual ou apareceu repentinamente? 
 • Há algum fator que desencadeou ou piorou?
 • Já tentou tratamentos anteriores? Com que resultado?
 
-O tempo de evolução me ajuda a entender se é uma condição aguda ou crônica.`;
+O tempo de evolução me ajuda a entender se é uma condição aguda ou crônica, influenciando diretamente o protocolo.`;
   };
 
   const generateMedicalHistoryQuestion = (timeline: string, context: Partial<ClinicalContext>) => {
@@ -239,24 +277,26 @@ O tempo de evolução me ajuda a entender se é uma condição aguda ou crônica
       specificConditions = '\n• Distúrbios hormonais (SOP, tireóide)?\n• Diabetes ou resistência à insulina?\n• Histórico de câncer hormônio-dependente?';
     } else if (complaint.includes('cardiovascular') || complaint.includes('circulação')) {
       specificConditions = '\n• Problemas cardíacos ou circulatórios?\n• Hipertensão arterial?\n• Uso de anticoagulantes?';
+    } else if (complaint.includes('dor') || complaint.includes('articular')) {
+      specificConditions = '\n• Artrite, artrose ou outras doenças articulares?\n• Fibromialgia ou outras síndromes dolorosas?\n• Lesões ou cirurgias articulares anteriores?';
     }
     
-    return `**Timeline:** ${timeline}
+    return `✅ **Timeline registrada:** ${timeline}
 
-**Histórico médico relevante:**
+**PERGUNTA 5/9 - HISTÓRICO MÉDICO RELEVANTE:**
 
 • Tem alguma doença crônica diagnosticada?
 • Faz uso de medicamentos contínuos?
 • Já teve reações alérgicas a medicamentos?
 • Cirurgias recentes ou procedimentos estéticos?${specificConditions}
 
-Preciso descartar contraindicações importantes.`;
+**⚠️ CRUCIAL:** Preciso descartar contraindicações importantes antes de formular.`;
   };
 
   const generateCurrentTreatmentsQuestion = (medicalHistory: string, context: Partial<ClinicalContext>) => {
-    return `**Histórico médico:** ${medicalHistory}
+    return `✅ **Histórico médico registrado:** ${medicalHistory}
 
-**Tratamentos atuais em uso:**
+**PERGUNTA 6/9 - TRATAMENTOS ATUAIS EM USO:**
 
 **Sistêmicos (oral):**
 • Antibióticos, hormônios, vitaminas?
@@ -270,13 +310,13 @@ Preciso descartar contraindicações importantes.`;
 • Suplementos, fitoterápicos?
 • Tratamentos alternativos?
 
-É crucial conhecer TUDO que está usando para evitar interações perigosas.`;
+**⚠️ FUNDAMENTAL:** É crucial conhecer TUDO que está usando para evitar interações perigosas.`;
   };
 
   const generateAllergiesQuestion = (currentTreatments: string, context: Partial<ClinicalContext>) => {
-    return `**Tratamentos atuais:** ${currentTreatments}
+    return `✅ **Tratamentos atuais registrados:** ${currentTreatments}
 
-**Alergias e intolerâncias:**
+**PERGUNTA 7/9 - ALERGIAS E INTOLERÂNCIAS:**
 
 **Medicamentosas:**
 • Alergia a algum medicamento específico?
@@ -290,7 +330,7 @@ Preciso descartar contraindicações importantes.`;
 • Alergia alimentar, ao látex, metais?
 • Asma ou rinite alérgica?
 
-Preciso garantir total segurança na formulação.`;
+**⚠️ SEGURANÇA:** Preciso garantir total segurança na formulação.`;
   };
 
   const generateLifestyleQuestion = (allergies: string, context: Partial<ClinicalContext>) => {
@@ -302,26 +342,26 @@ Preciso garantir total segurança na formulação.`;
       specificLifestyle = '\n• Rotina de limpeza da pele atual?\n• Usa maquiagem diariamente?\n• Nível de estresse e qualidade do sono?';
     } else if (complaint.includes('melasma') || complaint.includes('mancha')) {
       specificLifestyle = '\n• Exposição solar diária (trabalho, esporte)?\n• Usa protetor solar religiosamente?\n• Reaplica durante o dia?';
-    } else if (complaint.includes('anti-idade') || complaint.includes('rugas')) {
-      specificLifestyle = '\n• Tabagismo ou exposição solar excessiva?\n• Routine de cuidados atual?\n• Hidratação e alimentação?';
+    } else if (complaint.includes('dor') || complaint.includes('articular')) {
+      specificLifestyle = '\n• Nível de atividade física atual?\n• Trabalho envolve esforço repetitivo?\n• Qualidade do sono (dor noturna)?';
     }
     
-    return `**Alergias:** ${allergies}
+    return `✅ **Alergias registradas:** ${allergies}
 
-**Estilo de vida e rotina:**
+**PERGUNTA 8/9 - ESTILO DE VIDA E ROTINA:**
 
 • Como é a rotina de cuidados atual?
 • Exposição a fatores ambientais (sol, poluição)?
 • Nível de estresse e qualidade do sono?
 • Aderência a tratamentos (disciplina para usar)?${specificLifestyle}
 
-Isso me ajuda a personalizar o protocolo de aplicação.`;
+Isso me ajuda a personalizar o protocolo de aplicação e prever aderência.`;
   };
 
   const generateObjectivesQuestion = (lifestyle: string, context: Partial<ClinicalContext>) => {
-    return `**Estilo de vida:** ${lifestyle}
+    return `✅ **Estilo de vida registrado:** ${lifestyle}
 
-**🎯 Objetivos terapêuticos (ÚLTIMA PERGUNTA):**
+**PERGUNTA 9/9 - OBJETIVOS TERAPÊUTICOS (ÚLTIMA PERGUNTA!):**
 
 • Qual o principal resultado esperado?
 • Em quanto tempo gostaria de ver melhorias?
@@ -329,20 +369,22 @@ Isso me ajuda a personalizar o protocolo de aplicação.`;
 • Prefere aplicação manhã, noite ou ambos?
 • Orçamento aproximado para o tratamento?
 
-**Expectativas realistas:**
+**🎯 EXPECTATIVAS REALISTAS:**
 • Resultados iniciais: 2-4 semanas
 • Melhorias significativas: 2-3 meses  
 • Manutenção: tratamento contínuo
 
-Com essa informação, finalmente posso criar sua formulação personalizada! 🧬`;
+**🧬 APÓS SUA RESPOSTA:** Finalmente terei dados completos para criar sua formulação personalizada baseada em anamnese criteriosa!`;
   };
 
   const generateFormulation = (context: ClinicalContext) => {
-    console.log('Gerando formulação com contexto completo:', context);
+    console.log('🧬 GERANDO FORMULAÇÃO COM TODOS OS DADOS:', context);
     
     const formulationElements = analyzeComplexCase(context);
     
-    return `**🧬 ANÁLISE CLÍNICA COMPLETA - FORMULAÇÃO INTELIGENTE**
+    return `**🎉 ANAMNESE FINALIZADA COM SUCESSO! 🎉**
+
+**🧬 ANÁLISE CLÍNICA COMPLETA - FORMULAÇÃO INTELIGENTE**
 
 **📋 SÍNTESE DO CASO CLÍNICO:**
 • **Queixa Principal:** ${context.complaint}
@@ -374,7 +416,7 @@ ${formulationElements.considerations}
 ${formulationElements.prognosis}
 
 ---
-**Agora sim! Formulação completa baseada em anamnese criteriosa. Alguma dúvida ou ajuste necessário?**`;
+**✅ Formulação completa baseada em anamnese criteriosa com TODAS as informações necessárias coletadas! Alguma dúvida ou ajuste necessário?**`;
   };
 
   // ... keep existing code (analyzeComplexCase function)
@@ -437,10 +479,21 @@ ${formulationElements.prognosis}
 • Veículo: Creme base dermatológica`;
       
       rationale = `Tripla ação despigmentante com bloqueio da tirosinase e renovação celular acelerada.`;
+    } else if (complaint.includes('dor') || complaint.includes('articular')) {
+      primaryFormulation = `**FÓRMULA ANTI-INFLAMATÓRIA PARA DOR ARTICULAR:**
+• Curcumina 500mg
+• Boswellia serrata 300mg
+• Glucosamina 1500mg
+• Condroitina 1200mg
+• MSM 1000mg
+• Vitamina D3 2000UI
+• Veículo: Cápsulas`;
+      
+      rationale = `Sinergia anti-inflamatória e regenerativa para proteção articular e alívio da dor.`;
     } else {
       primaryFormulation = `**FÓRMULA PERSONALIZADA:**
-Baseada na análise completa do seu caso específico.`;
-      rationale = `Formulação desenvolvida considerando todos os aspectos clínicos apresentados.`;
+Baseada na análise completa do seu caso específico com todos os dados coletados.`;
+      rationale = `Formulação desenvolvida considerando todos os aspectos clínicos apresentados durante a anamnese.`;
     }
     
     protocol = `**Protocolo de Uso:**
@@ -508,6 +561,7 @@ Baseada na análise completa do seu caso específico.`;
       }));
       
       setConversationStage(analysis.stage);
+      setQuestionNumber(analysis.questionNumber);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -521,8 +575,8 @@ Baseada na análise completa do seu caso específico.`;
       
       if (analysis.stage === 'formulation') {
         toast({
-          title: "✅ Anamnese Completa Realizada!",
-          description: "Formulação personalizada baseada em análise clínica criteriosa.",
+          title: "✅ Anamnese Completa Finalizada!",
+          description: "Formulação personalizada baseada em análise clínica criteriosa com TODAS as informações coletadas.",
         });
       }
     }, 2000);
@@ -540,22 +594,23 @@ Baseada na análise completa do seu caso específico.`;
       id: '1',
       content: `Olá Dr(a). ${user.name}! 👨‍⚕️
 
-Sou seu assistente para desenvolvimento de fórmulas magistrais personalizadas. Vou conduzir uma anamnese inteligente, coletando todas as informações clínicas necessárias antes de sugerir qualquer formulação.
+Sou seu assistente para desenvolvimento de fórmulas magistrais personalizadas. Vou conduzir uma anamnese inteligente, coletando **TODAS** as informações clínicas necessárias antes de sugerir qualquer formulação.
 
-**Vamos começar com a primeira pergunta:**
+**🔍 IMPORTANTE:** Vou fazer 9 perguntas obrigatórias sequenciais. Só após responder TODAS elas é que terei dados suficientes para criar uma formulação segura e eficaz.
+
+**PERGUNTA 1/9 - QUEIXA PRINCIPAL:**
 Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição que precisa ser tratada.`,
       role: 'assistant',
       timestamp: new Date()
     }]);
     setConversationStage('complaint');
+    setQuestionNumber(1);
     setClinicalContext({});
     setInput('');
   };
 
   const getProgressIndicator = () => {
-    const stages = ['complaint', 'demographics', 'severity', 'timeline', 'medical_history', 'current_treatments', 'allergies', 'lifestyle', 'objectives', 'formulation'];
-    const currentIndex = stages.indexOf(conversationStage);
-    const progress = Math.min((currentIndex / (stages.length - 1)) * 100, 100);
+    const progress = Math.min((questionNumber / 9) * 100, 100);
     
     const stageLabels: Record<string, string> = {
       'complaint': 'Queixa Principal',
@@ -567,7 +622,7 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
       'allergies': 'Alergias',
       'lifestyle': 'Estilo de Vida',
       'objectives': 'Objetivos',
-      'formulation': 'Formulação'
+      'formulation': 'Formulação Gerada'
     };
     
     return (
@@ -579,7 +634,7 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
           />
         </div>
         <span className="text-xs text-slate-400">
-          {stageLabels[conversationStage] || 'Processando...'}
+          {questionNumber <= 9 ? `${questionNumber}/9 - ${stageLabels[conversationStage] || 'Processando...'}` : 'Completo'}
         </span>
       </div>
     );
@@ -684,7 +739,7 @@ Qual é a queixa principal do seu paciente? Descreva detalhadamente a condição
               placeholder={
                 conversationStage === 'formulation' 
                   ? "Tem alguma dúvida sobre a formulação ou quer ajustes?"
-                  : "Responda detalhadamente para que eu possa continuar a anamnese..."
+                  : `Responda à pergunta ${questionNumber}/9 para continuar a anamnese...`
               }
               className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none min-h-[60px]"
               rows={2}
