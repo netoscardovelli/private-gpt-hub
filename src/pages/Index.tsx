@@ -77,7 +77,6 @@ const Index = () => {
             <div className="container mx-auto max-w-4xl">
               <h1 className="text-3xl font-bold text-white mb-8">Configurações</h1>
               
-              {/* Botão de ação no topo */}
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Button
                   onClick={() => setCurrentView('support')}
@@ -89,7 +88,6 @@ const Index = () => {
               </div>
               
               <div className="space-y-8">
-                {/* Perfil do Usuário */}
                 <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
                   <h2 className="text-xl font-semibold text-white mb-4">Perfil do Usuário</h2>
                   <div className="space-y-4">
@@ -108,7 +106,6 @@ const Index = () => {
                   </div>
                 </div>
 
-                {/* Ativos Personalizados */}
                 <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
                   <CustomActives />
                 </div>
