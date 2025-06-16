@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
@@ -5,17 +6,16 @@ import PricingSection from '@/components/PricingSection';
 import ChatInterface from '@/components/ChatInterface';
 import AuthModal from '@/components/AuthModal';
 import CustomActives from '@/components/CustomActives';
-import SuggestionsChat from '@/components/SuggestionsChat';
 import SupportChat from '@/components/SupportChat';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, MessageCircleQuestion } from 'lucide-react';
+import { MessageCircleQuestion } from 'lucide-react';
 
 const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'chat' | 'settings' | 'billing' | 'suggestions' | 'support'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'chat' | 'settings' | 'billing' | 'support'>('home');
   const { toast } = useToast();
 
   const handleLogin = (userData: any) => {
@@ -65,24 +65,10 @@ const Index = () => {
     setCurrentView('chat');
   };
 
-  const handleSuggestionsClick = () => {
-    if (isAuthenticated) {
-      setCurrentView('suggestions');
-    } else {
-      toast({
-        title: "Login necessário",
-        description: "Faça login para acessar as sugestões de fórmulas.",
-      });
-      setShowAuthModal(true);
-    }
-  };
-
   const renderCurrentView = () => {
     switch (currentView) {
       case 'chat':
         return isAuthenticated ? <ChatInterface user={user} /> : renderHome();
-      case 'suggestions':
-        return isAuthenticated ? <SuggestionsChat user={user} onBack={() => setCurrentView('settings')} /> : renderHome();
       case 'support':
         return isAuthenticated ? <SupportChat user={user} onBack={() => setCurrentView('settings')} /> : renderHome();
       case 'settings':
@@ -91,15 +77,8 @@ const Index = () => {
             <div className="container mx-auto max-w-4xl">
               <h1 className="text-3xl font-bold text-white mb-8">Configurações</h1>
               
-              {/* Botões de ação no topo */}
+              {/* Botão de ação no topo */}
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <Button
-                  onClick={handleSuggestionsClick}
-                  className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
-                >
-                  <Lightbulb className="w-4 h-4 mr-2" />
-                  Sugestões de Fórmulas
-                </Button>
                 <Button
                   onClick={() => setCurrentView('support')}
                   className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
