@@ -30,52 +30,52 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
         />
       </div>
       
-      <div className="container mx-auto py-8 sm:py-12 lg:py-20 relative z-10 max-w-6xl">
+      <div className="container mx-auto py-4 sm:py-6 lg:py-8 relative z-10 max-w-5xl">
         <div className="text-center">
-          {/* Professional Authority Section */}
-          <div className="mb-8 sm:mb-12">
-            <div className="bg-gradient-to-r from-slate-800/90 to-slate-900/90 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 border border-emerald-500/30 shadow-2xl max-w-4xl mx-auto">
-              <div className="flex flex-col items-center space-y-4 sm:space-y-6">
-                {/* Professional Avatar */}
+          {/* Professional Authority Section - Mais compacto */}
+          <div className="mb-4 sm:mb-6">
+            <div className="bg-gradient-to-r from-slate-800/90 to-slate-900/90 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-emerald-500/30 shadow-2xl max-w-3xl mx-auto">
+              <div className="flex flex-col items-center space-y-2 sm:space-y-3">
+                {/* Professional Avatar - Menor */}
                 <div className="relative">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg">
-                    <Atom className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" />
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg">
+                    <Atom className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 sm:w-8 sm:h-8 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-                    <Shield className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-800" />
+                  <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+                    <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-yellow-800" />
                   </div>
                 </div>
                 
-                {/* 5 Stars Rating */}
+                {/* 5 Stars Rating - Menores */}
                 <div className="flex items-center space-x-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-yellow-400 fill-yellow-400" />
+                    <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-yellow-400" />
                   ))}
                 </div>
 
-                {/* Professional Title */}
-                <div className="text-center space-y-2 sm:space-y-3">
-                  <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-white leading-tight">
+                {/* Professional Title - Mais compacto */}
+                <div className="text-center space-y-1 sm:space-y-2">
+                  <h2 className="text-base sm:text-lg lg:text-xl font-bold text-white leading-tight">
                     Treinado por Médicos e Especialistas
                   </h2>
-                  <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-emerald-300 font-medium">
+                  <p className="text-sm sm:text-base lg:text-lg text-emerald-300 font-medium">
                     IA Especializada em Formulação Magistral
                   </p>
                 </div>
 
-                {/* Professional Credentials */}
-                <div className="bg-slate-800/60 rounded-xl px-4 py-3 sm:px-6 sm:py-4 border border-slate-600/40">
-                  <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-slate-300">
-                    <span className="flex items-center space-x-2">
-                      <Shield className="w-4 h-4 text-emerald-400" />
+                {/* Professional Credentials - Mais compacto */}
+                <div className="bg-slate-800/60 rounded-lg px-3 py-2 sm:px-4 sm:py-2 border border-slate-600/40">
+                  <div className="flex flex-wrap justify-center gap-3 sm:gap-4 text-xs text-slate-300">
+                    <span className="flex items-center space-x-1">
+                      <Shield className="w-3 h-3 text-emerald-400" />
                       <span>Validado Cientificamente</span>
                     </span>
-                    <span className="flex items-center space-x-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <span className="flex items-center space-x-1">
+                      <CheckCircle className="w-3 h-3 text-emerald-400" />
                       <span>Expertise Médica</span>
                     </span>
-                    <span className="flex items-center space-x-2">
-                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                    <span className="flex items-center space-x-1">
+                      <Sparkles className="w-3 h-3 text-emerald-400" />
                       <span>Tecnologia Avançada</span>
                     </span>
                   </div>
@@ -84,75 +84,75 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
             </div>
           </div>
 
-          {/* Main Title - Completely responsive */}
-          <div className="mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight px-2">
+          {/* Main Title - Mais compacto */}
+          <div className="mb-3 sm:mb-4">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-2 sm:mb-3 leading-tight px-2">
               <span className="bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 bg-clip-text text-transparent">
                 ANÁLISE DE FÓRMULAS MAGISTRAIS
               </span>
             </h1>
           </div>
 
-          {/* Subtitle */}
-          <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-slate-300 mb-8 sm:mb-10 max-w-4xl mx-auto leading-relaxed px-2">
+          {/* Subtitle - Mais compacto */}
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-300 mb-4 sm:mb-6 max-w-3xl mx-auto leading-relaxed px-2">
             IA TREINADA POR MÉDICO PARA AUXILIAR NO SEU DIA A DIA DO CONSULTÓRIO
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 justify-center items-center mb-12 sm:mb-16 lg:mb-20 px-2">
+          {/* CTA Buttons - Destaque maior */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8 px-2">
             <Button 
               size="lg" 
               onClick={handleStartClick}
-              className="group bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 text-sm sm:text-base lg:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-2xl hover:shadow-emerald-500/25 transform hover:scale-105 transition-all duration-300 border border-emerald-400/30 w-full sm:w-auto max-w-xs sm:max-w-none"
+              className="group bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-8 sm:px-10 py-4 sm:py-5 text-base sm:text-lg font-bold rounded-xl shadow-2xl hover:shadow-emerald-500/25 transform hover:scale-110 transition-all duration-300 border-2 border-emerald-400/50 w-full sm:w-auto max-w-xs sm:max-w-none pulse-glow"
             >
-              <Zap className="mr-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:animate-pulse" />
-              Começar Análise
-              <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+              <Zap className="mr-2 w-5 h-5 group-hover:animate-pulse" />
+              COMEÇAR ANÁLISE AGORA
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
             <Button 
               variant="outline" 
               size="lg"
-              className="border-2 border-slate-400 text-slate-300 hover:bg-slate-800 hover:border-emerald-400 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 text-sm sm:text-base lg:text-lg rounded-xl sm:rounded-2xl backdrop-blur-sm hover:scale-105 transition-all duration-300 w-full sm:w-auto max-w-xs sm:max-w-none"
+              className="border-2 border-slate-400 text-slate-300 hover:bg-slate-800 hover:border-emerald-400 px-6 sm:px-8 py-4 sm:py-5 text-sm sm:text-base rounded-xl backdrop-blur-sm hover:scale-105 transition-all duration-300 w-full sm:w-auto max-w-xs sm:max-w-none"
             >
-              <Beaker className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+              <Beaker className="mr-2 w-4 h-4" />
               Ver Exemplos
             </Button>
           </div>
 
-          {/* Features Grid - Mobile optimized */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto px-2">
+          {/* Features Grid - Mais compacto */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto px-2">
             {[
               {
                 icon: FlaskConical,
                 title: "Análise de Fórmulas",
-                description: "Análise completa de composições e sinergias entre ativos"
+                description: "Análise completa de composições"
               },
               {
                 icon: Beaker,
                 title: "Sugestão de Fórmulas", 
-                description: "Formulações personalizadas baseadas em evidências científicas"
+                description: "Formulações personalizadas"
               },
               {
                 icon: CheckCircle,
                 title: "Compatibilidade",
-                description: "Verificação de interações entre ativos e excipientes"
+                description: "Verificação de interações"
               },
               {
                 icon: Settings,
                 title: "Otimização",
-                description: "Melhore concentrações e formas farmacêuticas"
+                description: "Melhore concentrações"
               }
             ].map((feature, index) => (
               <div key={index} className="group text-center">
-                <div className="relative mb-4 sm:mb-6">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                    <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
+                <div className="relative mb-2 sm:mb-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                 </div>
-                <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-white mb-2 sm:mb-3 group-hover:text-emerald-300 transition-colors leading-tight">
+                <h3 className="text-xs sm:text-sm font-semibold text-white mb-1 group-hover:text-emerald-300 transition-colors leading-tight">
                   {feature.title}
                 </h3>
-                <p className="text-xs sm:text-sm lg:text-base text-slate-400 leading-relaxed px-1">
+                <p className="text-xs text-slate-400 leading-relaxed px-1 hidden sm:block">
                   {feature.description}
                 </p>
               </div>
@@ -161,8 +161,24 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
         </div>
       </div>
 
-      {/* Bottom decoration */}
-      <div className="absolute bottom-0 left-0 right-0 h-16 sm:h-24 lg:h-32 bg-gradient-to-t from-slate-800 to-transparent"></div>
+      {/* Bottom decoration - Menor */}
+      <div className="absolute bottom-0 left-0 right-0 h-8 sm:h-12 bg-gradient-to-t from-slate-800 to-transparent"></div>
+      
+      {/* CSS para efeito pulse no botão */}
+      <style jsx>{`
+        .pulse-glow {
+          animation: pulse-glow 2s infinite;
+        }
+        
+        @keyframes pulse-glow {
+          0%, 100% {
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 30px rgba(52, 211, 153, 0.6);
+          }
+        }
+      `}</style>
     </section>
   );
 };
