@@ -217,15 +217,15 @@ const ActiveSuggestions = ({
     });
   };
 
-  // NOVA FUNÇÃO: Adicionar ativo personalizado diretamente
-  const handleAddCustomActive = (activeName: string, concentration?: string) => {
+  // NOVA FUNÇÃO: Adicionar ativo personalizado diretamente com seleção de fórmulas
+  const handleAddCustomActive = (activeName: string, concentration?: string, targetFormulas?: string[]) => {
     const customActive: SuggestedActive = {
       name: activeName,
       concentration: concentration || 'conforme prescrição',
       benefit: 'Ativo adicionado pelo usuário',
       mechanism: 'Conforme literatura médica',
       synergyWith: [],
-      targetFormula: 'Fórmulas existentes',
+      targetFormula: targetFormulas ? targetFormulas.join(', ') : 'Fórmulas existentes',
       targetFormulaReason: 'Ativo preferido do médico',
       suggestedForm: 'capsule'
     };
@@ -246,7 +246,7 @@ const ActiveSuggestions = ({
         name: activeName,
         concentration: concentration || '',
         conditions: [specialty],
-        description: `Ativo preferido para ${specialty}`,
+        description: `Ativo preferido para ${specialty}${targetFormulas ? ` - Para: ${targetFormulas.join(', ')}` : ''}`,
         formulationType: 'cápsula'
       };
 

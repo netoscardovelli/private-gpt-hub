@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,17 +5,54 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Heart, Clock, Target } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import FormulaSelector from './FormulaSelector';
 
 interface QuickActiveAdderProps {
-  onAddActive: (active: string, concentration?: string) => void;
+  onAddActive: (active: string, concentration?: string, targetFormulas?: string[]) => void;
   currentFormula: string;
   specialty: string;
 }
 
 const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiveAdderProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showFormulaSelector, setShowFormulaSelector] = useState(false);
+  const [pendingActive, setPendingActive] = useState<string>('');
+  const [selectedFormulas, setSelectedFormulas] = useState<string[]>([]);
   const { toast } = useToast();
+
+  // Extrair fórmulas do texto da mensagem
+  const extractFormulasFromText = (text: string): string[] => {
+    const formulas: string[] = [];
+    
+    // Procurar por padrões de fórmulas
+    const formulaPatterns = [
+      /(?:Fórmula|Formula)\s+[\d\w\s-]+:\s*\n((?:• .+\n?)+)/gi,
+      /(?:Composição|COMPOSIÇÃO):\s*\n((?:• .+\n?)+)/gi,
+      /\*\*(?:Fórmula|Formula)\s+[\d\w\s-]+\*\*\s*\n((?:• .+\n?)+)/gi
+    ];
+
+    formulaPatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        if (match[1]) {
+          formulas.push(match[1].trim());
+        }
+      }
+    });
+
+    // Se não encontrou fórmulas com padrões, procurar por listas de ativos
+    if (formulas.length === 0) {
+      const activeListPattern = /(?:• .+\n?){3,}/g;
+      let match;
+      while ((match = activeListPattern.exec(text)) !== null) {
+        formulas.push(match[0].trim());
+      }
+    }
+
+    return formulas.filter(f => f.length > 50); // Filtrar fórmulas muito pequenas
+  };
+
+  const availableFormulas = extractFormulasFromText(currentFormula);
 
   // Ativos frequentes baseados no perfil do usuário (simulado - em produção viria do backend)
   const getUserFavoriteActives = () => {
@@ -80,6 +116,23 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
     return suggestions.slice(0, 6);
   };
 
+  const handleInitiateAddActive = (activeName: string) => {
+    if (availableFormulas.length === 0) {
+      // Se não há fórmulas detectadas, adicionar diretamente
+      onAddActive(activeName);
+      toast({
+        title: "Ativo adicionado!",
+        description: `${activeName} foi incluído na análise`,
+      });
+      return;
+    }
+
+    // Se há múltiplas fórmulas, mostrar seletor
+    setPendingActive(activeName);
+    setSelectedFormulas([]);
+    setShowFormulaSelector(true);
+  };
+
   const handleAddCustomActive = () => {
     if (!searchTerm.trim()) {
       toast({
@@ -90,17 +143,53 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
       return;
     }
 
-    onAddActive(searchTerm.trim());
+    handleInitiateAddActive(searchTerm.trim());
     setSearchTerm('');
+  };
+
+  const handleFormulaToggle = (formula: string) => {
+    setSelectedFormulas(prev => 
+      prev.includes(formula)
+        ? prev.filter(f => f !== formula)
+        : [...prev, formula]
+    );
+  };
+
+  const handleConfirmAddition = () => {
+    onAddActive(pendingActive, undefined, selectedFormulas);
     
     toast({
       title: "Ativo adicionado!",
-      description: `${searchTerm} foi incluído na análise`,
+      description: `${pendingActive} foi incluído em ${selectedFormulas.length} fórmula(s)`,
     });
+
+    // Reset state
+    setShowFormulaSelector(false);
+    setPendingActive('');
+    setSelectedFormulas([]);
+  };
+
+  const handleCancelAddition = () => {
+    setShowFormulaSelector(false);
+    setPendingActive('');
+    setSelectedFormulas([]);
   };
 
   const favoriteActives = getUserFavoriteActives();
   const smartSuggestions = getSmartSuggestions();
+
+  if (showFormulaSelector) {
+    return (
+      <FormulaSelector
+        formulas={availableFormulas}
+        selectedFormulas={selectedFormulas}
+        onFormulaToggle={handleFormulaToggle}
+        onConfirm={handleConfirmAddition}
+        onCancel={handleCancelAddition}
+        activeName={pendingActive}
+      />
+    );
+  }
 
   return (
     <Card className="bg-slate-800/50 border-slate-600 p-4 mt-4">
@@ -111,6 +200,11 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
           <h4 className="text-sm font-semibold text-slate-200">
             Esqueceu algum ativo? Adicione aqui!
           </h4>
+          {availableFormulas.length > 0 && (
+            <Badge className="bg-blue-600/30 text-blue-300 text-xs">
+              {availableFormulas.length} fórmula(s) detectada(s)
+            </Badge>
+          )}
         </div>
 
         {/* Search Input */}
@@ -146,7 +240,7 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
               {favoriteActives.map((active, index) => (
                 <Button
                   key={index}
-                  onClick={() => onAddActive(active.name)}
+                  onClick={() => handleInitiateAddActive(active.name)}
                   variant="outline"
                   size="sm"
                   className="border-red-500/50 text-red-300 hover:bg-red-500/20 text-xs h-7 px-2"
@@ -175,7 +269,7 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
               {smartSuggestions.map((suggestion, index) => (
                 <Button
                   key={index}
-                  onClick={() => onAddActive(suggestion.name)}
+                  onClick={() => handleInitiateAddActive(suggestion.name)}
                   variant="outline"
                   size="sm"
                   className="border-blue-500/50 text-blue-300 hover:bg-blue-500/20 text-xs h-auto p-2 w-full justify-start"
