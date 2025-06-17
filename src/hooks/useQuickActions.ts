@@ -56,6 +56,45 @@ export const useQuickActions = ({
       return;
     }
 
+    if (action === 'sugestao-formulas') {
+      const message = 'Quero sugestões de fórmulas personalizadas baseadas em caso clínico';
+
+      addMessage({
+        content: message,
+        role: 'user'
+      });
+
+      setIsLoading(true);
+      setConversationMode('analysis');
+
+      setTimeout(() => {
+        addMessage({
+          content: `Olá! Sou seu assistente clínico especializado em fórmulas manipuladas para profissionais da saúde. 
+
+🎯 **Minha missão é ajudar você a criar fórmulas personalizadas com base no caso clínico apresentado.**
+
+Para começarmos, preciso entender como você prefere trabalhar:
+
+**Você prefere:**
+
+1️⃣ **Colar o caso clínico completo agora** - se você já tem todas as informações organizadas
+
+2️⃣ **Construir o caso comigo, passo a passo** - vou te guiar com perguntas estratégicas
+
+Escolha a opção que preferir e vamos criar fórmulas personalizadas baseadas em:
+✅ Princípios de farmacotécnica e farmacodinâmica
+✅ Dosagens baseadas na farmacopeia
+✅ Boas práticas clínicas  
+✅ Fontes científicas confiáveis (PubMed, Galena, Fagron, etc.)
+
+Como você gostaria de proceder?`,
+          role: 'assistant'
+        });
+        setIsLoading(false);
+      }, 1000);
+      return;
+    }
+
     if (action === 'suggest-improvements') {
       console.log('🧠 Processando sugestões de otimização...');
       
