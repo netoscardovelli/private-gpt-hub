@@ -71,7 +71,6 @@ Escolha uma das opções abaixo para começar:
     });
   };
 
-  // Função para extrair fórmulas automaticamente da conversa
   const extractFormulasFromConversation = (): string => {
     const formulaMessages = messages
       .filter(msg => msg.role === 'assistant')
@@ -85,13 +84,8 @@ Escolha uma das opções abaixo para começar:
       return '';
     }
 
-    // Pegar a última análise de fórmula
     const lastFormulaAnalysis = formulaMessages[formulaMessages.length - 1];
-    
-    // Extrair informações relevantes
     const lines = lastFormulaAnalysis.content.split('\n');
-    const formulaData = [];
-    
     let currentFormula = '';
     let isComposition = false;
     
@@ -114,6 +108,8 @@ Escolha uma das opções abaixo para começar:
   };
 
   const handleQuickAction = async (action: string) => {
+    console.log('🎯 Quick action triggered:', action);
+
     if (action === 'analise') {
       const message = 'Quero fazer análise de fórmulas magistrais';
 
@@ -138,19 +134,24 @@ Escolha uma das opções abaixo para começar:
         setMessages(prev => [...prev, response]);
         setIsLoading(false);
       }, 1000);
+      return;
     }
 
     if (action === 'formulas-cadastradas') {
       setShowRegisteredFormulas(true);
+      return;
     }
 
     if (action === 'sugestao-formulas') {
       setShowFormulaSuggestions(true);
+      return;
     }
 
     if (action === 'suggest-improvements') {
-      // Extrair fórmulas automaticamente da conversa
+      console.log('🧠 Processando sugestões de otimização...');
+      
       const extractedFormulas = extractFormulasFromConversation();
+      console.log('📋 Fórmulas extraídas:', extractedFormulas);
       
       if (!extractedFormulas) {
         toast({
@@ -161,36 +162,22 @@ Escolha uma das opções abaixo para começar:
         return;
       }
 
-      const message = `ANÁLISE AUTOMÁTICA PARA OTIMIZAÇÃO:
+      const message = `Com base nas fórmulas analisadas na conversa, forneça sugestões específicas de otimização.
 
-FÓRMULAS IDENTIFICADAS NA CONVERSA:
+FÓRMULAS IDENTIFICADAS:
 ${extractedFormulas}
 
-INSTRUÇÃO ESPECIAL: Com base nas fórmulas analisadas acima, forneça sugestões específicas de otimização seguindo este formato:
+Forneça sugestões práticas para melhorar essas fórmulas, incluindo:
+- Ativos complementares que poderiam ser adicionados
+- Ajustes de dosagem recomendados  
+- Combinações sinérgicas
+- Justificativas científicas para cada sugestão
 
-## 💡 Sugestões de Otimização
-
-### 🔬 Ativos Complementares Recomendados:
-- [Nome do ativo] [Dose sugerida]
-  - **Mecanismo:** [Como funciona]
-  - **Sinergia:** [Como potencializa a fórmula existente]
-  - **Base científica:** [Referência ou estudo]
-
-### ⚖️ Ajustes de Dosagem:
-- [Ativo da fórmula]: [Nova dose sugerida] (atualmente: [dose atual])
-  - **Justificativa:** [Por que esta dose é melhor]
-
-### 🧬 Combinações Sinérgicas:
-- [Combinação de ativos]: [Explicação do efeito sinérgico]
-
-### ⚠️ Considerações Importantes:
-- [Observações sobre segurança, interações, etc.]
-
-Forneça pelo menos 3-5 sugestões concretas e específicas baseadas nas fórmulas analisadas.`;
+Seja específico e prático nas recomendações.`;
 
       const userMessage: Message = {
         id: Date.now().toString(),
-        content: 'Sugestões automáticas de otimização baseadas nas fórmulas analisadas',
+        content: 'Sugerir otimizações para as fórmulas analisadas',
         role: 'user',
         timestamp: new Date()
       };
@@ -201,7 +188,6 @@ Forneça pelo menos 3-5 sugestões concretas e específicas baseadas nas fórmul
 
       try {
         const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
-
         const conversationHistory = messages.map(msg => ({
           role: msg.role,
           content: msg.content
@@ -230,6 +216,7 @@ Forneça pelo menos 3-5 sugestões concretas e específicas baseadas nas fórmul
 
         setMessages(prev => [...prev, assistantMessage]);
       } catch (error: any) {
+        console.error('❌ Erro ao gerar sugestões:', error);
         const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
           content: `🚫 Ocorreu um erro ao gerar sugestões. Tente novamente.\n\nErro: ${error.message}`,
@@ -250,8 +237,9 @@ Forneça pelo menos 3-5 sugestões concretas e específicas baseadas nas fórmul
     }
   };
 
+  // ... keep existing code (handleAddActiveToFormula, handleSend, handleRegisteredFormulaSelect, handleFormulaSuggestionSelect)
+
   const handleAddActiveToFormula = async (actives: any[]) => {
-    // Get the last assistant message that contains formulas
     const lastAssistantMessage = messages
       .filter(msg => msg.role === 'assistant')
       .reverse()
@@ -292,7 +280,6 @@ INSTRUÇÃO: Refaça a análise das fórmulas incluindo estes novos ativos, most
 
     try {
       const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
-
       const conversationHistory = messages.map(msg => ({
         role: msg.role,
         content: msg.content
@@ -366,13 +353,11 @@ INSTRUÇÃO: Refaça a análise das fórmulas incluindo estes novos ativos, most
 
     try {
       const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
-
       const conversationHistory = messages.map(msg => ({
         role: msg.role,
         content: msg.content
       }));
 
-      // Add specific instruction for conversational formula explanations
       const enhancedMessage = `${currentInput}
 
 INSTRUÇÃO ESPECIAL: Ao explicar fórmulas, faça uma explicação conversacional e fluida, como se um técnico farmacêutico estivesse falando diretamente com o paciente. Cite os ativos e suas funções em um texto corrido, sem separar por tópicos ou bullets. Use uma linguagem técnica mas acessível, explicando o conjunto da fórmula de forma integrada.`;
