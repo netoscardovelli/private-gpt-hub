@@ -59,6 +59,8 @@ Clique no botão abaixo para começar a análise:
     setMessages(getInitialMessages());
     setInput('');
     setConversationMode('initial');
+    setShowRegisteredFormulas(false);
+    setShowFormulaSuggestions(false);
     toast({
       title: "Conversa resetada",
       description: "Nova conversa iniciada com sucesso.",
@@ -354,6 +356,7 @@ Por favor, faça uma análise completa desta fórmula incluindo compatibilidade,
 
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
+    setShowRegisteredFormulas(false);
 
     try {
       const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
@@ -422,6 +425,7 @@ Por favor, faça uma análise detalhada desta fórmula incluindo mecanismo de a�
 
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
+    setShowFormulaSuggestions(false);
 
     try {
       const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
@@ -483,7 +487,7 @@ Por favor, faça uma análise detalhada desta fórmula incluindo mecanismo de a�
     }
   };
 
-  const showFormulaButtons = conversationMode === 'analysis' && !showRegisteredFormulas && !showFormulaSuggestions;
+  const showFormulaButtons = conversationMode === 'analysis' && !showRegisteredFormulas && !showFormulaSuggestions && !isLoading;
 
   return (
     <div className="flex flex-col h-screen bg-slate-900">
@@ -511,7 +515,6 @@ Por favor, faça uma análise detalhada desta fórmula incluindo mecanismo de a�
           />
         ))}
 
-        {/* Novos botões de fórmulas */}
         {showFormulaButtons && (
           <FormulaButtons
             onShowRegisteredFormulas={() => setShowRegisteredFormulas(true)}
@@ -520,7 +523,6 @@ Por favor, faça uma análise detalhada desta fórmula incluindo mecanismo de a�
           />
         )}
 
-        {/* Painel de fórmulas cadastradas */}
         {showRegisteredFormulas && (
           <RegisteredFormulasPanel
             onClose={() => setShowRegisteredFormulas(false)}
@@ -528,7 +530,6 @@ Por favor, faça uma análise detalhada desta fórmula incluindo mecanismo de a�
           />
         )}
 
-        {/* Painel de sugestões de fórmulas */}
         {showFormulaSuggestions && (
           <FormulaSuggestionsPanel
             onClose={() => setShowFormulaSuggestions(false)}
