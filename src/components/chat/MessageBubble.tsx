@@ -84,6 +84,10 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
 
   const hasActivesList = message.content.includes('• ') && message.content.includes('mg');
 
+  // Check if this is the initial welcome message
+  const isInitialMessage = message.content.includes('<quick-action>analise</quick-action>') || 
+    message.content.includes('Clique no botão abaixo para começar');
+
   // Function to render message content with quick action buttons
   const renderMessageContent = (content: string) => {
     const parts = content.split(/(<quick-action>.*?<\/quick-action>)/);
@@ -152,8 +156,8 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
           />
         )}
 
-        {/* Ações da mensagem */}
-        {message.role === 'assistant' && (
+        {/* Ações da mensagem - apenas para mensagens do assistente que NÃO são a inicial */}
+        {message.role === 'assistant' && !isInitialMessage && (
           <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-slate-600">
             <Button
               onClick={copyToClipboard}
