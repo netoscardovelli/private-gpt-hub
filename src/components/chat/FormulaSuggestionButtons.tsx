@@ -7,11 +7,13 @@ import { useToast } from '@/hooks/use-toast';
 interface FormulaSuggestionButtonsProps {
   onQuickAction: (action: string) => void;
   onAddActiveToFormula: (actives: any[]) => void;
+  onShowQuickActiveAdder: () => void;
 }
 
 const FormulaSuggestionButtons = ({ 
   onQuickAction, 
-  onAddActiveToFormula 
+  onAddActiveToFormula,
+  onShowQuickActiveAdder
 }: FormulaSuggestionButtonsProps) => {
   const { toast } = useToast();
 
@@ -22,18 +24,7 @@ const FormulaSuggestionButtons = ({
 
   const handleAddCustomActives = () => {
     console.log('🎯 Botão "Ativos Esquecidos" clicado');
-    const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
-    console.log('📦 Ativos personalizados encontrados:', customActives);
-    
-    if (customActives.length > 0) {
-      onAddActiveToFormula(customActives);
-    } else {
-      toast({
-        title: "Nenhum ativo personalizado",
-        description: "Cadastre ativos personalizados na aba 'Ativos Personalizados'",
-        variant: "destructive"
-      });
-    }
+    onShowQuickActiveAdder();
   };
 
   console.log('🔧 FormulaSuggestionButtons renderizado');

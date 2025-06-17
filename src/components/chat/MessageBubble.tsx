@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import QuickActionButtons from './QuickActionButtons';
 import FormulaSuggestionButtons from './FormulaSuggestionButtons';
 import ActiveSuggestions from './ActiveSuggestions';
+import QuickActiveAdder from './QuickActiveAdder';
 import { detectFormulaAnalysis } from './FormulaDetection';
 
 interface Message {
@@ -32,6 +33,7 @@ const MessageBubble = ({
   userId 
 }: MessageBubbleProps) => {
   const [copied, setCopied] = useState(false);
+  const [showQuickActiveAdder, setShowQuickActiveAdder] = useState(false);
   const { toast } = useToast();
 
   const copyToClipboard = async () => {
@@ -52,6 +54,23 @@ const MessageBubble = ({
     }
   };
 
+  const handleAddActiveFromAdder = (activeName: string, concentration?: string) => {
+    const newActive = {
+      name: activeName,
+      concentration: concentration || 'A definir',
+      benefit: 'Conforme análise clínica',
+      mechanism: 'Revisar literatura'
+    };
+    
+    onAddActiveToFormula([newActive]);
+    setShowQuickActiveAdder(false);
+    
+    toast({
+      title: "Ativo adicionado!",
+      description: `${activeName} foi incluído na análise`,
+    });
+  };
+
   const hasQuickActions = message.content.includes('<quick-action>');
   const isFormulaAnalysis = detectFormulaAnalysis(message);
   
@@ -65,6 +84,31 @@ const MessageBubble = ({
     isFormulaAnalysis,
     showFormulaSuggestionButtons: message.role === 'assistant' && isFormulaAnalysis
   });
+
+  // Se está mostrando o QuickActiveAdder, renderizar apenas ele
+  if (showQuickActiveAdder) {
+    return (
+      <div className="flex justify-start">
+        <div className="max-w-[85%]">
+          <QuickActiveAdder
+            onAddActive={handleAddActiveFromAdder}
+            currentFormula={message.content}
+            specialty="geral"
+          />
+          <div className="mt-2">
+            <Button
+              onClick={() => setShowQuickActiveAdder(false)}
+              variant="ghost"
+              size="sm"
+              className="text-slate-400 hover:text-slate-200"
+            >
+              ← Voltar
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -98,7 +142,7 @@ const MessageBubble = ({
               />
             )}
 
-            {/* Active Suggestions - O componente que estava perfeito! */}
+            {/* Active Suggestions - Sugestões inteligentes baseadas em evidência */}
             {message.role === 'assistant' && isFormulaAnalysis && (
               <ActiveSuggestions
                 onAddActiveToFormula={onAddActiveToFormula}
@@ -107,11 +151,12 @@ const MessageBubble = ({
               />
             )}
 
-            {/* Formula Suggestion Buttons */}
+            {/* Formula Suggestion Buttons - Com botão "Ativos Esquecidos" */}
             {message.role === 'assistant' && isFormulaAnalysis && (
               <FormulaSuggestionButtons 
                 onQuickAction={onQuickAction}
                 onAddActiveToFormula={onAddActiveToFormula}
+                onShowQuickActiveAdder={() => setShowQuickActiveAdder(true)}
               />
             )}
 
