@@ -482,3 +482,188 @@ export const checkCompatibility = (active1: string, active2: string): {
   }
   return { compatible: true };
 };
+
+// NOVA SEÇÃO: Limites específicos para formulações tópicas
+export const TOPICAL_SAFETY_LIMITS: Record<string, {
+  maxPercentage: number;
+  safeRange: [number, number];
+  warnings: string[];
+  mechanism: string;
+}> = {
+  'arnica': {
+    maxPercentage: 5,
+    safeRange: [1, 5],
+    warnings: ['Acima de 5% pode causar dermatite de contato', 'Evitar em pele lesionada'],
+    mechanism: 'Anti-inflamatório tópico'
+  },
+  'calendula': {
+    maxPercentage: 10,
+    safeRange: [2, 10],
+    warnings: ['Concentrações altas podem causar sensibilização'],
+    mechanism: 'Cicatrizante e anti-inflamatório'
+  },
+  'camomila': {
+    maxPercentage: 10,
+    safeRange: [1, 10],
+    warnings: ['Pode causar reações alérgicas em sensíveis a asteráceas'],
+    mechanism: 'Calmante e anti-inflamatório'
+  },
+  'mentol': {
+    maxPercentage: 2,
+    safeRange: [0.1, 2],
+    warnings: ['Acima de 2% pode causar irritação intensa', 'Evitar em mucosas'],
+    mechanism: 'Analgésico por efeito refrescante'
+  },
+  'canfora': {
+    maxPercentage: 3,
+    safeRange: [0.5, 3],
+    warnings: ['Neurotóxica em altas concentrações', 'Contraindicada em crianças <2 anos'],
+    mechanism: 'Contra-irritante e analgésico'
+  },
+  'salicilato de metila': {
+    maxPercentage: 5,
+    safeRange: [1, 5],
+    warnings: ['Absorção sistêmica em grandes áreas', 'Evitar em alérgicos a salicilatos'],
+    mechanism: 'Anti-inflamatório tópico'
+  },
+  'capsaicina': {
+    maxPercentage: 0.1,
+    safeRange: [0.025, 0.1],
+    warnings: ['Extremamente irritante', 'Usar apenas em pequenas áreas'],
+    mechanism: 'Depleção de substância P'
+  },
+  'lidocaina': {
+    maxPercentage: 2,
+    safeRange: [0.5, 2],
+    warnings: ['Absorção sistêmica perigosa', 'Máximo 2% para uso tópico'],
+    mechanism: 'Anestésico local'
+  },
+  'benzocaina': {
+    maxPercentage: 5,
+    safeRange: [1, 5],
+    warnings: ['Risco de metahemoglobinemia', 'Evitar em mucosas'],
+    mechanism: 'Anestésico local'
+  },
+  'urea': {
+    maxPercentage: 40,
+    safeRange: [5, 40],
+    warnings: ['Acima de 20% pode causar irritação', 'Começar com concentrações baixas'],
+    mechanism: 'Queratolítico e hidratante'
+  },
+  'acido salicilico': {
+    maxPercentage: 5,
+    safeRange: [0.5, 5],
+    warnings: ['Absorção sistêmica significativa', 'Evitar em grandes áreas'],
+    mechanism: 'Queratolítico e anti-inflamatório'
+  },
+  'tretinoina': {
+    maxPercentage: 0.1,
+    safeRange: [0.025, 0.1],
+    warnings: ['Fotossensibilizante', 'Contraindicada na gravidez'],
+    mechanism: 'Modulador da diferenciação celular'
+  },
+  'hidroquinona': {
+    maxPercentage: 4,
+    safeRange: [2, 4],
+    warnings: ['Uso prolongado pode causar ocronose', 'Máximo 4% liberação magistral'],
+    mechanism: 'Inibidor da tirosinase'
+  }
+};
+
+// NOVA FUNÇÃO: Validação farmacotécnica para fórmulas tópicas
+export const validateTopicalFormulation = (actives: Array<{name: string, percentage: number}>): {
+  isValid: boolean;
+  totalPercentage: number;
+  errors: string[];
+  warnings: string[];
+} => {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  
+  const totalPercentage = actives.reduce((sum, active) => sum + active.percentage, 0);
+  
+  // Erro crítico: mais de 100%
+  if (totalPercentage > 100) {
+    errors.push(`Total de ativos: ${totalPercentage}% - FISICAMENTE IMPOSSÍVEL!`);
+  }
+  
+  // Warning: muito próximo de 100%
+  if (totalPercentage > 85 && totalPercentage <= 100) {
+    warnings.push(`Total de ativos: ${totalPercentage}% - Pouco espaço para excipientes (recomendado máximo 80%)`);
+  }
+  
+  // Validar cada ativo individualmente
+  actives.forEach(active => {
+    const activeKey = active.name.toLowerCase()
+      .replace(/ext\s+glicol\s+/g, '')
+      .replace(/extrato\s+glicolico\s+/g, '')
+      .replace(/\s+/g, '')
+      .trim();
+    
+    const limit = TOPICAL_SAFETY_LIMITS[activeKey];
+    if (limit) {
+      if (active.percentage > limit.maxPercentage) {
+        if (active.percentage > limit.maxPercentage * 2) {
+          errors.push(`${active.name}: ${active.percentage}% PERIGOSO - Máximo seguro: ${limit.maxPercentage}%`);
+        } else {
+          warnings.push(`${active.name}: ${active.percentage}% acima do recomendado (máximo: ${limit.maxPercentage}%)`);
+        }
+      }
+    }
+  });
+  
+  return {
+    isValid: errors.length === 0,
+    totalPercentage,
+    errors,
+    warnings
+  };
+};
+
+// NOVA FUNÇÃO: Verificação de incompatibilidades farmacotécnicas
+export const checkFormulationCompatibility = (actives: string[]): {
+  incompatibilities: Array<{
+    active1: string;
+    active2: string;
+    reason: string;
+    severity: 'critical' | 'moderate' | 'minor';
+  }>;
+} => {
+  const incompatibilities = [];
+  
+  // Incompatibilidades conhecidas
+  const knownIncompatibilities = {
+    'acido ascorbico': {
+      incompatibleWith: ['metais pesados', 'ferro', 'cobre'],
+      reason: 'Oxidação e perda de atividade'
+    },
+    'retinol': {
+      incompatibleWith: ['acido salicilico', 'benzoil peroxido'],
+      reason: 'Irritação sinérgica e instabilidade'
+    },
+    'hidroquinona': {
+      incompatibleWith: ['retinoides', 'acidos alfa-hidroxi'],
+      reason: 'Irritação excessiva e possível sensibilização'
+    }
+  };
+  
+  // Verificar incompatibilidades
+  actives.forEach((active1, i) => {
+    actives.slice(i + 1).forEach(active2 => {
+      const key1 = active1.toLowerCase().replace(/\s+/g, '');
+      const key2 = active2.toLowerCase().replace(/\s+/g, '');
+      
+      const incomp = knownIncompatibilities[key1];
+      if (incomp && incomp.incompatibleWith.some(inc => key2.includes(inc))) {
+        incompatibilities.push({
+          active1,
+          active2,
+          reason: incomp.reason,
+          severity: 'moderate' as const
+        });
+      }
+    });
+  });
+  
+  return { incompatibilities };
+};
