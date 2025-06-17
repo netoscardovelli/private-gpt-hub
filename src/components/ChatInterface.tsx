@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,9 +26,11 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
   const getInitialMessages = (): Message[] => [
     {
       id: '1',
-      content: `Olá! Sou seu assistente especializado em análise de fórmulas de manipulação farmacêutica.
+      content: `Olá ${user.name}! Sou seu assistente especializado em análise de fórmulas de manipulação farmacêutica.
 
-Cole suas fórmulas aqui e eu farei uma análise completa para você!`,
+Cole suas fórmulas aqui e eu farei uma análise completa para você!
+
+<quick-action>analise</quick-action>`,
       role: 'assistant',
       timestamp: new Date()
     }
