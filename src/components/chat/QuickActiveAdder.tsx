@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Heart, Clock, Target, ArrowRight, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import FormulaSelector from './FormulaSelector';
 
 interface QuickActiveAdderProps {
   onAddActive: (actives: any[]) => void;
@@ -16,36 +17,59 @@ interface QuickActiveAdderProps {
 const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiveAdderProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedActive, setSelectedActive] = useState('');
+  const [showFormulaSelector, setShowFormulaSelector] = useState(false);
+  const [selectedFormulas, setSelectedFormulas] = useState<string[]>([]);
   const { toast } = useToast();
 
   // Extrair fórmulas do texto da mensagem
-  const extractFormulasFromText = (text: string): { name: string; content: string }[] => {
-    const formulas: { name: string; content: string }[] = [];
+  const extractFormulasFromText = (text: string): string[] => {
+    const formulas: string[] = [];
     
     // Procurar por padrões de fórmulas numeradas
     const formulaMatches = text.match(/(?:Fórmula|Formula)\s+(\d+)[:\s-]+(.*?)(?=(?:Fórmula|Formula)\s+\d+|$)/gs);
     
     if (formulaMatches) {
-      formulaMatches.forEach((match, index) => {
-        const numberMatch = match.match(/(?:Fórmula|Formula)\s+(\d+)/);
-        const number = numberMatch ? numberMatch[1] : (index + 1).toString();
-        
-        formulas.push({
-          name: `Fórmula ${number}`,
-          content: match.trim()
-        });
+      formulaMatches.forEach((match) => {
+        formulas.push(match.trim());
       });
     }
 
     // Se não encontrou fórmulas numeradas, procurar por composições
     if (formulas.length === 0) {
       const compositionMatches = text.match(/(?:Composição|COMPOSIÇÃO):\s*\n((?:• .+\n?)+)/gi);
-      compositionMatches?.forEach((match, index) => {
-        formulas.push({
-          name: `Fórmula ${index + 1}`,
-          content: match
-        });
+      compositionMatches?.forEach((match) => {
+        formulas.push(match);
       });
+    }
+
+    // Se ainda não encontrou, procurar por listas de ativos com dosagens
+    if (formulas.length === 0) {
+      const lines = text.split('\n');
+      let currentFormula = '';
+      let foundActives = false;
+      
+      for (const line of lines) {
+        if (line.includes('• ') && (line.includes('mg') || line.includes('mcg') || line.includes('ui'))) {
+          currentFormula += line.trim() + '\n';
+          foundActives = true;
+        } else if (foundActives && line.trim() === '') {
+          if (currentFormula.trim()) {
+            formulas.push(currentFormula.trim());
+            currentFormula = '';
+            foundActives = false;
+          }
+        } else if (foundActives && !line.includes('• ')) {
+          if (currentFormula.trim()) {
+            formulas.push(currentFormula.trim());
+            currentFormula = '';
+            foundActives = false;
+          }
+        }
+      }
+      
+      if (currentFormula.trim()) {
+        formulas.push(currentFormula.trim());
+      }
     }
 
     return formulas;
@@ -83,8 +107,8 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
     setSearchTerm(activeName);
   };
 
-  const handleAddActive = (activeName: string) => {
-    const activeToAdd = activeName || searchTerm.trim();
+  const handleProceedWithActive = () => {
+    const activeToAdd = selectedActive || searchTerm.trim();
     
     if (!activeToAdd) {
       toast({
@@ -95,9 +119,19 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
       return;
     }
 
+    // Se há fórmulas detectadas, mostrar seletor
+    if (detectedFormulas.length > 0) {
+      setShowFormulaSelector(true);
+    } else {
+      // Se não há fórmulas, adicionar diretamente
+      handleAddActive(activeToAdd);
+    }
+  };
+
+  const handleAddActive = (activeName: string) => {
     // Criar o objeto do ativo no formato esperado
     const newActive = {
-      name: activeToAdd,
+      name: activeName,
       concentration: 'A definir',
       benefit: 'Conforme análise clínica',
       mechanism: 'Revisar literatura'
@@ -108,11 +142,43 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
     
     toast({
       title: "Ativo adicionado!",
-      description: `${activeToAdd} será incluído na análise atual`,
+      description: `${activeName} será incluído na análise atual`,
     });
   };
 
+  const handleFormulaToggle = (formula: string) => {
+    setSelectedFormulas(prev => 
+      prev.includes(formula) 
+        ? prev.filter(f => f !== formula)
+        : [...prev, formula]
+    );
+  };
+
+  const handleConfirmFormulas = () => {
+    const activeToAdd = selectedActive || searchTerm.trim();
+    handleAddActive(activeToAdd);
+    setShowFormulaSelector(false);
+    setSelectedFormulas([]);
+  };
+
   const smartSuggestions = getSmartSuggestions();
+
+  // Se está mostrando o seletor de fórmulas
+  if (showFormulaSelector) {
+    return (
+      <FormulaSelector
+        formulas={detectedFormulas}
+        selectedFormulas={selectedFormulas}
+        onFormulaToggle={handleFormulaToggle}
+        onConfirm={handleConfirmFormulas}
+        onCancel={() => {
+          setShowFormulaSelector(false);
+          setSelectedFormulas([]);
+        }}
+        activeName={selectedActive || searchTerm.trim()}
+      />
+    );
+  }
 
   return (
     <Card className="bg-slate-800/50 border-slate-600 p-4 mt-4">
@@ -133,7 +199,10 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
         {/* Explicação clara */}
         <div className="bg-slate-700/30 p-3 rounded-lg">
           <p className="text-xs text-slate-300">
-            ✨ O ativo será incluído na análise atual e as fórmulas serão reanalisadas automaticamente
+            {detectedFormulas.length > 0 
+              ? `✨ Escolha em qual das ${detectedFormulas.length} fórmula(s) detectada(s) adicionar o ativo`
+              : '✨ O ativo será incluído em uma nova análise'
+            }
           </p>
         </div>
 
@@ -146,7 +215,7 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
                 placeholder="Digite o nome do ativo (ex: Morosil, Berberina...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddActive(searchTerm)}
+                onKeyPress={(e) => e.key === 'Enter' && handleProceedWithActive()}
                 className="bg-slate-700 border-slate-600 text-white pl-10 text-sm"
               />
             </div>
@@ -180,20 +249,26 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
           </div>
         )}
 
-        {/* Botão de adicionar */}
+        {/* Botão de continuar */}
         <Button
-          onClick={() => handleAddActive(selectedActive || searchTerm)}
+          onClick={handleProceedWithActive}
           disabled={!(selectedActive || searchTerm.trim())}
           className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
           size="sm"
         >
-          <Plus className="w-3 h-3 mr-1" />
-          Adicionar "{selectedActive || searchTerm}" à análise atual
+          <ArrowRight className="w-3 h-3 mr-1" />
+          {detectedFormulas.length > 0 
+            ? `Escolher onde adicionar "${selectedActive || searchTerm}"`
+            : `Adicionar "${selectedActive || searchTerm}" à análise`
+          }
         </Button>
 
         <div className="text-xs text-slate-400 flex items-center gap-1 bg-slate-700/30 p-2 rounded">
           <Clock className="w-3 h-3" />
-          O ativo será integrado automaticamente e a análise será refeita
+          {detectedFormulas.length > 0 
+            ? 'Você poderá escolher em qual fórmula adicionar o ativo'
+            : 'O ativo será integrado automaticamente e a análise será refeita'
+          }
         </div>
       </div>
     </Card>
