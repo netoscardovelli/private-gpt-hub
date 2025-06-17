@@ -1,11 +1,9 @@
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, Bot, Copy, Check, Plus } from 'lucide-react';
+import { User, Bot, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import ActiveSuggestions from './ActiveSuggestions';
-import OptimizationSuggestionButton from './OptimizationSuggestionButton';
 
 interface Message {
   id: string;
@@ -30,8 +28,6 @@ const MessageBubble = ({
   userId 
 }: MessageBubbleProps) => {
   const [copied, setCopied] = useState(false);
-  const [showActiveSuggestions, setShowActiveSuggestions] = useState(false);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const { toast } = useToast();
 
   const copyToClipboard = async () => {
@@ -54,17 +50,6 @@ const MessageBubble = ({
 
   const handleQuickActionClick = (action: string) => {
     onQuickAction(action);
-  };
-
-  const handleSuggestOptimization = () => {
-    setIsLoadingSuggestions(true);
-    onQuickAction('suggest-improvements');
-    setTimeout(() => setIsLoadingSuggestions(false), 3000);
-  };
-
-  const handleAddActiveToFormula = (actives: any[]) => {
-    onAddActiveToFormula(actives);
-    setShowActiveSuggestions(false);
   };
 
   const renderQuickActions = (content: string) => {
@@ -108,11 +93,6 @@ const MessageBubble = ({
     return labels[action] || action;
   };
 
-  // Verificar se a mensagem contém análise de fórmulas (para mostrar botão de sugestões)
-  const containsFormulaAnalysis = message.role === 'assistant' && 
-    (message.content.includes('**Composição:**') || 
-     message.content.includes('• ') && message.content.includes('mg'));
-
   return (
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
       <Card className={`max-w-[85%] p-4 ${
@@ -147,30 +127,11 @@ const MessageBubble = ({
               </div>
             )}
 
-            {/* Botão de sugestões de otimização para análises de fórmulas */}
-            {containsFormulaAnalysis && !message.content.includes('💡 Sugestões de Otimização') && (
-              <OptimizationSuggestionButton
-                onSuggestOptimization={handleSuggestOptimization}
-                isLoading={isLoadingSuggestions}
-              />
-            )}
-
             <div className="flex items-center justify-between mt-3">
               <span className="text-xs opacity-70">
                 {message.timestamp.toLocaleTimeString()}
               </span>
               <div className="flex items-center space-x-2">
-                {message.role === 'assistant' && containsFormulaAnalysis && (
-                  <Button
-                    onClick={() => setShowActiveSuggestions(!showActiveSuggestions)}
-                    size="sm"
-                    variant="ghost"
-                    className="text-xs opacity-70 hover:opacity-100"
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Adicionar Ativos
-                  </Button>
-                )}
                 <Button
                   onClick={copyToClipboard}
                   size="sm"
@@ -185,16 +146,6 @@ const MessageBubble = ({
                 </Button>
               </div>
             </div>
-
-            {showActiveSuggestions && (
-              <div className="mt-3">
-                <ActiveSuggestions
-                  onAddActiveToFormula={handleAddActiveToFormula}
-                  messageContent={message.content}
-                  userId={userId}
-                />
-              </div>
-            )}
           </div>
         </div>
       </Card>
