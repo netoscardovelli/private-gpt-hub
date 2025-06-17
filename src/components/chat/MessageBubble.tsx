@@ -102,11 +102,29 @@ const MessageBubble = ({
 
   const hasQuickActions = message.content.includes('<quick-action>');
   
-  // Verificar se a mensagem contém análise de fórmula
-  const isFormulaAnalysis = message.role === 'assistant' && 
-    (message.content.includes('Análise da Fórmula') || 
-     message.content.includes('**Composição') || 
-     message.content.includes('• ') && message.content.includes('mg'));
+  // Verificar se a mensagem contém análise de fórmula - detecção melhorada
+  const isFormulaAnalysis = message.role === 'assistant' && (
+    message.content.includes('**Composição') || 
+    message.content.includes('Análise da Fórmula') ||
+    message.content.includes('**Benefícios Gerais') ||
+    message.content.includes('**Importância do Uso') ||
+    message.content.includes('📚 Fundamentação Científica') ||
+    message.content.includes('**Instruções de Uso') ||
+    message.content.includes('Essa fórmula foi desenvolvida') ||
+    message.content.includes('elaborei essa fórmula') ||
+    (message.content.includes('mg') && message.content.includes('UI') && message.content.includes('mcg')) ||
+    // Detectar múltiplos ativos com dosagens
+    (message.content.match(/\d+\s*(mg|mcg|UI|g)/g) || []).length >= 3
+  );
+
+  console.log('🔍 Análise de detecção de fórmula:', {
+    messageId: message.id,
+    isFormulaAnalysis,
+    contentLength: message.content.length,
+    containsBeneficios: message.content.includes('**Benefícios Gerais'),
+    containsFundamentacao: message.content.includes('📚 Fundamentação Científica'),
+    dosageMatches: (message.content.match(/\d+\s*(mg|mcg|UI|g)/g) || []).length
+  });
 
   return (
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
