@@ -31,56 +31,6 @@ const FormulaImporter = () => {
   const [editingFormula, setEditingFormula] = useState<number | null>(null);
   const { toast } = useToast();
 
-  const splitTextIntoChunks = (text: string): string[] => {
-    // Dividir por seções baseadas em títulos ou fórmulas distintas
-    const sections: string[] = [];
-    const lines = text.split('\n');
-    let currentSection = '';
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      
-      // Detectar início de nova seção (títulos, indicações principais)
-      const isNewSection = line && (
-        line.includes('Tratamento') ||
-        line.includes('Prevenção') ||
-        line.includes('TPM') ||
-        line.includes('Libido') ||
-        line.includes('DISFUNÇÃO') ||
-        line.includes('Óvulos') && currentSection.length > 200 ||
-        line.includes('Pomada') ||
-        line.includes('Sabonete') ||
-        line.includes('CREME') ||
-        line.includes('ejaculação')
-      );
-
-      if (isNewSection && currentSection.length > 50) {
-        sections.push(currentSection.trim());
-        currentSection = line;
-      } else {
-        currentSection += '\n' + line;
-      }
-    }
-    
-    if (currentSection.trim()) {
-      sections.push(currentSection.trim());
-    }
-
-    // Se ainda estiver muito grande, dividir por tamanho
-    const finalSections: string[] = [];
-    sections.forEach(section => {
-      if (section.length <= 1500) {
-        finalSections.push(section);
-      } else {
-        // Dividir seções muito grandes
-        const chunks = section.match(/.{1,1500}/g) || [section];
-        finalSections.push(...chunks);
-      }
-    });
-
-    return finalSections.filter(s => s.length > 20);
-  };
-
   const extractFormulasWithAI = async () => {
     if (!inputText.trim()) {
       toast({
@@ -94,7 +44,23 @@ const FormulaImporter = () => {
     setIsProcessing(true);
     
     try {
-      console.log('Dividindo texto em seções menores...');
+      console.log('🧪 Iniciando extração baseada em posologias...');
+      
+      // Primeiro, tentar extração manual baseada em posologias
+      const manualFormulas = extractFormulasByPosology(inputText);
+      console.log(`📋 Extração manual: ${manualFormulas.length} fórmulas identificadas`);
+      
+      if (manualFormulas.length > 0) {
+        setExtractedFormulas(manualFormulas);
+        toast({
+          title: "Fórmulas extraídas!",
+          description: `${manualFormulas.length} fórmula(s) identificada(s) pelo padrão de posologia.`,
+        });
+        return;
+      }
+
+      // Se a extração manual não funcionou, usar IA como fallback
+      console.log('🤖 Usando IA como fallback...');
       const textChunks = splitTextIntoChunks(inputText);
       console.log(`Texto dividido em ${textChunks.length} seções`);
       
@@ -102,27 +68,26 @@ const FormulaImporter = () => {
       
       for (let i = 0; i < textChunks.length; i++) {
         const chunk = textChunks[i];
-        console.log(`Processando seção ${i + 1}/${textChunks.length} (${chunk.length} caracteres)`);
+        console.log(`Processando seção ${i + 1}/${textChunks.length}`);
         
         try {
           const { data, error } = await supabase.functions.invoke('chat-ai', {
             body: {
-              message: `Analise APENAS este texto e extraia TODAS as fórmulas farmacêuticas encontradas.
+              message: `IMPORTANTE: As posologias (como "1x ao dia", "tomar à noite") marcam o FIM de uma fórmula.
+              
+Analise este texto seguindo essa regra:
+- Tudo antes de uma posologia pertence à mesma fórmula
+- Tudo após uma posologia é uma nova fórmula
+- Agrupe ativos corretamente por fórmula
 
-INSTRUÇÕES IMPORTANTES:
-1. Retorne APENAS um JSON válido com array de fórmulas
-2. 1 bilhão = 1000mg, 2 bilhões = 2000mg
-3. Identifique cada fórmula distinta no texto
-4. Para cada fórmula, extraia nome/indicação e todos os ativos
-
-FORMATO OBRIGATÓRIO - retorne APENAS este JSON:
+Retorne APENAS um JSON válido:
 [
   {
-    "name": "Nome ou Indicação da Fórmula",
-    "category": "categoria estimada",
+    "name": "Nome da Fórmula",
+    "category": "categoria",
     "pharmaceutical_form": "cápsulas|óvulos|pomada|sabonete|creme|sachê",
     "specialty": "ginecologia|urologia|endocrinologia|geral",
-    "clinical_indication": "indicação clínica",
+    "clinical_indication": "indicação",
     "actives": [
       {
         "name": "Nome do Ativo",
@@ -133,7 +98,7 @@ FORMATO OBRIGATÓRIO - retorne APENAS este JSON:
   }
 ]
 
-TEXTO PARA ANÁLISE:
+TEXTO:
 ${chunk}`,
               specialty: 'geral'
             }
@@ -151,16 +116,6 @@ ${chunk}`,
               allFormulas.push(...sectionFormulas);
             } catch (parseError) {
               console.error(`Erro ao processar seção ${i + 1}:`, parseError);
-              // Tentar extrair manualmente
-              try {
-                const manualFormulas = extractFormulasManually(chunk);
-                if (manualFormulas.length > 0) {
-                  console.log(`Extração manual da seção ${i + 1}: ${manualFormulas.length} fórmulas`);
-                  allFormulas.push(...manualFormulas);
-                }
-              } catch (manualError) {
-                console.error(`Extração manual falhou na seção ${i + 1}:`, manualError);
-              }
             }
           }
         } catch (sectionError: any) {
@@ -194,110 +149,243 @@ ${chunk}`,
     }
   };
 
-  const extractFormulasManually = (text: string): ExtractedFormula[] => {
+  const extractFormulasByPosology = (text: string): ExtractedFormula[] => {
+    console.log('🔍 Iniciando extração baseada em posologias...');
     const formulas: ExtractedFormula[] = [];
     
-    // Dividir por seções baseadas em indicações
-    const sections = text.split(/(?=Tratamento|TPM|Libido|Óvulos|Pomada|Sabonete|CREME|DISFUNÇÃO)/i);
+    // Padrões para identificar posologias (fim de fórmula)
+    const posologyPatterns = [
+      /(\d+x?\s*ao\s*dia)/i,
+      /(tomar.*noite)/i,
+      /(tomar.*manhã)/i,
+      /(aplicar.*dia)/i,
+      /(usar.*vezes)/i,
+      /(posologia:?.*)/i,
+      /(modo de uso:?.*)/i,
+      /(administração:?.*)/i,
+      /(dosagem:?.*)/i
+    ];
     
-    sections.forEach((section, index) => {
-      if (section.trim().length < 20) return;
+    // Dividir o texto em linhas
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    
+    let currentFormula: ExtractedFormula | null = null;
+    let formulaIndex = 1;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      console.log(`📝 Analisando linha ${i + 1}: "${line}"`);
       
-      const lines = section.split('\n').filter(line => line.trim());
-      if (lines.length === 0) return;
+      // Verificar se a linha é uma posologia (fim de fórmula)
+      const isPosology = posologyPatterns.some(pattern => pattern.test(line));
       
-      const formula: ExtractedFormula = {
-        name: lines[0].trim() || `Fórmula ${index + 1}`,
-        category: 'Geral',
-        pharmaceutical_form: 'cápsulas',
-        specialty: 'geral',
-        clinical_indication: lines[0].trim(),
-        actives: []
-      };
-
-      // Detectar forma farmacêutica
-      const sectionLower = section.toLowerCase();
-      if (sectionLower.includes('óvulo')) formula.pharmaceutical_form = 'óvulos';
-      else if (sectionLower.includes('pomada')) formula.pharmaceutical_form = 'pomada';
-      else if (sectionLower.includes('sabonete')) formula.pharmaceutical_form = 'sabonete';
-      else if (sectionLower.includes('creme')) formula.pharmaceutical_form = 'creme';
-      else if (sectionLower.includes('sachê')) formula.pharmaceutical_form = 'sachê';
-
-      // Detectar especialidade
-      if (sectionLower.includes('vagina') || sectionLower.includes('óvulo')) formula.specialty = 'ginecologia';
-      else if (sectionLower.includes('libido') || sectionLower.includes('eret')) formula.specialty = 'urologia';
-      else if (sectionLower.includes('tpm')) formula.specialty = 'endocrinologia';
-
-      // Extrair ativos
-      lines.forEach(line => {
-        const cleanLine = line.trim();
-        if (!cleanLine || cleanLine.includes('Tomar') || cleanLine.includes('Aplicar')) return;
+      if (isPosology) {
+        console.log(`💊 Posologia identificada: "${line}"`);
         
-        // Padrões para identificar ativos com concentrações
-        const patterns = [
-          /(.+?)\s+(\d+(?:\.\d+)?)\s*(?:bilhão|bilhões)/i,
-          /(.+?)\s+(\d+(?:\.\d+)?)\s*(?:blh)/i,
-          /(.+?)\s+(\d+(?:\.\d+)?)\s*mg/i,
-          /(.+?)\s+(\d+(?:\.\d+)?)\s*mcg/i,
-          /(.+?)\s+(\d+(?:\.\d+)?)\s*UI/i,
-          /(.+?)\s+(\d+(?:\.\d+)?)\s*%/i
-        ];
-        
-        for (const pattern of patterns) {
-          const match = cleanLine.match(pattern);
-          if (match) {
-            let name = match[1].trim();
-            const value = parseFloat(match[2]);
-            
-            // Limpar nome do ativo
-            name = name.replace(/^[-•]\s*/, '').trim();
-            
-            if (name.length < 3) continue; // Ignorar nomes muito curtos
-            
-            // Converter concentrações
-            let concentration_mg = value;
-            if (cleanLine.toLowerCase().includes('bilhão') || cleanLine.toLowerCase().includes('blh')) {
-              concentration_mg = value * 1000;
-            } else if (cleanLine.toLowerCase().includes('mcg')) {
-              concentration_mg = value / 1000;
-            } else if (cleanLine.toLowerCase().includes('%')) {
-              concentration_mg = value * 100; // Estimativa para percentuais
-            }
-            
-            formula.actives.push({
-              name,
-              concentration_mg,
-              concentration_text: match[0].trim(),
-              role: null
-            });
-            break;
-          }
+        // Se temos uma fórmula em andamento, finalizá-la
+        if (currentFormula && currentFormula.actives.length > 0) {
+          console.log(`✅ Finalizando fórmula: "${currentFormula.name}" com ${currentFormula.actives.length} ativos`);
+          formulas.push(currentFormula);
         }
-      });
+        
+        // Resetar para próxima fórmula
+        currentFormula = null;
+        continue;
+      }
       
-      if (formula.actives.length > 0) {
-        formulas.push(formula);
+      // Verificar se é início de nova seção/fórmula (título)
+      const isTitle = line.length > 10 && 
+        (line.includes('Tratamento') || 
+         line.includes('TPM') || 
+         line.includes('Libido') || 
+         line.includes('Óvulos') || 
+         line.includes('Pomada') || 
+         line.includes('Sabonete') || 
+         line.includes('CREME') || 
+         line.includes('DISFUNÇÃO') ||
+         line.includes('Prevenção') ||
+         /^[A-Z\s]+:?$/.test(line));
+      
+      if (isTitle && !currentFormula) {
+        console.log(`🏷️ Título de fórmula identificado: "${line}"`);
+        currentFormula = createNewFormula(line, formulaIndex++);
+        continue;
+      }
+      
+      // Tentar extrair ativo da linha
+      const active = extractActiveFromLine(line);
+      if (active) {
+        // Se não temos fórmula atual, criar uma genérica
+        if (!currentFormula) {
+          currentFormula = createNewFormula(`Fórmula ${formulaIndex++}`, formulaIndex - 1);
+        }
+        
+        console.log(`🧬 Ativo extraído: ${active.name} - ${active.concentration_text}`);
+        currentFormula.actives.push(active);
+      }
+    }
+    
+    // Adicionar última fórmula se houver
+    if (currentFormula && currentFormula.actives.length > 0) {
+      console.log(`✅ Finalizando última fórmula: "${currentFormula.name}" com ${currentFormula.actives.length} ativos`);
+      formulas.push(currentFormula);
+    }
+    
+    console.log(`🎯 Extração concluída: ${formulas.length} fórmulas identificadas`);
+    return formulas;
+  };
+
+  const createNewFormula = (name: string, index: number): ExtractedFormula => {
+    const cleanName = name.replace(/^[-•]\s*/, '').trim();
+    
+    // Detectar forma farmacêutica
+    let pharmaceutical_form = 'cápsulas';
+    const nameLower = cleanName.toLowerCase();
+    if (nameLower.includes('óvulo')) pharmaceutical_form = 'óvulos';
+    else if (nameLower.includes('pomada')) pharmaceutical_form = 'pomada';
+    else if (nameLower.includes('sabonete')) pharmaceutical_form = 'sabonete';
+    else if (nameLower.includes('creme')) pharmaceutical_form = 'creme';
+    else if (nameLower.includes('sachê')) pharmaceutical_form = 'sachê';
+    
+    // Detectar especialidade
+    let specialty = 'geral';
+    if (nameLower.includes('vagina') || nameLower.includes('óvulo') || nameLower.includes('tpm')) {
+      specialty = 'ginecologia';
+    } else if (nameLower.includes('libido') || nameLower.includes('eret') || nameLower.includes('disfunção')) {
+      specialty = 'urologia';
+    } else if (nameLower.includes('emagre') || nameLower.includes('performance')) {
+      specialty = 'endocrinologia';
+    }
+    
+    return {
+      name: cleanName || `Fórmula ${index}`,
+      category: 'Geral',
+      pharmaceutical_form,
+      specialty,
+      clinical_indication: cleanName,
+      actives: []
+    };
+  };
+
+  const extractActiveFromLine = (line: string): { name: string; concentration_mg: number; concentration_text: string; role?: string } | null => {
+    // Ignorar linhas que claramente não são ativos
+    if (line.includes('Tomar') || 
+        line.includes('Aplicar') || 
+        line.includes('Usar') ||
+        line.length < 5 ||
+        /^\d+[x\s]*ao\s*dia/i.test(line)) {
+      return null;
+    }
+    
+    // Padrões para extrair ativos com concentrações
+    const patterns = [
+      // Bilhões/blh
+      /(.+?)\s+(\d+(?:\.\d+)?)\s*(?:bilhão|bilhões|blh)/i,
+      // Miligramas
+      /(.+?)\s+(\d+(?:\.\d+)?)\s*mg/i,
+      // Microgramas
+      /(.+?)\s+(\d+(?:\.\d+)?)\s*mcg/i,
+      // Unidades Internacionais
+      /(.+?)\s+(\d+(?:\.\d+)?)\s*UI/i,
+      // Percentuais
+      /(.+?)\s+(\d+(?:\.\d+)?)\s*%/i,
+      // Formato especial (Ex: "Ativo 100")
+      /(.+?)\s+(\d+(?:\.\d+)?)$/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = line.match(pattern);
+      if (match) {
+        let name = match[1].trim();
+        const value = parseFloat(match[2]);
+        
+        // Limpar nome do ativo
+        name = name.replace(/^[-•]\s*/, '').trim();
+        
+        if (name.length < 3 || value <= 0) continue;
+        
+        // Converter concentrações
+        let concentration_mg = value;
+        const unit = line.toLowerCase();
+        
+        if (unit.includes('bilhão') || unit.includes('blh')) {
+          concentration_mg = value * 1000;
+        } else if (unit.includes('mcg')) {
+          concentration_mg = value / 1000;
+        } else if (unit.includes('%')) {
+          concentration_mg = value * 100;
+        }
+        
+        return {
+          name,
+          concentration_mg,
+          concentration_text: match[0].trim(),
+          role: null
+        };
+      }
+    }
+    
+    return null;
+  };
+
+  const splitTextIntoChunks = (text: string): string[] => {
+    const sections: string[] = [];
+    const lines = text.split('\n');
+    let currentSection = '';
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      const isNewSection = line && (
+        line.includes('Tratamento') ||
+        line.includes('Prevenção') ||
+        line.includes('TPM') ||
+        line.includes('Libido') ||
+        line.includes('DISFUNÇÃO') ||
+        line.includes('Óvulos') && currentSection.length > 200 ||
+        line.includes('Pomada') ||
+        line.includes('Sabonete') ||
+        line.includes('CREME') ||
+        line.includes('ejaculação')
+      );
+
+      if (isNewSection && currentSection.length > 50) {
+        sections.push(currentSection.trim());
+        currentSection = line;
+      } else {
+        currentSection += '\n' + line;
+      }
+    }
+    
+    if (currentSection.trim()) {
+      sections.push(currentSection.trim());
+    }
+
+    const finalSections: string[] = [];
+    sections.forEach(section => {
+      if (section.length <= 1500) {
+        finalSections.push(section);
+      } else {
+        const chunks = section.match(/.{1,1500}/g) || [section];
+        finalSections.push(...chunks);
       }
     });
-    
-    return formulas;
+
+    return finalSections.filter(s => s.length > 20);
   };
 
   const parseAIResponse = (responseText: string): ExtractedFormula[] => {
     console.log('Tentando extrair JSON da resposta...');
 
-    // Múltiplas estratégias para encontrar JSON
     let jsonText = '';
     
-    // 1. Procurar por array JSON
     const arrayMatch = responseText.match(/\[[\s\S]*?\]/);
     if (arrayMatch) {
       jsonText = arrayMatch[0];
     } else {
-      // 2. Procurar por objeto JSON único
       const objectMatch = responseText.match(/\{[\s\S]*?\}/);
       if (objectMatch) {
-        jsonText = `[${objectMatch[0]}]`; // Transformar em array
+        jsonText = `[${objectMatch[0]}]`;
       }
     }
 
@@ -305,24 +393,22 @@ ${chunk}`,
       throw new Error('Nenhum JSON encontrado na resposta');
     }
 
-    // Limpeza agressiva do JSON
     jsonText = jsonText
-      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remover caracteres de controle
-      .replace(/,(\s*[}\]])/g, '$1') // Remover vírgulas antes de } ou ]
-      .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":') // Aspas nas chaves
-      .replace(/:\s*'([^']*)'/g, ': "$1"') // Aspas simples para duplas
-      .replace(/\n/g, ' ') // Remover quebras
-      .replace(/\t/g, ' ') // Remover tabs
-      .replace(/\s+/g, ' ') // Múltiplos espaços
-      .replace(/,\s*}/g, '}') // Vírgula antes de }
-      .replace(/,\s*]/g, ']') // Vírgula antes de ]
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+      .replace(/,(\s*[}\]])/g, '$1')
+      .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
+      .replace(/:\s*'([^']*)'/g, ': "$1"')
+      .replace(/\n/g, ' ')
+      .replace(/\t/g, ' ')
+      .replace(/\s+/g, ' ')
+      .replace(/,\s*}/g, '}')
+      .replace(/,\s*]/g, ']')
       .trim();
 
     try {
       const parsedData = JSON.parse(jsonText);
       let formulasArray = Array.isArray(parsedData) ? parsedData : [parsedData];
       
-      // Validar e limpar fórmulas
       return formulasArray
         .filter(formula => formula && typeof formula === 'object')
         .map((formula, index) => ({
@@ -470,7 +556,7 @@ ${chunk}`,
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="formula-text">
-              Cole o texto com as fórmulas (prescrições, protocolos, etc.)
+              Cole o texto com as fórmulas (agora com detecção inteligente por posologia!)
             </Label>
             <Textarea
               id="formula-text"
@@ -478,7 +564,7 @@ ${chunk}`,
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Cole aqui o texto com as fórmulas... 
 
-O sistema irá dividir automaticamente textos longos em seções menores para melhor processamento."
+NOVO: O sistema agora identifica automaticamente onde uma fórmula termina baseado nas posologias (ex: '1x ao dia', 'tomar à noite', etc.)"
               className="min-h-[200px]"
             />
           </div>
@@ -490,7 +576,7 @@ O sistema irá dividir automaticamente textos longos em seções menores para me
               className="flex-1"
             >
               <Wand2 className="w-4 h-4 mr-2" />
-              {isProcessing ? 'Processando...' : 'Extrair Fórmulas com IA'}
+              {isProcessing ? 'Processando...' : 'Extrair Fórmulas (Detecção por Posologia)'}
             </Button>
             
             {inputText.length > 1500 && (
