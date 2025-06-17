@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +39,8 @@ Clique no botão abaixo para começar a análise:
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationMode, setConversationMode] = useState<'initial' | 'analysis'>('initial');
+  const [showRegisteredFormulas, setShowRegisteredFormulas] = useState(false);
+  const [showFormulaSuggestions, setShowFormulaSuggestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -343,6 +344,8 @@ INSTRUÇÃO ESPECIAL: Ao explicar fórmulas, faça uma explicação conversacion
     }
   };
 
+  const showFormulaButtons = conversationMode === 'analysis' && !showRegisteredFormulas && !showFormulaSuggestions;
+
   return (
     <div className="flex flex-col h-screen bg-slate-900">
       <ChatHeader user={user} />
@@ -368,6 +371,31 @@ INSTRUÇÃO ESPECIAL: Ao explicar fórmulas, faça uma explicação conversacion
             userId={user.id}
           />
         ))}
+
+        {/* Novos botões de fórmulas */}
+        {showFormulaButtons && (
+          <FormulaButtons
+            onShowRegisteredFormulas={() => setShowRegisteredFormulas(true)}
+            onShowFormulaSuggestions={() => setShowFormulaSuggestions(true)}
+            showButtons={true}
+          />
+        )}
+
+        {/* Painel de fórmulas cadastradas */}
+        {showRegisteredFormulas && (
+          <RegisteredFormulasPanel
+            onClose={() => setShowRegisteredFormulas(false)}
+            onSelectFormula={handleRegisteredFormulaSelect}
+          />
+        )}
+
+        {/* Painel de sugestões de fórmulas */}
+        {showFormulaSuggestions && (
+          <FormulaSuggestionsPanel
+            onClose={() => setShowFormulaSuggestions(false)}
+            onSelectSuggestion={handleFormulaSuggestionSelect}
+          />
+        )}
 
         {isLoading && <LoadingMessage />}
         <div ref={messagesEndRef} />
