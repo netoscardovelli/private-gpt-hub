@@ -12,6 +12,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Iniciando processamento OCR...');
+    
     const formData = await req.formData();
     const imageFile = formData.get('image') as File;
 
@@ -19,15 +21,21 @@ serve(async (req) => {
       throw new Error('Nenhuma imagem foi enviada');
     }
 
+    console.log('Arquivo recebido:', imageFile.name, imageFile.type);
+
     // Convert image to base64
     const arrayBuffer = await imageFile.arrayBuffer();
     const base64Image = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+    console.log('Imagem convertida para base64');
 
     // Usar OpenAI Vision API para extrair texto da imagem
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
       throw new Error('OPENAI_API_KEY não configurada');
     }
+
+    console.log('Chamando OpenAI API...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -67,6 +75,8 @@ serve(async (req) => {
 
     const data = await response.json();
     const extractedText = data.choices[0]?.message?.content || 'Não foi possível extrair texto da imagem.';
+
+    console.log('Texto extraído com sucesso');
 
     return new Response(
       JSON.stringify({ 
