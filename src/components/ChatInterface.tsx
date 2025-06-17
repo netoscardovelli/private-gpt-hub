@@ -71,6 +71,48 @@ Escolha uma das opções abaixo para começar:
     });
   };
 
+  // Função para extrair fórmulas automaticamente da conversa
+  const extractFormulasFromConversation = (): string => {
+    const formulaMessages = messages
+      .filter(msg => msg.role === 'assistant')
+      .filter(msg => 
+        msg.content.includes('**Composição') || 
+        msg.content.includes('• ') && msg.content.includes('mg') ||
+        msg.content.includes('Análise da Fórmula')
+      );
+
+    if (formulaMessages.length === 0) {
+      return '';
+    }
+
+    // Pegar a última análise de fórmula
+    const lastFormulaAnalysis = formulaMessages[formulaMessages.length - 1];
+    
+    // Extrair informações relevantes
+    const lines = lastFormulaAnalysis.content.split('\n');
+    const formulaData = [];
+    
+    let currentFormula = '';
+    let isComposition = false;
+    
+    for (const line of lines) {
+      if (line.includes('**Composição') || line.includes('**COMPOSIÇÃO')) {
+        isComposition = true;
+        continue;
+      }
+      
+      if (line.includes('**') && !line.includes('Composição') && !line.includes('COMPOSIÇÃO')) {
+        isComposition = false;
+      }
+      
+      if (isComposition && line.trim().startsWith('•')) {
+        currentFormula += line.trim() + '\n';
+      }
+    }
+    
+    return currentFormula || lastFormulaAnalysis.content;
+  };
+
   const handleQuickAction = async (action: string) => {
     if (action === 'analise') {
       const message = 'Quero fazer análise de fórmulas magistrais';
@@ -107,11 +149,48 @@ Escolha uma das opções abaixo para começar:
     }
 
     if (action === 'suggest-improvements') {
-      const message = 'Com base nas fórmulas analisadas, sugira ativos adicionais ou modificações que poderiam otimizar os resultados do protocolo.';
+      // Extrair fórmulas automaticamente da conversa
+      const extractedFormulas = extractFormulasFromConversation();
+      
+      if (!extractedFormulas) {
+        toast({
+          title: "Nenhuma fórmula encontrada",
+          description: "Primeiro analise uma fórmula para poder receber sugestões de otimização.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const message = `ANÁLISE AUTOMÁTICA PARA OTIMIZAÇÃO:
+
+FÓRMULAS IDENTIFICADAS NA CONVERSA:
+${extractedFormulas}
+
+INSTRUÇÃO ESPECIAL: Com base nas fórmulas analisadas acima, forneça sugestões específicas de otimização seguindo este formato:
+
+## 💡 Sugestões de Otimização
+
+### 🔬 Ativos Complementares Recomendados:
+- [Nome do ativo] [Dose sugerida]
+  - **Mecanismo:** [Como funciona]
+  - **Sinergia:** [Como potencializa a fórmula existente]
+  - **Base científica:** [Referência ou estudo]
+
+### ⚖️ Ajustes de Dosagem:
+- [Ativo da fórmula]: [Nova dose sugerida] (atualmente: [dose atual])
+  - **Justificativa:** [Por que esta dose é melhor]
+
+### 🧬 Combinações Sinérgicas:
+- [Combinação de ativos]: [Explicação do efeito sinérgico]
+
+### ⚠️ Considerações Importantes:
+- [Observações sobre segurança, interações, etc.]
+
+Forneça pelo menos 3-5 sugestões concretas e específicas baseadas nas fórmulas analisadas.`;
 
       const userMessage: Message = {
         id: Date.now().toString(),
-        content: message,
+        content: 'Sugestões automáticas de otimização baseadas nas fórmulas analisadas',
         role: 'user',
         timestamp: new Date()
       };
@@ -128,19 +207,9 @@ Escolha uma das opções abaixo para começar:
           content: msg.content
         }));
 
-        const enhancedMessage = `${message}
-
-INSTRUÇÃO ESPECIAL: Analise as fórmulas discutidas anteriormente e forneça sugestões específicas de otimização. Foque em:
-1. Ativos que poderiam ser adicionados para potencializar os efeitos
-2. Modificações de dosagem que poderiam ser benéficas
-3. Combinações sinérgicas que ainda não foram exploradas
-4. Explicação científica de por que cada sugestão seria valiosa
-
-Use a seção "💡 Sugestões de Otimização" conforme definido no prompt.`;
-
         const { data, error } = await supabase.functions.invoke('chat-ai', {
           body: {
-            message: enhancedMessage,
+            message,
             conversationHistory,
             customActives,
             userId: user.id,
