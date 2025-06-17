@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,46 +48,52 @@ const FormulaImporter = () => {
       
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
-          message: `INSTRUÇÃO ESPECIAL PARA EXTRAÇÃO DE FÓRMULAS:
+          message: `SISTEMA DE EXTRAÇÃO DE FÓRMULAS MAGISTRAIS:
 
-Analise o texto fornecido e extraia TODAS as fórmulas encontradas. Para cada fórmula, identifique:
-- Nome/descrição da fórmula
-- Categoria (ex: candidíase, TPM, libido, menopausa, etc)
-- Forma farmacêutica (cápsulas, óvulos, pomada, xarope, etc)
-- Especialidade médica
-- Todos os ativos com suas concentrações
+Analise o texto fornecido e extraia TODAS as fórmulas encontradas. Identifique:
 
-RETORNE APENAS UM JSON VÁLIDO neste formato exato:
+1. NOME/OBJETIVO da fórmula (ex: "Candidíase", "TPM", "Libido Masculina", etc)
+2. FORMA FARMACÊUTICA (cápsulas, óvulos, pomada, creme, xarope, sachê, etc)
+3. CATEGORIA/ÁREA (ginecologia, urologia, dermatologia, etc)
+4. TODOS OS ATIVOS com suas concentrações exatas
+
+CONVERSÕES OBRIGATÓRIAS:
+- 1 bilhão = 1000mg
+- 2 bilhões = 2000mg  
+- 1000mcg = 1mg
+- 1g = 1000mg
+- Para % (ex: 10%), use valor numérico: 10mg
+- Para UI, mantenha o número: 2000 UI = 2000mg
+- Se não conseguir converter, use 0
+
+RETORNE APENAS JSON VÁLIDO:
 {
   "formulas": [
     {
-      "name": "nome da fórmula",
-      "category": "categoria",
+      "name": "Nome da fórmula",
+      "category": "categoria médica",
       "pharmaceutical_form": "forma farmacêutica",
-      "specialty": "especialidade",
+      "specialty": "especialidade médica",
       "description": "descrição breve",
       "clinical_indication": "indicação clínica",
       "actives": [
         {
           "name": "nome do ativo",
           "concentration_mg": numero_em_mg,
-          "concentration_text": "texto original",
-          "role": "função do ativo"
+          "concentration_text": "texto original da concentração",
+          "role": "função do ativo (opcional)"
         }
       ]
     }
   ]
 }
 
-REGRAS IMPORTANTES:
-- Para concentrações em bilhões (ex: "1 bilhão"), converta para mg: 1 bilhão = 1000mg
-- Para UI (unidades internacionais), mantenha o número: 2000 UI = 2000mg
-- Para mcg, converta: 1000mcg = 1mg
-- Para g, converta: 1g = 1000mg
-- Para %, extraia o número: 10% = 10mg
-- Se não conseguir converter, use 0 para concentration_mg
-- Identifique bem a forma farmacêutica (cápsulas, óvulos, pomada, xarope, etc)
-- Agrupe ativos que fazem parte da mesma fórmula
+INSTRUÇÕES ESPECÍFICAS:
+- Para fórmulas sem nome claro, use o objetivo (ex: "Fórmula para Candidíase")
+- Agrupe ativos que pertencem à mesma fórmula
+- Identifique corretamente a forma farmacêutica (óvulos, pomadas, cápsulas, etc)
+- Para especialidades, use: ginecologia, urologia, dermatologia, endocrinologia, medicina geral
+- Mantenha o texto original da concentração em "concentration_text"
 
 TEXTO PARA ANÁLISE:
 ${inputText}`,
@@ -107,15 +112,16 @@ ${inputText}`,
         throw new Error('Resposta vazia da API');
       }
 
-      // Tentar extrair JSON da resposta, sendo mais flexível
-      let jsonText = data.response;
-      
-      // Procurar por JSON válido na resposta
+      // Extrair JSON de forma mais robusta
+      let jsonText = data.response.trim();
+      console.log('Resposta completa:', jsonText);
+
+      // Remover texto antes e depois do JSON
       const jsonStart = jsonText.indexOf('{');
       const jsonEnd = jsonText.lastIndexOf('}');
       
       if (jsonStart === -1 || jsonEnd === -1) {
-        console.error('JSON não encontrado na resposta:', jsonText);
+        console.error('JSON não encontrado na resposta');
         throw new Error('Formato de resposta inválido - JSON não encontrado');
       }
 
@@ -128,52 +134,74 @@ ${inputText}`,
       } catch (parseError) {
         console.error('Erro ao fazer parse do JSON:', parseError);
         console.error('JSON problemático:', jsonText);
-        throw new Error('Erro ao interpretar resposta da IA. Tente novamente.');
+        
+        // Tentar limpar e parsear novamente
+        try {
+          const cleanedJson = jsonText
+            .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove caracteres de controle
+            .replace(/,\s*}/g, '}') // Remove vírgulas antes de }
+            .replace(/,\s*]/g, ']'); // Remove vírgulas antes de ]
+          
+          extractedData = JSON.parse(cleanedJson);
+          console.log('JSON limpo e parseado com sucesso');
+        } catch (secondError) {
+          throw new Error('Erro ao interpretar resposta da IA. Tente novamente.');
+        }
       }
       
       if (!extractedData.formulas || !Array.isArray(extractedData.formulas)) {
         console.error('Estrutura inválida:', extractedData);
-        throw new Error('Estrutura de resposta inválida - propriedade "formulas" não encontrada');
+        throw new Error('Estrutura de resposta inválida');
       }
 
-      // Validar e limpar dados das fórmulas
-      const validFormulas = extractedData.formulas.map((formula: any, index: number) => {
-        if (!formula.name || !formula.actives || !Array.isArray(formula.actives)) {
-          console.warn(`Fórmula ${index} inválida:`, formula);
-          return null;
-        }
+      // Validar e processar fórmulas
+      const validFormulas = extractedData.formulas
+        .map((formula: any, index: number) => {
+          console.log(`Processando fórmula ${index}:`, formula);
+          
+          if (!formula.name || !formula.actives || !Array.isArray(formula.actives)) {
+            console.warn(`Fórmula ${index} inválida:`, formula);
+            return null;
+          }
 
-        // Validar e limpar ativos
-        const validActives = formula.actives.map((active: any) => {
+          // Processar ativos
+          const validActives = formula.actives
+            .map((active: any) => {
+              if (!active.name) return null;
+              
+              return {
+                name: active.name.trim(),
+                concentration_mg: typeof active.concentration_mg === 'number' ? Math.max(0, active.concentration_mg) : 0,
+                concentration_text: active.concentration_text || active.name || '',
+                role: active.role || null
+              };
+            })
+            .filter(Boolean);
+
+          if (validActives.length === 0) {
+            console.warn(`Fórmula ${index} sem ativos válidos`);
+            return null;
+          }
+
           return {
-            name: active.name || 'Ativo sem nome',
-            concentration_mg: typeof active.concentration_mg === 'number' ? active.concentration_mg : 0,
-            concentration_text: active.concentration_text || active.name || '',
-            role: active.role || null
+            name: formula.name.trim(),
+            category: formula.category || 'Geral',
+            pharmaceutical_form: formula.pharmaceutical_form || 'Cápsulas',
+            specialty: formula.specialty || 'Medicina Geral',
+            description: formula.description || null,
+            clinical_indication: formula.clinical_indication || null,
+            actives: validActives
           };
-        }).filter((active: any) => active.name && active.name !== 'Ativo sem nome');
-
-        if (validActives.length === 0) {
-          console.warn(`Fórmula ${index} sem ativos válidos:`, formula);
-          return null;
-        }
-
-        return {
-          name: formula.name,
-          category: formula.category || 'Geral',
-          pharmaceutical_form: formula.pharmaceutical_form || 'Cápsulas',
-          specialty: formula.specialty || 'Medicina Geral',
-          description: formula.description || null,
-          clinical_indication: formula.clinical_indication || null,
-          actives: validActives
-        };
-      }).filter(Boolean);
+        })
+        .filter(Boolean);
 
       if (validFormulas.length === 0) {
         throw new Error('Nenhuma fórmula válida encontrada no texto');
       }
 
+      console.log('Fórmulas extraídas:', validFormulas);
       setExtractedFormulas(validFormulas);
+      
       toast({
         title: "Fórmulas extraídas!",
         description: `${validFormulas.length} fórmula(s) identificada(s) no texto.`,
@@ -196,92 +224,114 @@ ${inputText}`,
 
     setIsProcessing(true);
     let savedCount = 0;
+    const errors: string[] = [];
 
     try {
-      for (const formula of extractedFormulas) {
-        console.log('Salvando fórmula:', formula.name);
-        
-        // Validar dados antes de inserir
-        if (!formula.name || !formula.actives || formula.actives.length === 0) {
-          console.warn('Fórmula inválida pulada:', formula);
-          continue;
-        }
-
-        // Inserir fórmula
-        const formulaData = {
-          name: formula.name,
-          category: formula.category,
-          pharmaceutical_form: formula.pharmaceutical_form,
-          specialty: formula.specialty,
-          description: formula.description,
-          clinical_indication: formula.clinical_indication,
-          target_dosage_per_day: 1,
-          capsules_per_dose: 1
-        };
-
-        console.log('Dados da fórmula para inserção:', formulaData);
-
-        const { data: insertedFormula, error: formulaError } = await supabase
-          .from('reference_formulas')
-          .insert(formulaData)
-          .select()
-          .single();
-
-        if (formulaError) {
-          console.error('Erro ao inserir fórmula:', formulaError);
-          throw new Error(`Erro ao salvar fórmula "${formula.name}": ${formulaError.message}`);
-        }
-
-        if (!insertedFormula) {
-          throw new Error(`Fórmula "${formula.name}" não foi salva corretamente`);
-        }
-
-        console.log('Fórmula salva com ID:', insertedFormula.id);
-
-        // Inserir ativos da fórmula
-        for (const active of formula.actives) {
-          if (!active.name) {
-            console.warn('Ativo sem nome pulado:', active);
+      for (const [index, formula] of extractedFormulas.entries()) {
+        try {
+          console.log(`Salvando fórmula ${index + 1}:`, formula.name);
+          
+          // Validar fórmula antes de salvar
+          if (!formula.name?.trim()) {
+            errors.push(`Fórmula ${index + 1}: Nome inválido`);
             continue;
           }
 
-          const activeData = {
-            formula_id: insertedFormula.id,
-            active_name: active.name,
-            concentration_mg: active.concentration_mg || 0,
-            concentration_text: active.concentration_text || active.name,
-            role_in_formula: active.role
+          if (!formula.actives || formula.actives.length === 0) {
+            errors.push(`Fórmula ${index + 1}: Sem ativos válidos`);
+            continue;
+          }
+
+          // Inserir fórmula
+          const formulaData = {
+            name: formula.name.trim(),
+            category: formula.category || 'Geral',
+            pharmaceutical_form: formula.pharmaceutical_form || 'Cápsulas',
+            specialty: formula.specialty || 'Medicina Geral',
+            description: formula.description,
+            clinical_indication: formula.clinical_indication,
+            target_dosage_per_day: 1,
+            capsules_per_dose: 1
           };
 
-          console.log('Dados do ativo para inserção:', activeData);
+          const { data: insertedFormula, error: formulaError } = await supabase
+            .from('reference_formulas')
+            .insert(formulaData)
+            .select()
+            .single();
 
-          const { error: activeError } = await supabase
-            .from('reference_formula_actives')
-            .insert(activeData);
-
-          if (activeError) {
-            console.error('Erro ao inserir ativo:', activeError);
-            throw new Error(`Erro ao salvar ativo "${active.name}": ${activeError.message}`);
+          if (formulaError) {
+            console.error('Erro ao inserir fórmula:', formulaError);
+            errors.push(`Erro ao salvar fórmula "${formula.name}": ${formulaError.message}`);
+            continue;
           }
-        }
 
-        savedCount++;
+          if (!insertedFormula?.id) {
+            errors.push(`Fórmula "${formula.name}" não foi salva corretamente`);
+            continue;
+          }
+
+          // Inserir ativos
+          const activesToInsert = formula.actives
+            .filter(active => active.name?.trim())
+            .map(active => ({
+              formula_id: insertedFormula.id,
+              active_name: active.name.trim(),
+              concentration_mg: Math.max(0, active.concentration_mg || 0),
+              concentration_text: active.concentration_text || active.name.trim(),
+              role_in_formula: active.role
+            }));
+
+          if (activesToInsert.length === 0) {
+            errors.push(`Fórmula "${formula.name}": Nenhum ativo válido para inserir`);
+            continue;
+          }
+
+          const { error: activesError } = await supabase
+            .from('reference_formula_actives')
+            .insert(activesToInsert);
+
+          if (activesError) {
+            console.error('Erro ao inserir ativos:', activesError);
+            errors.push(`Erro ao salvar ativos da fórmula "${formula.name}": ${activesError.message}`);
+            continue;
+          }
+
+          savedCount++;
+          console.log(`Fórmula "${formula.name}" salva com sucesso`);
+
+        } catch (formulaError: any) {
+          console.error(`Erro ao processar fórmula ${index + 1}:`, formulaError);
+          errors.push(`Erro na fórmula ${index + 1}: ${formulaError.message}`);
+        }
       }
 
-      toast({
-        title: "Fórmulas salvas!",
-        description: `${savedCount} fórmula(s) adicionada(s) ao banco de dados.`,
-      });
+      // Mostrar resultado
+      if (savedCount > 0) {
+        toast({
+          title: "Fórmulas salvas!",
+          description: `${savedCount} fórmula(s) adicionada(s) ao banco de dados.`,
+        });
 
-      // Limpar dados
-      setExtractedFormulas([]);
-      setInputText('');
+        // Limpar apenas se salvou alguma
+        setExtractedFormulas([]);
+        setInputText('');
+      }
+
+      if (errors.length > 0) {
+        console.error('Erros durante o salvamento:', errors);
+        toast({
+          title: errors.length === extractedFormulas.length ? "Erro ao salvar" : "Salvamento parcial",
+          description: `${errors.length} erro(s) encontrado(s). Verifique o console para detalhes.`,
+          variant: errors.length === extractedFormulas.length ? "destructive" : "default"
+        });
+      }
 
     } catch (error: any) {
-      console.error('Erro detalhado ao salvar fórmulas:', error);
+      console.error('Erro geral ao salvar fórmulas:', error);
       toast({
         title: "Erro ao salvar",
-        description: error.message || "Erro ao salvar fórmulas no banco de dados.",
+        description: error.message || "Erro inesperado ao salvar fórmulas.",
         variant: "destructive"
       });
     } finally {
