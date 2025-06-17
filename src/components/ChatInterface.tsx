@@ -499,7 +499,7 @@ Por favor, faça uma análise detalhada desta fórmula incluindo mecanismo de a�
     }
   };
 
-  const showFormulaButtons = false; // Desabilitamos os botões antigos
+  const showFormulaButtons = conversationMode === 'initial';
 
   return (
     <div className="flex flex-col h-screen bg-slate-900">
@@ -516,6 +516,12 @@ Por favor, faça uma análise detalhada desta fórmula incluindo mecanismo de a�
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4">
+        <FormulaButtons 
+          showButtons={showFormulaButtons}
+          onShowRegisteredFormulas={() => setShowRegisteredFormulas(true)}
+          onShowFormulaSuggestions={() => setShowFormulaSuggestions(true)}
+        />
+
         {messages.map((message, index) => (
           <MessageBubble
             key={message.id}
