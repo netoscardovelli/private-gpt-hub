@@ -68,23 +68,25 @@ export const useQuickActions = ({
 
       setTimeout(() => {
         addMessage({
-          content: `Olá! Sou um assistente clínico altamente especializado em fórmulas manipuladas, voltado para profissionais da saúde como médicos, nutricionistas, farmacêuticos e biomédicos prescritores.
+          content: `Olá! 🩺 Sou um assistente clínico altamente especializado em fórmulas manipuladas, voltado para profissionais da saúde como médicos, nutricionistas, farmacêuticos e biomédicos prescritores.
 
-🎯 **Minha principal função é ajudar você a construir ou revisar fórmulas manipuladas personalizadas**, respeitando rigorosamente:
+🎯 **Minha principal função é ajudar você a construir fórmulas manipuladas personalizadas do zero**, respeitando rigorosamente:
 
 ✅ As boas práticas de prescrição clínica
-✅ As normas de farmacotécnica  
+✅ As normas de farmacotécnica e farmacodinâmica  
 ✅ Os limites de dose mínima e máxima segundo Farmacopeia
-✅ A viabilidade galênica
+✅ A viabilidade galênica e melhores condutas de manipulação
 ✅ A lógica clínica individualizada com base em sintomas e objetivos do paciente
 
-**Você prefere colar o caso clínico completo agora ou quer ir construindo o caso comigo, passo a passo?**
+Vou criar fórmulas cientificamente embasadas com base no seu caso clínico, podendo sugerir múltiplas fórmulas quando necessário (ex: uma para sono e outra para emagrecimento), incluindo ativos de marca quando apropriado (Morosil®, Metabolaid®, etc.).
+
+**🧠 Para começarmos, você prefere:**
 
 <quick-action>caso-clinico-completo</quick-action>
 
 <quick-action>construir-passo-a-passo</quick-action>
 
-Escolha a opção que preferir e vamos criar fórmulas personalizadas baseadas em evidências científicas sólidas e raciocínio clínico individualizado! 🧠`,
+Escolha a opção que preferir e vamos criar fórmulas personalizadas baseadas em evidências científicas sólidas e raciocínio clínico individualizado! 💊`,
           role: 'assistant'
         });
         setIsLoading(false);
@@ -106,13 +108,13 @@ Escolha a opção que preferir e vamos criar fórmulas personalizadas baseadas e
         addMessage({
           content: `Perfeito! 📋
 
-Cole aqui seu caso clínico completo com todas as informações que você tem disponível. 
+Cole aqui seu caso clínico completo com todas as informações disponíveis. 
 
-Vou extrair atentamente as seguintes informações do seu relato:
+Vou extrair atentamente as seguintes informações do seu relato para construir as fórmulas ideais:
 
 • **Dados do paciente:** idade, sexo
 • **Objetivo(s) clínico(s):** principal(is) meta(s) do tratamento
-• **Sintomas ou diagnóstico:** quadro atual
+• **Sintomas ou diagnóstico:** quadro atual detalhado
 • **Medicamentos em uso:** se houver
 • **Tempo de evolução:** há quanto tempo apresenta os sintomas
 • **Sintomas associados:** queixas secundárias
@@ -120,7 +122,7 @@ Vou extrair atentamente as seguintes informações do seu relato:
 • **Histórico de fórmulas:** tratamentos anteriores
 • **Preferências:** número de fórmulas e forma farmacêutica desejada
 
-Quanto mais detalhado o caso, mais precisa e personalizada será minha sugestão de fórmulas baseada em raciocínio clínico individualizado!
+Quanto mais detalhado o caso, mais precisa e personalizada será minha sugestão de fórmulas!
 
 💡 **Cole seu caso clínico completo abaixo:**`,
           role: 'assistant'
@@ -144,7 +146,7 @@ Quanto mais detalhado o caso, mais precisa e personalizada será minha sugestão
         addMessage({
           content: `Excelente escolha! 👩‍⚕️👨‍⚕️
 
-Vamos construir o caso clínico juntos para criar as melhores fórmulas para seu paciente.
+Vamos construir o caso clínico juntos de forma inteligente para criar as melhores fórmulas para seu paciente.
 
 **Primeira pergunta:**
 
@@ -152,7 +154,7 @@ Vamos construir o caso clínico juntos para criar as melhores fórmulas para seu
 
 (Importante para personalizar a prescrição e o futuro PDF)
 
-*Próximas perguntas serão feitas uma por vez conforme você responder*`,
+*Farei as próximas perguntas de forma estratégica, uma por vez, baseado nas suas respostas*`,
           role: 'assistant'
         });
         setIsLoading(false);
