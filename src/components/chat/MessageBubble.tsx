@@ -117,9 +117,9 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
           {content.replace(/<quick-action>.*?<\/quick-action>/g, '')}
         </span>
         
-        {/* Render quick action buttons if they exist */}
+        {/* Render quick action buttons if they exist - reduced spacing from mt-4 to mt-2 */}
         {hasQuickActions && (
-          <div className="flex flex-wrap gap-3 mt-4">
+          <div className="flex flex-wrap gap-3 mt-2">
             {content.includes('<quick-action>analise</quick-action>') && (
               <Button
                 onClick={() => onQuickAction('analise')}
