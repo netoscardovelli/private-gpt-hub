@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -26,58 +26,89 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
   // Detectar fórmulas na conversa atual
   const detectExistingFormulas = () => {
     console.log('🔍 Detectando fórmulas na conversa...');
-    console.log('📝 Conteúdo recebido:', currentFormula.substring(0, 200));
+    console.log('📝 Conteúdo recebido:', currentFormula.substring(0, 300));
     
     const formulas: string[] = [];
     
-    // Buscar por padrões de fórmulas com composição
+    // Padrões mais abrangentes para detectar fórmulas
+    const formulaPatterns = [
+      /\*\*Composição[:\s]*\*\*(.*?)(?=\*\*[^*]|\n\n)/gs,
+      /\*\*COMPOSIÇÃO[:\s]*\*\*(.*?)(?=\*\*[^*]|\n\n)/gs,
+      /Composição:(.*?)(?=\n\n|\*\*|$)/gs,
+      /COMPOSIÇÃO:(.*?)(?=\n\n|\*\*|$)/gs,
+      /📋\s*\*\*FÓRMULAS PRESCRITAS:\*\*(.*?)(?=\*\*[A-Z]|\n\n\*\*|$)/gs
+    ];
+
+    // Tentar cada padrão
+    for (const pattern of formulaPatterns) {
+      const matches = [...currentFormula.matchAll(pattern)];
+      for (const match of matches) {
+        if (match[1] && match[1].trim()) {
+          const formulaContent = match[1].trim();
+          // Verificar se tem dosagens típicas de fórmula
+          if (formulaContent.includes('mg') || formulaContent.includes('mcg') || formulaContent.includes('UI')) {
+            formulas.push(formulaContent);
+          }
+        }
+      }
+    }
+
+    // Método alternativo: buscar por listas com bullets e dosagens
     const lines = currentFormula.split('\n');
     let currentFormulaText = '';
-    let isInComposition = false;
+    let foundComposition = false;
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       
       // Detectar início de composição
-      if (line.includes('**Composição') || line.includes('**COMPOSIÇÃO') || 
-          line.includes('Composição:') || line.includes('COMPOSIÇÃO:')) {
-        if (currentFormulaText && isInComposition) {
+      if (line.toLowerCase().includes('composição') || 
+          line.toLowerCase().includes('fórmula') && line.includes('**')) {
+        if (currentFormulaText && foundComposition) {
           formulas.push(currentFormulaText.trim());
         }
         currentFormulaText = '';
-        isInComposition = true;
+        foundComposition = true;
         continue;
       }
       
-      // Se está em composição e encontra um item
-      if (isInComposition && line.startsWith('•') && (line.includes('mg') || line.includes('mcg') || line.includes('ui'))) {
+      // Se encontrou composição e tem item com dosagem
+      if (foundComposition && line.startsWith('•') && 
+          (line.includes('mg') || line.includes('mcg') || line.includes('UI'))) {
         currentFormulaText += line + '\n';
       }
       
-      // Parar composição quando encontra outra seção
-      if (isInComposition && line.startsWith('**') && !line.includes('Composição') && !line.includes('COMPOSIÇÃO')) {
+      // Parar quando encontra nova seção
+      if (foundComposition && line.startsWith('**') && 
+          !line.toLowerCase().includes('composição') && 
+          !line.toLowerCase().includes('fórmula')) {
         if (currentFormulaText.trim()) {
           formulas.push(currentFormulaText.trim());
           currentFormulaText = '';
         }
-        isInComposition = false;
+        foundComposition = false;
       }
     }
     
     // Adicionar última fórmula se houver
-    if (currentFormulaText.trim() && isInComposition) {
+    if (currentFormulaText.trim() && foundComposition) {
       formulas.push(currentFormulaText.trim());
     }
+
+    // Remover duplicatas
+    const uniqueFormulas = [...new Set(formulas)];
     
-    console.log('📋 Fórmulas detectadas:', formulas.length);
-    setDetectedFormulas(formulas);
-    return formulas;
+    console.log('📋 Fórmulas detectadas:', uniqueFormulas.length);
+    console.log('🔍 Fórmulas encontradas:', uniqueFormulas.map(f => f.substring(0, 100)));
+    
+    setDetectedFormulas(uniqueFormulas);
+    return uniqueFormulas;
   };
 
   // Executar detecção quando componente carrega
-  useState(() => {
+  useEffect(() => {
     detectExistingFormulas();
-  });
+  }, [currentFormula]);
 
   // Sugestões inteligentes baseadas na especialidade
   const getSmartSuggestions = () => {
@@ -124,17 +155,23 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
     // Detectar fórmulas existentes
     const formulas = detectExistingFormulas();
     
+    console.log('🎯 Fórmulas detectadas no continue:', formulas.length);
+    
     if (formulas.length > 0) {
       // Se há fórmulas, mostrar opções
+      console.log('✅ Mostrando opções de fórmulas existentes');
+      setSelectedOption('');
       setShowDosageInput(false);
     } else {
       // Se não há fórmulas, ir direto para dosagem
+      console.log('📝 Criando nova fórmula diretamente');
       setSelectedOption('new');
       setShowDosageInput(true);
     }
   };
 
   const handleOptionSelect = (option: 'existing' | 'new') => {
+    console.log('🎯 Opção selecionada:', option);
     setSelectedOption(option);
     if (option === 'new') {
       setShowDosageInput(true);
@@ -142,6 +179,7 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
   };
 
   const handleFormulaSelect = (index: number) => {
+    console.log('📋 Fórmula selecionada:', index);
     setSelectedFormulaIndex(index);
     setShowDosageInput(true);
   };
