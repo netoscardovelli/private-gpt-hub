@@ -1,4 +1,5 @@
 
+
 export const detectFormulaAnalysis = (message: { role: string; content: string }): boolean => {
   if (message.role !== 'assistant') return false;
   
@@ -31,7 +32,6 @@ export const detectFormulaAnalysis = (message: { role: string; content: string }
                            hasMultipleDosages || hasPharmUnits || hasActiveList || hasFormulasPrescribed;
   
   console.log('🔍 Detecção de fórmula - Debug:', {
-    messageId: message.id || 'N/A',
     role: message.role,
     isFormulaAnalysis,
     hasComposition,
@@ -46,3 +46,4 @@ export const detectFormulaAnalysis = (message: { role: string; content: string }
   
   return isFormulaAnalysis;
 };
+
