@@ -12,7 +12,9 @@ const QuickActionButtons = ({ content, onQuickAction }: QuickActionButtonsProps)
     const labels: { [key: string]: string } = {
       'analise': '🔬 Análise de Fórmulas',
       'formulas-cadastradas': '📋 Fórmulas Cadastradas',
-      'sugestao-formulas': '💡 Sugestões de Fórmulas'
+      'sugestao-formulas': '💡 Sugestões de Fórmulas',
+      'caso-clinico-completo': '📋 Colar Caso Clínico',
+      'construir-passo-a-passo': '🎯 Construir Passo a Passo'
     };
     return labels[action] || action;
   };

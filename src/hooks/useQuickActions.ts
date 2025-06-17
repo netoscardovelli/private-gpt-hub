@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -81,6 +80,10 @@ Para começarmos, preciso entender como você prefere trabalhar:
 
 2️⃣ **Construir o caso comigo, passo a passo** - vou te guiar com perguntas estratégicas
 
+<quick-action>caso-clinico-completo</quick-action>
+
+<quick-action>construir-passo-a-passo</quick-action>
+
 Escolha a opção que preferir e vamos criar fórmulas personalizadas baseadas em:
 ✅ Princípios de farmacotécnica e farmacodinâmica
 ✅ Dosagens baseadas na farmacopeia
@@ -88,6 +91,72 @@ Escolha a opção que preferir e vamos criar fórmulas personalizadas baseadas e
 ✅ Fontes científicas confiáveis (PubMed, Galena, Fagron, etc.)
 
 Como você gostaria de proceder?`,
+          role: 'assistant'
+        });
+        setIsLoading(false);
+      }, 1000);
+      return;
+    }
+
+    if (action === 'caso-clinico-completo') {
+      const message = 'Quero colar o caso clínico completo agora';
+
+      addMessage({
+        content: message,
+        role: 'user'
+      });
+
+      setIsLoading(true);
+
+      setTimeout(() => {
+        addMessage({
+          content: `Perfeito! 📋
+
+Cole aqui seu caso clínico completo com todas as informações que você tem disponível. Pode incluir:
+
+• **Dados do paciente:** idade, sexo, histórico relevante
+• **Queixa principal:** sintomas, objetivos do tratamento
+• **Medicamentos em uso:** se houver
+• **Tempo de evolução:** há quanto tempo apresenta os sintomas
+• **Observações específicas:** horários dos sintomas, fatores agravantes/atenuantes
+• **Qualquer outra informação** que considere relevante
+
+Quanto mais detalhado o caso, mais precisa e personalizada será minha sugestão de fórmulas! 
+
+💡 **Dica:** Pode colar direto da sua anamnese ou relato clínico.`,
+          role: 'assistant'
+        });
+        setIsLoading(false);
+      }, 1000);
+      return;
+    }
+
+    if (action === 'construir-passo-a-passo') {
+      const message = 'Quero construir o caso clínico passo a passo';
+
+      addMessage({
+        content: message,
+        role: 'user'
+      });
+
+      setIsLoading(true);
+
+      setTimeout(() => {
+        addMessage({
+          content: `Excelente escolha! 👩‍⚕️👨‍⚕️
+
+Vou te guiar através de algumas perguntas estratégicas para construirmos juntos o melhor perfil de fórmulas para seu paciente.
+
+Vamos começar com as informações básicas:
+
+**1. Qual a idade do paciente?**
+
+**2. Sexo:** Masculino ou Feminino?
+
+**3. Qual é o objetivo clínico principal?** 
+(Ex: emagrecimento, ansiedade, insônia, libido, performance, anti-aging, etc.)
+
+Pode responder essas 3 primeiras perguntas e depois vou personalizando as próximas com base no que você me disser! 😊`,
           role: 'assistant'
         });
         setIsLoading(false);
