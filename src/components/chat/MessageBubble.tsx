@@ -89,34 +89,80 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
 
   // Function to render message content with quick action buttons
   const renderMessageContent = (content: string) => {
-    const parts = content.split(/(<quick-action>.*?<\/quick-action>)/);
-    
-    return parts.map((part, index) => {
-      const quickActionMatch = part.match(/<quick-action>(.*?)<\/quick-action>/);
-      
-      if (quickActionMatch) {
-        const action = quickActionMatch[1];
-        const buttonText = action === 'analise' ? 'Analisar Fórmulas' : action;
-        
-        return (
-          <div key={index} className="my-4">
-            <Button
-              onClick={() => onQuickAction(action)}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium px-6 py-3 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              {buttonText}
-            </Button>
-          </div>
-        );
+    const quickActionRegex = /<quick-action>(.*?)<\/quick-action>/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = quickActionRegex.exec(content)) !== null) {
+      // Add text before the quick action
+      if (match.index > lastIndex) {
+        parts.push(content.slice(lastIndex, match.index));
       }
-      
-      return (
-        <span key={index} className="whitespace-pre-wrap">
-          {part}
+      lastIndex = quickActionRegex.lastIndex;
+    }
+
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push(content.slice(lastIndex));
+    }
+
+    // Check if this content has quick actions
+    const hasQuickActions = quickActionRegex.test(content);
+    
+    return (
+      <div>
+        {/* Render text content without quick actions */}
+        <span className="whitespace-pre-wrap">
+          {content.replace(/<quick-action>.*?<\/quick-action>/g, '')}
         </span>
-      );
-    });
+        
+        {/* Render quick action buttons if they exist */}
+        {hasQuickActions && (
+          <div className="flex flex-wrap gap-3 mt-4">
+            {content.includes('<quick-action>analise</quick-action>') && (
+              <Button
+                onClick={() => onQuickAction('analise')}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-3 rounded-lg shadow-md transition-all hover:shadow-lg flex items-center space-x-2"
+              >
+                <Microscope className="w-5 h-5" />
+                <span>Analisar Fórmulas</span>
+              </Button>
+            )}
+            
+            {content.includes('<quick-action>formulas-cadastradas</quick-action>') && (
+              <Button
+                onClick={() => onQuickAction('formulas-cadastradas')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-3 rounded-lg shadow-md transition-all hover:shadow-lg flex items-center space-x-2"
+              >
+                <BookOpen className="w-5 h-5" />
+                <span>Fórmulas Cadastradas</span>
+              </Button>
+            )}
+            
+            {content.includes('<quick-action>sugestao-formulas</quick-action>') && (
+              <Button
+                onClick={() => onQuickAction('sugestao-formulas')}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-4 py-3 rounded-lg shadow-md transition-all hover:shadow-lg flex items-center space-x-2"
+              >
+                <Lightbulb className="w-5 h-5" />
+                <span>Sugestão de Fórmulas</span>
+              </Button>
+            )}
+            
+            {content.includes('<quick-action>suggest-improvements</quick-action>') && (
+              <Button
+                onClick={() => onQuickAction('suggest-improvements')}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-medium px-4 py-3 rounded-lg shadow-md transition-all hover:shadow-lg flex items-center space-x-2"
+              >
+                <Sparkles className="w-5 h-5" />
+                <span>Sugerir Melhorias</span>
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const renderQuickActions = (content: string) => {
