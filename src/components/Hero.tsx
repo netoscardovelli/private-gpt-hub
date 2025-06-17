@@ -1,5 +1,6 @@
+
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FlaskConical, Shield, Sparkles, Beaker, CheckCircle, Settings, Star, Zap, Atom, Instagram } from 'lucide-react';
+import { ArrowRight, FlaskConical, Shield, Sparkles, Beaker, CheckCircle, Settings, Star, Zap, Atom } from 'lucide-react';
 
 interface HeroProps {
   onGetStarted?: () => void;
@@ -31,42 +32,53 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
       
       <div className="container mx-auto py-8 sm:py-12 lg:py-20 relative z-10 max-w-6xl">
         <div className="text-center">
-          {/* Dr. Neto Section - Completely restructured for mobile */}
+          {/* Professional Authority Section */}
           <div className="mb-8 sm:mb-12">
-            <div className="bg-gradient-to-r from-slate-800/80 to-slate-900/80 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-emerald-500/20 shadow-2xl">
-              <div className="flex flex-col items-center space-y-3 sm:space-y-4">
-                {/* Avatar */}
+            <div className="bg-gradient-to-r from-slate-800/90 to-slate-900/90 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 border border-emerald-500/30 shadow-2xl max-w-4xl mx-auto">
+              <div className="flex flex-col items-center space-y-4 sm:space-y-6">
+                {/* Professional Avatar */}
                 <div className="relative">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg">
-                    <Star className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white" />
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg">
+                    <Atom className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-yellow-400 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 text-yellow-800" />
+                  <div className="absolute -top-2 -right-2 w-6 h-6 sm:w-8 sm:h-8 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+                    <Shield className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-800" />
                   </div>
                 </div>
                 
-                {/* Title */}
-                <div className="text-center space-y-1 sm:space-y-2">
-                  <h2 className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-white leading-tight">
-                    Treinado pelo Dr. Neto Scardovelli
+                {/* 5 Stars Rating */}
+                <div className="flex items-center space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-yellow-400 fill-yellow-400" />
+                  ))}
+                </div>
+
+                {/* Professional Title */}
+                <div className="text-center space-y-2 sm:space-y-3">
+                  <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-white leading-tight">
+                    Treinado por Médicos e Especialistas
                   </h2>
-                  <p className="text-xs sm:text-sm lg:text-base xl:text-lg text-emerald-300 font-medium">
-                    Especialista em Fórmulas Magistrais
+                  <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-emerald-300 font-medium">
+                    IA Especializada em Formulação Magistral
                   </p>
                 </div>
 
-                {/* Social Media */}
-                <div className="flex items-center space-x-2 bg-slate-800/50 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 border border-slate-600/30">
-                  <span className="text-slate-300 text-xs">Siga-me:</span>
-                  <a 
-                    href="https://instagram.com/netoscardovelli" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-1 text-emerald-400 hover:text-emerald-300 transition-colors duration-200 font-semibold"
-                  >
-                    <Instagram className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="text-xs">@netoscardovelli</span>
-                  </a>
+                {/* Professional Credentials */}
+                <div className="bg-slate-800/60 rounded-xl px-4 py-3 sm:px-6 sm:py-4 border border-slate-600/40">
+                  <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-slate-300">
+                    <span className="flex items-center space-x-2">
+                      <Shield className="w-4 h-4 text-emerald-400" />
+                      <span>Validado Cientificamente</span>
+                    </span>
+                    <span className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <span>Expertise Médica</span>
+                    </span>
+                    <span className="flex items-center space-x-2">
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      <span>Tecnologia Avançada</span>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
