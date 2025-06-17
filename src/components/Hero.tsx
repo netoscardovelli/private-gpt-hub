@@ -84,6 +84,13 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
             </div>
           </div>
 
+          {/* Problema/Solução Statement */}
+          <div className="mb-3 sm:mb-4">
+            <p className="text-lg sm:text-xl md:text-2xl text-red-400 font-bold mb-2 px-2">
+              DIFICULDADE EM CRIAR E ANALISAR FÓRMULAS MANIPULADAS NUNCA MAIS
+            </p>
+          </div>
+
           {/* Main Title - Mais compacto */}
           <div className="mb-3 sm:mb-4">
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-2 sm:mb-3 leading-tight px-2">
@@ -165,7 +172,7 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
       <div className="absolute bottom-0 left-0 right-0 h-8 sm:h-12 bg-gradient-to-t from-slate-800 to-transparent"></div>
       
       {/* CSS para efeito pulse no botão */}
-      <style jsx>{`
+      <style>{`
         .pulse-glow {
           animation: pulse-glow 2s infinite;
         }
