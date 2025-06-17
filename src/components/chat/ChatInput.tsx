@@ -1,9 +1,10 @@
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, RotateCcw } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { Send, RotateCcw, ImageIcon } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import SpecialtySelector from './SpecialtySelector';
+import ImageUploader from './ImageUploader';
 
 interface ChatInputProps {
   input: string;
@@ -29,6 +30,8 @@ const ChatInput = ({
   onSpecialtyChange
 }: ChatInputProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [showImageUploader, setShowImageUploader] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -56,8 +59,30 @@ const ChatInput = ({
     }
   };
 
+  const handleImageExtracted = (extractedText: string, imageUrl: string) => {
+    const imageMessage = `📷 IMAGEM ENVIADA PARA ANÁLISE
+
+${extractedText}
+
+Por favor, analise o texto extraído desta imagem e forneça orientações adequadas.`;
+    
+    setInput(imageMessage);
+    setShowImageUploader(false);
+  };
+
   return (
     <div className="border-t border-slate-700 p-2 sm:p-4 bg-slate-800">
+      {/* Image Uploader */}
+      {showImageUploader && (
+        <div className="mb-4">
+          <ImageUploader 
+            onImageExtracted={handleImageExtracted}
+            isLoading={imageUploading}
+            setIsLoading={setImageUploading}
+          />
+        </div>
+      )}
+
       <div className="flex space-x-2 sm:space-x-4 items-end">
         <Textarea
           ref={textareaRef}
@@ -68,8 +93,17 @@ const ChatInput = ({
           placeholder={placeholder}
           className="flex-1 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none text-sm sm:text-base min-h-[40px] max-h-[200px] overflow-y-auto"
           rows={1}
-          disabled={remainingMessages <= 0}
+          disabled={remainingMessages <= 0 || imageUploading}
         />
+        <Button 
+          onClick={() => setShowImageUploader(!showImageUploader)}
+          variant="outline"
+          className="border-slate-600 text-slate-400 hover:text-slate-200 hover:border-slate-500 h-10 w-10 p-0 flex-shrink-0"
+          title="Enviar imagem para análise"
+          disabled={imageUploading}
+        >
+          <ImageIcon className="w-4 h-4" />
+        </Button>
         <Button 
           onClick={onReset}
           variant="outline"
@@ -80,7 +114,7 @@ const ChatInput = ({
         </Button>
         <Button 
           onClick={onSend}
-          disabled={!input.trim() || isLoading || remainingMessages <= 0}
+          disabled={!input.trim() || isLoading || remainingMessages <= 0 || imageUploading}
           className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 h-10 w-10 p-0 flex-shrink-0"
         >
           <Send className="w-4 h-4" />
