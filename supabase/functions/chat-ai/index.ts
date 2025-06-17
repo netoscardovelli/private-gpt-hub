@@ -3,6 +3,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { buildSystemPrompt, buildLearningPrompt } from './prompts.ts';
 import { getDoctorProfile, updateDoctorLearning, saveFeedback } from './learning.ts';
 import { buildReferenceContext } from './formula-reference.ts';
+import { processAutoLearning } from './auto-learning.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -132,6 +133,12 @@ serve(async (req) => {
     console.log('Resposta da OpenAI recebida com modelo avançado');
 
     const aiResponse = data.choices[0]?.message?.content || 'Desculpe, não foi possível gerar uma resposta.';
+
+    // NOVO: Processar aprendizado automático baseado na interação
+    if (userId) {
+      console.log('🧠 Iniciando aprendizado automático...');
+      await processAutoLearning(userId, message, aiResponse, specialty);
+    }
 
     console.log('Análise médica avançada concluída');
 

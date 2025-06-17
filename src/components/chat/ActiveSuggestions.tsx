@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Check, Lightbulb, Target, Send, Pill, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import QuickActiveAdder from './QuickActiveAdder';
 
 interface SuggestedActive {
   name: string;
@@ -25,6 +25,7 @@ interface ActiveSuggestionsProps {
   onAddActiveToFormula: (actives: SuggestedActive[]) => void;
   suggestions?: SuggestedActive[];
   isLoading?: boolean;
+  specialty?: string;
 }
 
 const ActiveSuggestions = ({ 
@@ -33,7 +34,8 @@ const ActiveSuggestions = ({
   onRequestSuggestions,
   onAddActiveToFormula,
   suggestions = [], 
-  isLoading = false 
+  isLoading = false,
+  specialty = 'geral'
 }: ActiveSuggestionsProps) => {
   const [selectedActives, setSelectedActives] = useState<Set<string>>(new Set());
   const [parsedSuggestions, setParsedSuggestions] = useState<SuggestedActive[]>([]);
@@ -191,36 +193,52 @@ const ActiveSuggestions = ({
     });
   };
 
+  // NOVA FUNÇÃO: Adicionar ativo personalizado diretamente
+  const handleAddCustomActive = (activeName: string, concentration?: string) => {
+    const customActive: SuggestedActive = {
+      name: activeName,
+      concentration: concentration || 'conforme prescrição',
+      benefit: 'Ativo adicionado pelo usuário',
+      mechanism: 'Conforme literatura médica',
+      synergyWith: [],
+      targetFormula: 'Fórmulas existentes',
+      targetFormulaReason: 'Ativo preferido do médico',
+      suggestedForm: 'capsule'
+    };
+
+    // Adicionar automaticamente às sugestões e selecionar
+    setParsedSuggestions(prev => [...prev, customActive]);
+    setSelectedActives(prev => new Set([...prev, activeName]));
+
+    // Adicionar aos ativos personalizados permanentemente
+    const existingActives = JSON.parse(localStorage.getItem('customActives') || '[]');
+    const alreadyExists = existingActives.some((existing: any) => 
+      existing.name.toLowerCase() === activeName.toLowerCase()
+    );
+
+    if (!alreadyExists) {
+      const newActive = {
+        id: Date.now().toString() + Math.random(),
+        name: activeName,
+        concentration: concentration || '',
+        conditions: [specialty],
+        description: `Ativo preferido para ${specialty}`,
+        formulationType: 'cápsula'
+      };
+
+      const updatedActives = [...existingActives, newActive];
+      localStorage.setItem('customActives', JSON.stringify(updatedActives));
+    }
+  };
+
   const isSelected = (activeName: string) => selectedActives.has(activeName);
-
-  const getFormIcon = (form: string | undefined) => {
-    switch (form) {
-      case 'powder':
-        return <Package className="w-3 h-3 text-orange-400" />;
-      case 'new-formula':
-        return <Plus className="w-3 h-3 text-blue-400" />;
-      default:
-        return <Pill className="w-3 h-3 text-green-400" />;
-    }
-  };
-
-  const getFormBadge = (form: string | undefined) => {
-    switch (form) {
-      case 'powder':
-        return <Badge className="bg-orange-600/30 text-orange-300 text-xs">Pó/Sachê</Badge>;
-      case 'new-formula':
-        return <Badge className="bg-blue-600/30 text-blue-300 text-xs">Nova Fórmula</Badge>;
-      default:
-        return <Badge className="bg-green-600/30 text-green-300 text-xs">Cápsula</Badge>;
-    }
-  };
 
   // Usar sugestões extraídas do texto se disponíveis, senão usar as passadas via props
   const activeSuggestions = parsedSuggestions.length > 0 ? parsedSuggestions : suggestions;
 
   if (activeSuggestions.length === 0 && !messageContent.includes('💡 Sugestões de Otimização:')) {
     return (
-      <div className="mt-4">
+      <div className="mt-4 space-y-4">
         <Button
           onClick={onRequestSuggestions}
           disabled={isLoading}
@@ -230,6 +248,12 @@ const ActiveSuggestions = ({
           <Lightbulb className="w-3 h-3" />
           {isLoading ? 'Analisando...' : '💡 Sugerir Ativos para Otimizar'}
         </Button>
+        
+        <QuickActiveAdder 
+          onAddActive={handleAddCustomActive}
+          currentFormula={messageContent}
+          specialty={specialty}
+        />
       </div>
     );
   }
@@ -337,6 +361,13 @@ const ActiveSuggestions = ({
           </Card>
         ))}
       </div>
+
+      {/* Componente para adicionar ativos esquecidos */}
+      <QuickActiveAdder 
+        onAddActive={handleAddCustomActive}
+        currentFormula={messageContent}
+        specialty={specialty}
+      />
     </div>
   );
 };
