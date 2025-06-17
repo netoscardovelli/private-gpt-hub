@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { DRUG_DATABASE, DRUG_INTERACTIONS, DrugInfo } from '@/data/pharmacologyData';
-import { ShieldAlert, ShieldCheck, Info } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Info, CheckCircle } from 'lucide-react';
 
 interface ParsedActive {
   name: string;
@@ -11,7 +12,7 @@ interface ParsedActive {
 }
 
 interface SafetyAlert {
-  type: 'critical' | 'warning' | 'caution' | 'info';
+  type: 'critical' | 'warning' | 'caution' | 'info' | 'safe';
   title: string;
   message: string;
   active: string;
@@ -22,11 +23,13 @@ interface DrugInteraction {
   drug1: string;
   drug2: string;
   description: string;
+  severity: 'high' | 'medium' | 'low';
 }
 
 interface SafetyAnalysis {
   alerts: SafetyAlert[];
   interactions: DrugInteraction[];
+  safeActives: string[];
 }
 
 interface PharmacySafetyAlertProps {
@@ -34,7 +37,11 @@ interface PharmacySafetyAlertProps {
 }
 
 const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
-  const [safetyAnalysis, setSafetyAnalysis] = useState<SafetyAnalysis>({ alerts: [], interactions: [] });
+  const [safetyAnalysis, setSafetyAnalysis] = useState<SafetyAnalysis>({ 
+    alerts: [], 
+    interactions: [],
+    safeActives: []
+  });
 
   const parseActivesFromText = (text: string): ParsedActive[] => {
     const actives: ParsedActive[] = [];
@@ -61,6 +68,7 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
   const analyzeSafety = (actives: ParsedActive[]): SafetyAnalysis => {
     const alerts: SafetyAlert[] = [];
     const interactions: DrugInteraction[] = [];
+    const safeActives: string[] = [];
 
     actives.forEach((active, index) => {
       const drugKey = active.name.toLowerCase()
@@ -73,71 +81,84 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
         drugKey,
         drugKey.replace(/\s+/g, ''),
         drugKey.split(' ')[0],
-        drugKey.replace('acido', 'ácido').replace('ácido', 'acido')
+        drugKey.replace('acido', 'ácido').replace('ácido', 'acido'),
+        drugKey.replace('quelato', '').trim()
       ];
 
       let drugInfo = null;
+      let matchedKey = '';
       for (const key of possibleKeys) {
         if (DRUG_DATABASE[key]) {
           drugInfo = DRUG_DATABASE[key];
+          matchedKey = key;
           break;
         }
       }
 
       if (drugInfo) {
-        const percentage = (active.dose / drugInfo.maxDailyDose) * 100;
-
-        // ALERTA CRÍTICO: Dose muito acima do máximo (como Saw Palmetto 2000mg)
-        if (percentage > 600) {
-          alerts.push({
-            type: 'critical',
-            title: '🚨 DOSE EXTREMAMENTE PERIGOSA',
-            message: `${active.name} ${active.dose}${active.unit} está ${Math.round(percentage/100)}x ACIMA da dose máxima segura (${drugInfo.maxDailyDose}${drugInfo.unit}/dia). RISCO GRAVE DE TOXICIDADE!`,
-            active: active.name,
-            recommendation: `Reduzir imediatamente para no máximo ${drugInfo.maxDailyDose}${drugInfo.unit}/dia. Consultar literatura médica.`
-          });
+        // Converter unidades se necessário
+        let normalizedDose = active.dose;
+        if (active.unit !== drugInfo.unit) {
+          if (active.unit === 'mcg' && drugInfo.unit === 'mg') {
+            normalizedDose = active.dose / 1000;
+          } else if (active.unit === 'mg' && drugInfo.unit === 'mcg') {
+            normalizedDose = active.dose * 1000;
+          }
         }
-        // Dose muito alta (200-600% do máximo)
-        else if (percentage > 200) {
+
+        const percentage = (normalizedDose / drugInfo.maxDailyDose) * 100;
+
+        // Análise de dosagem mais precisa
+        if (percentage > 150) {
           alerts.push({
             type: 'critical',
-            title: '⚠️ DOSE MUITO ACIMA DO SEGURO',
+            title: '🚨 DOSE PERIGOSA',
             message: `${active.name} ${active.dose}${active.unit} está ${Math.round(percentage)}% acima da dose máxima segura (${drugInfo.maxDailyDose}${drugInfo.unit}/dia)`,
             active: active.name,
-            recommendation: `Reduzir para no máximo ${drugInfo.maxDailyDose}${drugInfo.unit}/dia. Doses recomendadas: ${drugInfo.commonDoses.join(', ')}${drugInfo.unit}`
+            recommendation: `REDUZIR IMEDIATAMENTE para no máximo ${drugInfo.maxDailyDose}${drugInfo.unit}/dia. ${drugInfo.recommendedDose ? 'Dose recomendada: ' + drugInfo.recommendedDose : ''}`
           });
-        }
-        // Dose alta (100-200% do máximo)
-        else if (percentage > 100) {
+        } else if (percentage > 100) {
           alerts.push({
             type: 'warning',
-            title: '⚠️ Dose acima do limite máximo',
-            message: `${active.name} ${active.dose}${active.unit} excede a dose máxima recomendada (${drugInfo.maxDailyDose}${drugInfo.unit}/dia)`,
+            title: '⚠️ Dose acima do limite',
+            message: `${active.name} ${active.dose}${active.unit} excede a dose máxima (${drugInfo.maxDailyDose}${drugInfo.unit}/dia)`,
             active: active.name,
-            recommendation: `Considerar reduzir para ${drugInfo.maxDailyDose}${drugInfo.unit}/dia ou menos`
+            recommendation: `Reduzir para no máximo ${drugInfo.maxDailyDose}${drugInfo.unit}/dia. ${drugInfo.recommendedDose ? 'Dose ideal: ' + drugInfo.recommendedDose : ''}`
           });
-        }
-        // Dose próxima do limite (80-100% do máximo)
-        else if (percentage > 80) {
+        } else if (percentage > 80) {
           alerts.push({
             type: 'caution',
             title: '⚡ Dose próxima do limite',
             message: `${active.name} ${active.dose}${active.unit} está próximo da dose máxima (${drugInfo.maxDailyDose}${drugInfo.unit}/dia)`,
             active: active.name,
-            recommendation: 'Monitorar tolerabilidade do paciente'
+            recommendation: `Dose apropriada. Monitorar tolerabilidade do paciente.`
+          });
+        } else {
+          // Dose segura
+          safeActives.push(active.name);
+          alerts.push({
+            type: 'safe',
+            title: '✅ Dose segura',
+            message: `${active.name} ${active.dose}${active.unit} está dentro da faixa terapêutica segura`,
+            active: active.name,
+            recommendation: `Dose apropriada conforme literatura científica.`
           });
         }
 
+        // Alertas específicos de precauções
         if (drugInfo.warnings && drugInfo.warnings.length > 0) {
           alerts.push({
             type: 'warning',
             title: '❗ Precauções importantes',
             message: `${active.name}: ${drugInfo.warnings.join(', ')}`,
             active: active.name,
-            recommendation: 'Ajustar a dose ou monitorar o paciente'
+            recommendation: drugInfo.contraindications ? 
+              `Contraindicações: ${drugInfo.contraindications.join(', ')}` : 
+              'Monitorar paciente conforme descrito'
           });
         }
 
+        // Verificar interações medicamentosas
         if (drugInfo.interactions && drugInfo.interactions.length > 0) {
           drugInfo.interactions.forEach(interactionDrug => {
             const interactedActive = actives.find(otherActive => {
@@ -145,34 +166,41 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
                 .replace(/[^\w\s]/g, '')
                 .replace(/\s+/g, ' ')
                 .trim();
-              return otherDrugKey.includes(interactionDrug);
+              return otherDrugKey.includes(interactionDrug) || interactionDrug.includes(otherDrugKey);
             });
 
             if (interactedActive) {
               interactions.push({
                 drug1: active.name,
                 drug2: interactedActive.name,
-                description: DRUG_INTERACTIONS[drugKey]?.[interactionDrug] || `Interação entre ${active.name} e ${interactedActive.name}`
+                description: DRUG_INTERACTIONS[matchedKey]?.[interactionDrug] || 
+                  `Possível interação entre ${active.name} e ${interactedActive.name}`,
+                severity: 'medium'
               });
             }
           });
         }
       } else {
-        // Ativo não encontrado na base de dados
+        // Ativo não encontrado - mais específico
         alerts.push({
           type: 'info',
-          title: '📋 Ativo não catalogado',
-          message: `${active.name} não está na nossa base de dados de segurança farmacológica`,
+          title: '📋 Verificação necessária',
+          message: `${active.name} não foi encontrado na base farmacotécnica (PubMed/Micromedex)`,
           active: active.name,
-          recommendation: 'Verificar dosagem na literatura médica especializada'
+          recommendation: 'Consultar Micromedex, PubMed ou Martindale para validação da dosagem e segurança'
         });
       }
     });
 
-    return { alerts, interactions };
+    return { alerts, interactions, safeActives };
   };
 
-  const hasCriticalAlerts = safetyAnalysis.alerts.some(alert => alert.type === 'critical');
+  const criticalAlerts = safetyAnalysis.alerts.filter(alert => alert.type === 'critical');
+  const warningAlerts = safetyAnalysis.alerts.filter(alert => alert.type === 'warning');
+  const cautionAlerts = safetyAnalysis.alerts.filter(alert => alert.type === 'caution');
+  const safeAlerts = safetyAnalysis.alerts.filter(alert => alert.type === 'safe');
+  const infoAlerts = safetyAnalysis.alerts.filter(alert => alert.type === 'info');
+  
   const hasAlerts = safetyAnalysis.alerts.length > 0;
   const hasInteractions = safetyAnalysis.interactions.length > 0;
 
@@ -182,27 +210,48 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
 
   return (
     <div className="mt-3 space-y-3">
-      {hasCriticalAlerts && (
-        <Alert variant="destructive">
+      {/* Resumo de Segurança */}
+      <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-3">
+        <h4 className="text-sm font-semibold text-slate-200 mb-2 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          Análise Farmacotécnica (Base: PubMed/Micromedex)
+        </h4>
+        <div className="flex flex-wrap gap-2 text-xs">
+          {safeAlerts.length > 0 && (
+            <Badge className="bg-green-600/30 text-green-300">
+              ✅ {safeAlerts.length} dose(s) segura(s)
+            </Badge>
+          )}
+          {criticalAlerts.length > 0 && (
+            <Badge className="bg-red-600/30 text-red-300">
+              🚨 {criticalAlerts.length} dose(s) perigosa(s)
+            </Badge>
+          )}
+          {warningAlerts.length > 0 && (
+            <Badge className="bg-orange-600/30 text-orange-300">
+              ⚠️ {warningAlerts.length} alerta(s)
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Alertas Críticos */}
+      {criticalAlerts.map((alert, index) => (
+        <Alert key={index} variant="destructive">
           <ShieldAlert className="h-4 w-4" />
-          <AlertTitle>ALERTA DE SEGURANÇA CRÍTICO</AlertTitle>
+          <AlertTitle>{alert.title}</AlertTitle>
           <AlertDescription>
-            Detectamos riscos graves nesta fórmula.
+            {alert.message}
+            <br />
+            <span className="font-semibold">Ação imediata:</span> {alert.recommendation}
           </AlertDescription>
         </Alert>
-      )}
+      ))}
 
-      {safetyAnalysis.alerts.map((alert, index) => (
-        <Alert key={index} variant={alert.type === 'critical' ? 'destructive' : alert.type === 'warning' ? 'warning' : alert.type === 'caution' ? 'default' : 'info'}>
-          {alert.type === 'critical' ? (
-            <ShieldAlert className="h-4 w-4" />
-          ) : alert.type === 'warning' ? (
-            <ShieldAlert className="h-4 w-4" />
-          ) : alert.type === 'caution' ? (
-            <ShieldCheck className="h-4 w-4" />
-          ) : (
-            <Info className="h-4 w-4" />
-          )}
+      {/* Alertas de Warning */}
+      {warningAlerts.map((alert, index) => (
+        <Alert key={index} variant="warning">
+          <ShieldAlert className="h-4 w-4" />
           <AlertTitle>{alert.title}</AlertTitle>
           <AlertDescription>
             {alert.message}
@@ -212,16 +261,61 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
         </Alert>
       ))}
 
+      {/* Alertas de Precaução */}
+      {cautionAlerts.map((alert, index) => (
+        <Alert key={index} variant="default">
+          <ShieldCheck className="h-4 w-4" />
+          <AlertTitle>{alert.title}</AlertTitle>
+          <AlertDescription>
+            {alert.message}
+            <br />
+            <span className="font-semibold">Orientação:</span> {alert.recommendation}
+          </AlertDescription>
+        </Alert>
+      ))}
+
+      {/* Doses Seguras */}
+      {safeAlerts.length > 0 && (
+        <Alert variant="default" className="border-green-600/50 bg-green-900/20">
+          <CheckCircle className="h-4 w-4 text-green-400" />
+          <AlertTitle className="text-green-300">Doses Farmacotecnicamente Apropriadas</AlertTitle>
+          <AlertDescription className="text-green-200">
+            {safeAlerts.map(alert => alert.active).join(', ')} - dosagens dentro da faixa terapêutica estabelecida por estudos clínicos.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Alertas de Info */}
+      {infoAlerts.map((alert, index) => (
+        <Alert key={index} variant="info">
+          <Info className="h-4 w-4" />
+          <AlertTitle>{alert.title}</AlertTitle>
+          <AlertDescription>
+            {alert.message}
+            <br />
+            <span className="font-semibold">Verificação:</span> {alert.recommendation}
+          </AlertDescription>
+        </Alert>
+      ))}
+
+      {/* Interações Medicamentosas */}
       {hasInteractions && (
         <div className="space-y-2">
           <h4 className="text-sm font-semibold text-orange-400 flex items-center gap-1">
             <ShieldAlert className="w-4 h-4" />
-            Possíveis Interações Medicamentosas:
+            Interações Medicamentosas Identificadas:
           </h4>
           {safetyAnalysis.interactions.map((interaction, index) => (
             <Alert key={index} variant="warning">
-              <AlertTitle>Interação: {interaction.drug1} + {interaction.drug2}</AlertTitle>
-              <AlertDescription>{interaction.description}</AlertDescription>
+              <AlertTitle>⚠️ {interaction.drug1} + {interaction.drug2}</AlertTitle>
+              <AlertDescription>
+                {interaction.description}
+                <br />
+                <span className="font-semibold">Severidade:</span> {
+                  interaction.severity === 'high' ? 'Alta' : 
+                  interaction.severity === 'medium' ? 'Moderada' : 'Baixa'
+                }
+              </AlertDescription>
             </Alert>
           ))}
         </div>

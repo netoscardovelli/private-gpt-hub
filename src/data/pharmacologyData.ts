@@ -7,6 +7,9 @@ export interface DrugInfo {
   interactions?: string[];
   mechanism?: string;
   category?: string;
+  clinicalIndications?: string[];
+  contraindications?: string[];
+  recommendedDose?: string;
 }
 
 export const DRUG_DATABASE: Record<string, DrugInfo> = {
@@ -34,7 +37,9 @@ export const DRUG_DATABASE: Record<string, DrugInfo> = {
     warnings: ['Pode causar hipoglicemia', 'Interação com metformina'],
     interactions: ['metformina', 'insulina'],
     mechanism: 'Ativação da AMPK',
-    category: 'Antidiabético'
+    category: 'Antidiabético',
+    clinicalIndications: ['Diabetes tipo 2', 'Resistência insulínica', 'Síndrome metabólica'],
+    recommendedDose: '500mg, 2-3x ao dia'
   },
   'picolinato de cromo': {
     maxDailyDose: 400,
@@ -59,7 +64,9 @@ export const DRUG_DATABASE: Record<string, DrugInfo> = {
     warnings: ['Pode interagir com anticoagulantes'],
     interactions: ['varfarina'],
     mechanism: 'Antioxidante mitocondrial',
-    category: 'Coenzima'
+    category: 'Coenzima',
+    clinicalIndications: ['Fibromialgia', 'Fadiga crônica', 'Disfunção mitocondrial'],
+    recommendedDose: '100-200mg ao dia, dividido em 2 doses'
   },
   'omega 3': {
     maxDailyDose: 3000,
@@ -78,13 +85,36 @@ export const DRUG_DATABASE: Record<string, DrugInfo> = {
     mechanism: 'Regulação do cálcio',
     category: 'Vitamina'
   },
-  'magnésio': {
+  'magnesio quelato': {
+    maxDailyDose: 400,
+    unit: 'mg',
+    commonDoses: [150, 200, 300, 400],
+    warnings: ['Pode causar diarreia em doses altas (>400mg)'],
+    mechanism: 'Cofator enzimático, relaxamento muscular',
+    category: 'Mineral',
+    clinicalIndications: ['Fibromialgia', 'Cãibras musculares', 'Ansiedade', 'Insônia'],
+    recommendedDose: '150-300mg ao dia, dividido em 2 doses',
+    contraindications: ['Insuficiência renal grave']
+  },
+  'magnesio': {
     maxDailyDose: 400,
     unit: 'mg',
     commonDoses: [200, 300, 400],
     warnings: ['Pode causar diarreia em doses altas'],
     mechanism: 'Cofator enzimático',
     category: 'Mineral'
+  },
+  'zinco quelato': {
+    maxDailyDose: 40,
+    unit: 'mg',
+    commonDoses: [15, 30, 40],
+    warnings: ['Doses >15mg podem interferir com absorção de cobre'],
+    interactions: ['cobre', 'ferro'],
+    mechanism: 'Cofator enzimático',
+    category: 'Mineral',
+    clinicalIndications: ['Deficiência imunológica', 'Cicatrização', 'Acne'],
+    recommendedDose: '8-15mg ao dia para adultos. Doses terapêuticas: 15-30mg',
+    contraindications: ['Doses >40mg podem causar deficiência de cobre']
   },
   'zinco': {
     maxDailyDose: 40,
@@ -94,6 +124,28 @@ export const DRUG_DATABASE: Record<string, DrugInfo> = {
     interactions: ['cobre', 'ferro'],
     mechanism: 'Cofator enzimático',
     category: 'Mineral'
+  },
+  'acido malico': {
+    maxDailyDose: 800,
+    unit: 'mg',
+    commonDoses: [150, 300, 600, 800],
+    warnings: ['Pode causar desconforto gástrico em doses altas'],
+    mechanism: 'Cofator do ciclo de Krebs, produção de ATP',
+    category: 'Ácido orgânico',
+    clinicalIndications: ['Fibromialgia', 'Fadiga crônica', 'Dor muscular'],
+    recommendedDose: '150-300mg, 2x ao dia'
+  },
+  '5htp': {
+    maxDailyDose: 300,
+    unit: 'mg',
+    commonDoses: [50, 100, 200],
+    warnings: ['Pode causar náuseas, sonolência', 'Não usar com antidepressivos'],
+    interactions: ['ISRS', 'IMAO', 'triptanos'],
+    mechanism: 'Precursor da serotonina',
+    category: 'Aminoácido',
+    clinicalIndications: ['Depressão leve', 'Insônia', 'Fibromialgia'],
+    recommendedDose: '50-100mg ao dia, preferencialmente à noite',
+    contraindications: ['Síndrome serotoninérgica', 'uso concomitante com antidepressivos']
   },
   'acido alfa lipoico': {
     maxDailyDose: 600,
@@ -168,5 +220,30 @@ export const DRUG_INTERACTIONS: Record<string, Record<string, string>> = {
   },
   'curcuma': {
     'anticoagulantes': 'Pode aumentar risco de sangramento'
+  },
+  '5htp': {
+    'fluoxetina': 'Risco de síndrome serotoninérgica',
+    'sertralina': 'Risco de síndrome serotoninérgica',
+    'paroxetina': 'Risco de síndrome serotoninérgica'
   }
+};
+
+// Função para verificar indicações clínicas baseadas na condição
+export const getIndicationBasedSuggestions = (condition: string): string[] => {
+  const conditionLower = condition.toLowerCase();
+  const suggestions: string[] = [];
+  
+  if (conditionLower.includes('fibromialgia')) {
+    suggestions.push('vitamina d3', 'omega 3', 'curcuma');
+  }
+  
+  if (conditionLower.includes('diabetes') || conditionLower.includes('glicemia')) {
+    suggestions.push('berberina', 'acido alfa lipoico', 'picolinato de cromo');
+  }
+  
+  if (conditionLower.includes('emagrecimento') || conditionLower.includes('obesidade')) {
+    suggestions.push('l carnitina', 'picolinato de cromo', 'berberina');
+  }
+  
+  return suggestions;
 };

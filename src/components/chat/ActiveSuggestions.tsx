@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Lightbulb, Target } from 'lucide-react';
+import { Plus, Lightbulb, Target, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import QuickActiveAdder from './QuickActiveAdder';
+import { DRUG_DATABASE, getIndicationBasedSuggestions } from '@/data/pharmacologyData';
 
 interface ActiveSuggestionsProps {
   onAddActiveToFormula: (actives: any[]) => void;
@@ -64,54 +65,46 @@ const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: Act
     const suggestions: any[] = [];
     const currentActives = extractActivesFromAnalysis();
     
-    // Sugestões baseadas no contexto da análise
-    if (analysisLower.includes('emagrecimento') || analysisLower.includes('obesidade')) {
-      if (!currentActives.some(a => a.toLowerCase().includes('carnitina'))) {
+    // Detectar condição clínica principal
+    let primaryCondition = '';
+    if (analysisLower.includes('fibromialgia')) {
+      primaryCondition = 'fibromialgia';
+    } else if (analysisLower.includes('diabetes')) {
+      primaryCondition = 'diabetes';
+    } else if (analysisLower.includes('emagrecimento')) {
+      primaryCondition = 'emagrecimento';
+    }
+    
+    // Sugestões baseadas em evidência científica para a condição
+    if (primaryCondition === 'fibromialgia') {
+      // Para fibromialgia: vitamina D3, ômega 3 e curcumina têm evidências científicas
+      if (!currentActives.some(a => a.toLowerCase().includes('vitamina d'))) {
         suggestions.push({
-          name: 'L-Carnitina',
-          concentration: '1000mg',
-          benefit: 'Oxidação de gorduras',
-          mechanism: 'Transporte de ácidos graxos para mitocôndrias',
-          synergy: 'Potencializa queima de gordura'
+          name: 'Vitamina D3',
+          concentration: '2000 UI',
+          benefit: 'Redução da dor e melhora da função muscular',
+          mechanism: 'Modulação da inflamação e função neuromuscular',
+          synergy: 'Potencializa efeitos do magnésio na função muscular',
+          evidence: 'Estudos mostram deficiência de vitamina D em 83% dos pacientes com fibromialgia'
         });
       }
       
-      if (!currentActives.some(a => a.toLowerCase().includes('cromo'))) {
-        suggestions.push({
-          name: 'Picolinato de Cromo',
-          concentration: '200mcg',
-          benefit: 'Controle do apetite',
-          mechanism: 'Melhora sensibilidade à insulina',
-          synergy: 'Reduz compulsão por doces'
-        });
-      }
-    }
-    
-    if (analysisLower.includes('diabetes') || analysisLower.includes('glicemia')) {
-      if (!currentActives.some(a => a.toLowerCase().includes('berberina'))) {
-        suggestions.push({
-          name: 'Berberina',
-          concentration: '500mg',
-          benefit: 'Controle glicêmico',
-          mechanism: 'Ativação da AMPK',
-          synergy: 'Melhora sensibilidade insulínica'
-        });
-      }
-    }
-    
-    if (analysisLower.includes('colesterol') || analysisLower.includes('lipídios')) {
       if (!currentActives.some(a => a.toLowerCase().includes('omega'))) {
         suggestions.push({
           name: 'Ômega 3',
-          concentration: '1000mg',
-          benefit: 'Melhora perfil lipídico',
-          mechanism: 'Anti-inflamatório cardiovascular',
-          synergy: 'Reduz triglicerídeos'
+          concentration: '2000mg',
+          benefit: 'Ação anti-inflamatória e melhora da dor',
+          mechanism: 'Inibição de citocinas pró-inflamatórias',
+          synergy: 'Complementa a ação anti-inflamatória do magnésio',
+          evidence: 'Meta-análise mostra redução significativa da dor em fibromialgia'
         });
       }
     }
     
-    return suggestions.slice(0, 3); // Máximo 3 sugestões
+    // REMOVER berberina para fibromialgia - não há indicação clínica
+    // Berberina é indicada para diabetes/resistência insulínica, não fibromialgia
+    
+    return suggestions.slice(0, 2); // Máximo 2 sugestões baseadas em evidência
   };
 
   const handleAddActiveManually = (activeName: string) => {
@@ -146,14 +139,14 @@ const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: Act
 
   return (
     <div className="mt-4 space-y-3">
-      {/* Sugestões Inteligentes */}
+      {/* Sugestões Inteligentes baseadas em evidência */}
       {showSuggestions && (
         <Card className="bg-slate-800/50 border-slate-600 p-4">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Lightbulb className="w-4 h-4 text-yellow-400" />
               <h4 className="text-sm font-semibold text-slate-200">
-                💡 Sugestões de Otimização
+                💡 Sugestões Baseadas em Evidência Científica
               </h4>
             </div>
             
@@ -176,9 +169,14 @@ const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: Act
                       <p className="text-xs text-slate-300 mb-1">
                         <span className="font-medium">Benefício:</span> {suggestion.benefit}
                       </p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-400 mb-1">
                         <span className="font-medium">Sinergia:</span> {suggestion.synergy}
                       </p>
+                      {suggestion.evidence && (
+                        <p className="text-xs text-blue-300 bg-blue-900/30 p-1 rounded">
+                          <span className="font-medium">📚 Evidência:</span> {suggestion.evidence}
+                        </p>
+                      )}
                     </div>
                     <Button
                       onClick={() => onAddActiveToFormula([suggestion])}
@@ -203,6 +201,11 @@ const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: Act
                 Incluir Todas as Sugestões ({suggestions.length})
               </Button>
             )}
+            
+            <div className="text-xs text-slate-400 bg-slate-700/30 p-2 rounded flex items-center gap-2">
+              <AlertTriangle className="w-3 h-3" />
+              Sugestões baseadas em literatura científica específica para a condição diagnóstica
+            </div>
           </div>
         </Card>
       )}
