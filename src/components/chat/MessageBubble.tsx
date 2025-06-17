@@ -57,13 +57,12 @@ const MessageBubble = ({
   // Conteúdo limpo sem quick actions para exibição
   const cleanContent = message.content.replace(/<quick-action>.*?<\/quick-action>/g, '');
 
-  console.log('🔍 Análise de detecção de fórmula:', {
+  console.log('💬 MessageBubble renderizado:', {
     messageId: message.id,
+    role: message.role,
+    hasQuickActions,
     isFormulaAnalysis,
-    contentLength: message.content.length,
-    containsBeneficios: message.content.includes('**Benefícios Gerais'),
-    containsFundamentacao: message.content.includes('📚 Fundamentação Científica'),
-    dosageMatches: (message.content.match(/\d+\s*(mg|mcg|UI|g)/g) || []).length
+    showFormulaSuggestionButtons: message.role === 'assistant' && isFormulaAnalysis
   });
 
   return (
@@ -91,19 +90,24 @@ const MessageBubble = ({
             </div>
             
             {/* Quick Action Buttons */}
-            {message.role === 'assistant' && (
+            {message.role === 'assistant' && hasQuickActions && (
               <QuickActionButtons 
                 content={message.content}
                 onQuickAction={onQuickAction}
               />
             )}
 
-            {/* Formula Suggestion Buttons */}
-            {isFormulaAnalysis && (
-              <FormulaSuggestionButtons 
-                onQuickAction={onQuickAction}
-                onAddActiveToFormula={onAddActiveToFormula}
-              />
+            {/* Formula Suggestion Buttons - Forçar exibição para teste */}
+            {message.role === 'assistant' && isFormulaAnalysis && (
+              <div>
+                <div className="text-xs text-green-400 mb-2">
+                  🟢 Botões de sugestão detectados e carregando...
+                </div>
+                <FormulaSuggestionButtons 
+                  onQuickAction={onQuickAction}
+                  onAddActiveToFormula={onAddActiveToFormula}
+                />
+              </div>
             )}
 
             <div className="flex items-center justify-between mt-3">

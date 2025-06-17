@@ -15,8 +15,16 @@ const FormulaSuggestionButtons = ({
 }: FormulaSuggestionButtonsProps) => {
   const { toast } = useToast();
 
+  const handleSuggestOptimization = () => {
+    console.log('🎯 Botão "Sugerir Ativos" clicado');
+    onQuickAction('suggest-improvements');
+  };
+
   const handleAddCustomActives = () => {
+    console.log('🎯 Botão "Ativos Esquecidos" clicado');
     const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
+    console.log('📦 Ativos personalizados encontrados:', customActives);
+    
     if (customActives.length > 0) {
       onAddActiveToFormula(customActives);
     } else {
@@ -27,6 +35,8 @@ const FormulaSuggestionButtons = ({
       });
     }
   };
+
+  console.log('🔧 FormulaSuggestionButtons renderizado');
 
   return (
     <div className="mt-4 space-y-3">
@@ -42,7 +52,7 @@ const FormulaSuggestionButtons = ({
             </p>
           </div>
           <Button
-            onClick={() => onQuickAction('suggest-improvements')}
+            onClick={handleSuggestOptimization}
             size="sm"
             className="bg-gradient-to-r from-purple-600 to-emerald-600 hover:from-purple-700 hover:to-emerald-700 text-white ml-3"
           >

@@ -20,9 +20,29 @@ export const detectFormulaAnalysis = (message: { role: string; content: string }
   // Verificar se tem unidades farmacêuticas típicas em conjunto
   const hasPharmUnits = content.includes('mg') && content.includes('UI') && content.includes('mcg');
   
+  // Detectar listas de ativos com bullet points
+  const hasActiveList = content.includes('• ') && dosageMatches >= 2;
+  
+  // Detectar texto de fórmulas prescritas
+  const hasFormulasPrescribed = content.includes('📋 **FÓRMULAS PRESCRITAS:**') || content.includes('**FÓRMULAS PRESCRITAS:**');
+  
   const isFormulaAnalysis = hasComposition || hasAnalysis || hasBenefits || hasImportance || 
                            hasFoundation || hasInstructions || hasFormulaText || 
-                           hasMultipleDosages || hasPharmUnits;
+                           hasMultipleDosages || hasPharmUnits || hasActiveList || hasFormulasPrescribed;
+  
+  console.log('🔍 Detecção de fórmula - Debug:', {
+    messageId: message.id || 'N/A',
+    role: message.role,
+    isFormulaAnalysis,
+    hasComposition,
+    hasAnalysis,
+    hasBenefits,
+    hasFoundation,
+    hasActiveList,
+    hasFormulasPrescribed,
+    dosageMatches,
+    contentPreview: content.substring(0, 200) + '...'
+  });
   
   return isFormulaAnalysis;
 };
