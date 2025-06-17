@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -59,33 +58,100 @@ export const useQuickActions = ({
     if (action === 'suggest-improvements') {
       console.log('🧠 Processando sugestões de otimização...');
       
-      const extractedFormulas = extractFormulasFromConversation(messages);
-      console.log('📋 Fórmulas extraídas:', extractedFormulas);
-      
-      if (!extractedFormulas) {
-        toast({
-          title: "Nenhuma fórmula encontrada",
-          description: "Primeiro analise uma fórmula para poder receber sugestões de otimização.",
-          variant: "destructive"
+      // Buscar mensagens do assistente que contenham análises de fórmula
+      const formulaMessages = messages
+        .filter(msg => msg.role === 'assistant')
+        .filter(msg => {
+          const content = msg.content.toLowerCase();
+          return content.includes('fórmula') && 
+                 (content.includes('mg') || content.includes('mcg') || content.includes('ui') ||
+                  content.includes('composição') || content.includes('análise'));
         });
+
+      console.log('📋 Mensagens com fórmulas encontradas:', formulaMessages.length);
+
+      if (formulaMessages.length === 0) {
+        // Se não encontrar análises, sugere uma análise geral
+        const message = `Com base no contexto da nossa conversa, forneça sugestões de ativos e fórmulas que podem ser úteis para complementar tratamentos farmacêuticos. 
+
+Inclua:
+- Ativos populares e suas indicações
+- Combinações sinérgicas comuns
+- Dosagens recomendadas
+- Justificativas científicas
+
+Seja específico e prático nas recomendações, mesmo sem uma fórmula específica para analisar.`;
+
+        addMessage({
+          content: 'Sugerir ativos e fórmulas complementares',
+          role: 'user'
+        });
+
+        setIsLoading(true);
+
+        try {
+          const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
+          const conversationHistory = messages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }));
+
+          const { data, error } = await supabase.functions.invoke('chat-ai', {
+            body: {
+              message,
+              conversationHistory,
+              customActives,
+              userId: user.id,
+              specialty: selectedSpecialty
+            }
+          });
+
+          if (error || data?.error || !data?.response) {
+            throw new Error(data?.details || error?.message || 'Erro desconhecido');
+          }
+
+          addMessage({
+            content: data.response,
+            role: 'assistant'
+          });
+        } catch (error: any) {
+          console.error('❌ Erro ao gerar sugestões:', error);
+          addMessage({
+            content: `🚫 Ocorreu um erro ao gerar sugestões. Tente novamente.\n\nErro: ${error.message}`,
+            role: 'assistant'
+          });
+
+          toast({
+            title: "Erro ao gerar sugestões",
+            description: error.message,
+            variant: "destructive"
+          });
+        } finally {
+          setIsLoading(false);
+        }
         return;
       }
 
-      const message = `Com base nas fórmulas analisadas na conversa, forneça sugestões específicas de otimização.
+      // Se encontrou fórmulas, usa a mais recente para sugestões específicas
+      const lastFormulaMessage = formulaMessages[formulaMessages.length - 1];
+      console.log('📄 Última análise encontrada:', lastFormulaMessage.content.substring(0, 200));
 
-FÓRMULAS IDENTIFICADAS:
-${extractedFormulas}
+      const message = `Com base na fórmula analisada anteriormente, forneça sugestões específicas de otimização e ativos complementares.
 
-Forneça sugestões práticas para melhorar essas fórmulas, incluindo:
+ANÁLISE DE FÓRMULA IDENTIFICADA:
+${lastFormulaMessage.content}
+
+Forneça sugestões práticas para melhorar esta fórmula, incluindo:
 - Ativos complementares que poderiam ser adicionados
 - Ajustes de dosagem recomendados  
 - Combinações sinérgicas
 - Justificativas científicas para cada sugestão
+- Como os novos ativos se integrariam com os existentes
 
 Seja específico e prático nas recomendações.`;
 
       addMessage({
-        content: 'Sugerir otimizações para as fórmulas analisadas',
+        content: 'Sugerir otimizações para a fórmula analisada',
         role: 'user'
       });
 
