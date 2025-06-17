@@ -150,7 +150,9 @@ Vamos construir o caso clínico juntos para criar as melhores fórmulas para seu
 
 **Qual é o nome do paciente?** 
 
-(Importante para personalizar a prescrição e o futuro PDF)`,
+(Importante para personalizar a prescrição e o futuro PDF)
+
+*Próximas perguntas serão feitas uma por vez conforme você responder*`,
           role: 'assistant'
         });
         setIsLoading(false);
