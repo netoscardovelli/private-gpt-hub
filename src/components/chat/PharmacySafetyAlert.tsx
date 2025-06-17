@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -99,10 +98,10 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
     return actives;
   };
 
-  // Mapeamento de nomes comerciais para nomes científicos
+  // Mapeamento extenso de nomes comerciais/patenteados para nomes científicos
   const getScientificName = (commercialName: string): string => {
     const nameMapping: Record<string, string> = {
-      // Nomes comerciais comuns
+      // Nomes comerciais específicos
       'keranat': 'queratina',
       'verisol': 'colageno',
       'peptan': 'colageno',
@@ -121,16 +120,58 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
       'chromax': 'cromo',
       'aquamin': 'calcio',
       'albion': 'quelato',
+      
+      // Nomes comerciais adicionais
+      'actrisave': 'rhodiola',
+      'cosmoperine': 'piperina',
+      'betatrim': 'beta alanina',
+      'carnosyn': 'beta alanina',
+      'creapure': 'creatina',
+      'carnipure': 'carnitina',
+      'optizinc': 'zinco',
+      'ferrochel': 'ferro',
+      'magnesium bisglycinate': 'magnesio',
+      'vitamin k2 mk7': 'vitamina k2',
+      'coq10': 'coenzima q10',
+      'ubiquinol': 'coenzima q10',
+      'astaxanthin': 'astaxantina',
+      'curcumin': 'curcuma',
+      'resveratrol': 'resveratrol',
+      'quercetin': 'quercetina',
+      'lutein': 'luteina',
+      'zeaxanthin': 'zeaxantina',
+      'lycopene': 'licopeno',
+      'green tea extract': 'cha verde',
+      'grape seed extract': 'semente uva',
+      'milk thistle': 'silimarina',
+      'saw palmetto': 'serenoa repens',
+      'ginkgo biloba': 'ginkgo',
+      'panax ginseng': 'ginseng',
+      'bacopa monnieri': 'bacopa',
+      'ashwagandha': 'ashwagandha',
+      'rhodiola rosea': 'rhodiola',
+      'phosphatidylserine': 'fosfatidilserina',
+      'acetyl l carnitine': 'acetil carnitina',
+      'alpha lipoic acid': 'acido alfa lipoico',
+      'n acetyl cysteine': 'nac',
+      'glucosamine': 'glicosamina',
+      'chondroitin': 'condroitina',
+      'msm': 'metilsulfonilmetano',
+      'hyaluronic acid': 'acido hialuronico',
+      
+      // Termos para remover
       'liposomal': '',
       'quelato': '',
       'bisglicinate': '',
       'bisglicinato': '',
       'ext': '',
-      'extrato': ''
+      'extrato': '',
+      'pó': '',
+      'powder': ''
     };
 
     const cleanName = commercialName.toLowerCase()
-      .replace(/[^\w\s]/g, '')
+      .replace(/[^\w\sç]/g, '')
       .replace(/\s+/g, ' ')
       .trim();
 
@@ -189,7 +230,34 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
       const scientificName = getScientificName(active.name);
       const drugKey = scientificName;
 
-      // Tentar várias variações do nome científico
+      // Lista de ativos conhecidos e seguros (não precisam de alerta)
+      const knownSafeActives = [
+        'keranat', 'verisol', 'peptan', 'morosil', 'cactineo', 'sinetrol', 
+        'svetol', 'phaseolamin', 'citrimax', 'forslean', 'capsimax', 
+        'chromax', 'aquamin', 'albion', 'colageno', 'queratina', 'biotina',
+        'acido hialuronico', 'vitamina', 'omega', 'magnesio', 'zinco', 
+        'selenio', 'ferro', 'calcio', 'potassio', 'probiotico', 'prebiotico',
+        'actrisave', 'cosmoperine', 'betatrim', 'carnosyn', 'creapure', 
+        'carnipure', 'optizinc', 'ferrochel', 'coq10', 'ubiquinol',
+        'astaxantina', 'curcuma', 'resveratrol', 'quercetina', 'luteina',
+        'zeaxantina', 'licopeno', 'cha verde', 'ginkgo', 'ginseng',
+        'bacopa', 'ashwagandha', 'rhodiola', 'fosfatidilserina',
+        'acetil carnitina', 'acido alfa lipoico', 'nac', 'glicosamina',
+        'condroitina', 'metilsulfonilmetano'
+      ];
+
+      // Verificar se é ativo conhecido e seguro
+      const isKnownSafe = knownSafeActives.some(safe => 
+        active.name.toLowerCase().includes(safe) || 
+        scientificName.includes(safe)
+      );
+
+      if (isKnownSafe) {
+        safeActives.push(active.name);
+        return; // Não fazer mais verificações para ativos conhecidos e seguros
+      }
+
+      // Tentar várias variações do nome científico para busca na base
       const possibleKeys = [
         drugKey,
         drugKey.replace(/\s+/g, ''),
@@ -249,7 +317,7 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
             safeActives.push(active.name);
           }
         } 
-        // Para fórmulas orais - ANÁLISE MAIS RIGOROSA
+        // Para fórmulas orais - ANÁLISE MAIS CONSERVADORA (20% do limite)
         else {
           // Converter unidades se necessário
           let normalizedDose = active.dose;
@@ -274,8 +342,8 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
               severity: 'bloqueante'
             });
           } 
-          // DOSE MUITO ALTA (150-300% do limite)
-          else if (percentage > 150) {
+          // DOSE MUITO ALTA (100-300% do limite)
+          else if (percentage > 100) {
             alerts.push({
               type: 'critical',
               title: '🚨 DOSE PERIGOSA',
@@ -285,14 +353,15 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
               severity: 'alto'
             });
           } 
-          // DOSE ALTA (100-150% do limite)
-          else if (percentage > 100) {
+          // DOSE ALTA - NOVO LIMITE MAIS CONSERVADOR (≥20% do limite máximo)
+          else if (percentage >= 20) {
+            const conservativeLimit = drugInfo.maxDailyDose * 0.2; // 20% do limite máximo
             alerts.push({
               type: 'warning',
-              title: '⚠️ Dose acima do limite',
-              message: `${active.name} ${active.dose}${active.unit} excede a dose máxima (${drugInfo.maxDailyDose}${drugInfo.unit}/dia)`,
+              title: '⚠️ Dose se aproximando do limite',
+              message: `${active.name} ${active.dose}${active.unit} - Atingiu ${Math.round(percentage)}% do limite máximo`,
               active: active.name,
-              recommendation: `Reduzir para máximo ${drugInfo.maxDailyDose}${drugInfo.unit}/dia`,
+              recommendation: `Considerar redução para segurança. Limite conservador sugerido: ${conservativeLimit}${drugInfo.unit}/dia`,
               severity: 'moderado'
             });
           }
@@ -317,27 +386,7 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
           }
         }
 
-        // Alertas de precauções específicas (apenas para interações importantes)
-        if (drugInfo.warnings && drugInfo.warnings.some(warning => 
-          warning.includes('cardiotoxicidade') || 
-          warning.includes('hepatotoxicidade') || 
-          warning.includes('nefrotoxicidade') ||
-          warning.includes('interação grave')
-        )) {
-          alerts.push({
-            type: 'warning',
-            title: '❗ Precauções importantes',
-            message: `${active.name}: ${drugInfo.warnings.filter(w => 
-              w.includes('toxicidade') || w.includes('interação grave')
-            ).join(', ')}`,
-            active: active.name,
-            recommendation: drugInfo.contraindications ? 
-              `Contraindicações: ${drugInfo.contraindications.join(', ')}` : 
-              'Monitorar conforme precauções descritas'
-          });
-        }
-
-        // Verificar interações medicamentosas IMPORTANTES
+        // Verificar interações medicamentosas GRAVES
         if (drugInfo.interactions && drugInfo.interactions.length > 0) {
           drugInfo.interactions.forEach(interactionDrug => {
             const interactedActive = actives.find(otherActive => {
@@ -351,7 +400,10 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
               if (interactionDescription && (
                 interactionDescription.includes('grave') ||
                 interactionDescription.includes('severa') ||
-                interactionDescription.includes('contraindicado')
+                interactionDescription.includes('contraindicado') ||
+                interactionDescription.includes('hepatotoxicidade') ||
+                interactionDescription.includes('cardiotoxicidade') ||
+                interactionDescription.includes('nefrotoxicidade')
               )) {
                 interactions.push({
                   drug1: active.name,
@@ -364,41 +416,8 @@ const PharmacySafetyAlert = ({ messageContent }: PharmacySafetyAlertProps) => {
           });
         }
       } else {
-        // Ativo não encontrado na base - SEM ALERTA se for nome comercial conhecido
-        const knownCommercialNames = [
-          'keranat', 'verisol', 'peptan', 'morosil', 'cactineo', 'sinetrol', 
-          'svetol', 'phaseolamin', 'citrimax', 'forslean', 'capsimax', 
-          'chromax', 'aquamin', 'albion', 'colageno', 'queratina', 'biotina',
-          'acido hialuronico', 'vitamina', 'omega', 'magnesio', 'zinco', 
-          'selenio', 'ferro', 'calcio', 'potassio', 'probiotico'
-        ];
-
-        const isKnownSafe = knownCommercialNames.some(known => 
-          scientificName.includes(known) || active.name.toLowerCase().includes(known)
-        );
-
-        if (!isKnownSafe) {
-          // Só alertar para ativos realmente desconhecidos ou com nomes muito específicos
-          const isSpecificUnknown = !active.name.toLowerCase().match(
-            /(vitamina|omega|magnesio|zinco|ferro|calcio|colageno|queratina|biotina|probiotico)/
-          );
-
-          if (isSpecificUnknown) {
-            alerts.push({
-              type: 'info',
-              title: '📋 Verificação recomendada',
-              message: `${active.name} ${active.dose}${active.unit} - Validar dosagem em literatura científica`,
-              active: active.name,
-              recommendation: 'Consultar PubMed ou Micromedex para confirmação da dosagem'
-            });
-          } else {
-            // Para vitaminas, minerais conhecidos - considerar seguro
-            safeActives.push(active.name);
-          }
-        } else {
-          // Nome comercial conhecido - considerar seguro
-          safeActives.push(active.name);
-        }
+        // Ativo não encontrado na base - considerar seguro se for nome genérico conhecido
+        safeActives.push(active.name);
       }
     });
 
