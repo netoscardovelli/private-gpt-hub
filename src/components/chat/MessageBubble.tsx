@@ -114,12 +114,9 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
         {/* Sugestões de ativos - apenas para análises */}
         {isAnalysisMessage && (
           <ActiveSuggestions
-            messageId={message.id}
             messageContent={message.content}
-            onRequestSuggestions={handleRequestSuggestions}
             onAddActiveToFormula={onAddActiveToFormula}
-            isLoading={isRequestingSuggestions}
-            specialty="endocrinologia"
+            userId={userId}
           />
         )}
 
