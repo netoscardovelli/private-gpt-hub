@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { ArrowRight, FlaskConical, Shield, Sparkles, Beaker, CheckCircle, Settings, Star, Zap, Atom } from 'lucide-react';
 
@@ -84,13 +83,6 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
             </div>
           </div>
 
-          {/* Problema/Solução Statement */}
-          <div className="mb-3 sm:mb-4">
-            <p className="text-lg sm:text-xl md:text-2xl text-yellow-400 font-bold mb-2 px-2 drop-shadow-lg">
-              DIFICULDADE EM CRIAR E ANALISAR FÓRMULAS MANIPULADAS NUNCA MAIS
-            </p>
-          </div>
-
           {/* Main Title - Mais compacto */}
           <div className="mb-3 sm:mb-4">
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-2 sm:mb-3 leading-tight px-2">
@@ -98,6 +90,13 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
                 ANÁLISE DE FÓRMULAS MANIPULADAS
               </span>
             </h1>
+          </div>
+
+          {/* Problema/Solução Statement - Moved below the main title */}
+          <div className="mb-3 sm:mb-4">
+            <p className="text-lg sm:text-xl md:text-2xl text-yellow-400 font-bold mb-2 px-2 drop-shadow-lg">
+              DIFICULDADE EM CRIAR E ANALISAR FÓRMULAS MANIPULADAS NUNCA MAIS
+            </p>
           </div>
 
           {/* Subtitle - Mais compacto */}
