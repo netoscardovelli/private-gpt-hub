@@ -25,7 +25,7 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
   const getInitialMessages = (): Message[] => [
     {
       id: '1',
-      content: `Olá ${user.name}! Sou seu assistente especializado em análise de fórmulas de manipulação farmacêutica.
+      content: `Olá! Sou seu assistente especializado em análise de fórmulas de manipulação farmacêutica.
 
 Cole suas fórmulas aqui e eu farei uma análise completa para você!`,
       role: 'assistant',
