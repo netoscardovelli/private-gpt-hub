@@ -49,6 +49,7 @@ const MessageBubble = ({
   };
 
   const handleQuickActionClick = (action: string) => {
+    console.log('Quick action clicked:', action);
     onQuickAction(action);
   };
 
@@ -59,24 +60,30 @@ const MessageBubble = ({
     let match;
 
     while ((match = quickActionRegex.exec(content)) !== null) {
+      // Adicionar texto antes do match
       if (match.index > lastIndex) {
         parts.push(content.slice(lastIndex, match.index));
       }
       
-      parts.push(
-        <Button
-          key={match.index}
-          onClick={() => handleQuickActionClick(match[1])}
-          size="sm"
-          className="mx-1 my-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-        >
-          {getActionLabel(match[1])}
-        </Button>
-      );
+      // Verificar se o match[1] existe antes de usar
+      const actionValue = match[1];
+      if (actionValue) {
+        parts.push(
+          <Button
+            key={match.index}
+            onClick={() => handleQuickActionClick(actionValue)}
+            size="sm"
+            className="mx-1 my-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            {getActionLabel(actionValue)}
+          </Button>
+        );
+      }
       
       lastIndex = match.index + match[0].length;
     }
     
+    // Adicionar texto restante
     if (lastIndex < content.length) {
       parts.push(content.slice(lastIndex));
     }
@@ -92,6 +99,8 @@ const MessageBubble = ({
     };
     return labels[action] || action;
   };
+
+  const hasQuickActions = message.content.includes('<quick-action>');
 
   return (
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -114,15 +123,15 @@ const MessageBubble = ({
           </div>
           <div className="flex-1">
             <div className="whitespace-pre-wrap">
-              {message.role === 'assistant' && message.content.includes('<quick-action>') 
+              {message.role === 'assistant' && hasQuickActions 
                 ? renderQuickActions(message.content.replace(/<quick-action>.*?<\/quick-action>/g, ''))
                 : message.content}
             </div>
             
-            {message.role === 'assistant' && message.content.includes('<quick-action>') && (
+            {message.role === 'assistant' && hasQuickActions && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {renderQuickActions(message.content).filter(part => 
-                  typeof part === 'object' && part.type === Button
+                  typeof part === 'object' && part?.type === Button
                 )}
               </div>
             )}
