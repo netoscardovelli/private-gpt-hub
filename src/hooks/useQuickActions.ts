@@ -68,29 +68,23 @@ export const useQuickActions = ({
 
       setTimeout(() => {
         addMessage({
-          content: `Olá! Sou seu assistente clínico especializado em fórmulas manipuladas para profissionais da saúde. 
+          content: `Olá! Sou um assistente clínico altamente especializado em fórmulas manipuladas, voltado para profissionais da saúde como médicos, nutricionistas, farmacêuticos e biomédicos prescritores.
 
-🎯 **Minha missão é ajudar você a criar fórmulas personalizadas com base no caso clínico apresentado.**
+🎯 **Minha principal função é ajudar você a construir ou revisar fórmulas manipuladas personalizadas**, respeitando rigorosamente:
 
-Para começarmos, preciso entender como você prefere trabalhar:
+✅ As boas práticas de prescrição clínica
+✅ As normas de farmacotécnica  
+✅ Os limites de dose mínima e máxima segundo Farmacopeia
+✅ A viabilidade galênica
+✅ A lógica clínica individualizada com base em sintomas e objetivos do paciente
 
-**Você prefere:**
-
-1️⃣ **Colar o caso clínico completo agora** - se você já tem todas as informações organizadas
-
-2️⃣ **Construir o caso comigo, passo a passo** - vou te guiar com perguntas estratégicas
+**Você prefere colar o caso clínico completo agora ou quer ir construindo o caso comigo, passo a passo?**
 
 <quick-action>caso-clinico-completo</quick-action>
 
 <quick-action>construir-passo-a-passo</quick-action>
 
-Escolha a opção que preferir e vamos criar fórmulas personalizadas baseadas em:
-✅ Princípios de farmacotécnica e farmacodinâmica
-✅ Dosagens baseadas na farmacopeia
-✅ Boas práticas clínicas  
-✅ Fontes científicas confiáveis (PubMed, Galena, Fagron, etc.)
-
-Como você gostaria de proceder?`,
+Escolha a opção que preferir e vamos criar fórmulas personalizadas baseadas em evidências científicas sólidas e raciocínio clínico individualizado! 🧠`,
           role: 'assistant'
         });
         setIsLoading(false);
@@ -112,18 +106,23 @@ Como você gostaria de proceder?`,
         addMessage({
           content: `Perfeito! 📋
 
-Cole aqui seu caso clínico completo com todas as informações que você tem disponível. Pode incluir:
+Cole aqui seu caso clínico completo com todas as informações que você tem disponível. 
 
-• **Dados do paciente:** idade, sexo, histórico relevante
-• **Queixa principal:** sintomas, objetivos do tratamento
+Vou extrair atentamente as seguintes informações do seu relato:
+
+• **Dados do paciente:** idade, sexo
+• **Objetivo(s) clínico(s):** principal(is) meta(s) do tratamento
+• **Sintomas ou diagnóstico:** quadro atual
 • **Medicamentos em uso:** se houver
 • **Tempo de evolução:** há quanto tempo apresenta os sintomas
-• **Observações específicas:** horários dos sintomas, fatores agravantes/atenuantes
-• **Qualquer outra informação** que considere relevante
+• **Sintomas associados:** queixas secundárias
+• **Horário de piora:** quando os sintomas são mais intensos
+• **Histórico de fórmulas:** tratamentos anteriores
+• **Preferências:** número de fórmulas e forma farmacêutica desejada
 
-Quanto mais detalhado o caso, mais precisa e personalizada será minha sugestão de fórmulas! 
+Quanto mais detalhado o caso, mais precisa e personalizada será minha sugestão de fórmulas baseada em raciocínio clínico individualizado!
 
-💡 **Dica:** Pode colar direto da sua anamnese ou relato clínico.`,
+💡 **Cole seu caso clínico completo abaixo:**`,
           role: 'assistant'
         });
         setIsLoading(false);
