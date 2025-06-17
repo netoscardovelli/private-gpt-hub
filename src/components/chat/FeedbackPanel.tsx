@@ -3,18 +3,16 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { ThumbsUp, ThumbsDown, Send, Star } from 'lucide-react';
+import { Send, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FeedbackPanelProps {
-  messageId: string;
-  originalAnalysis: string;
-  userId?: string;
-  onClose: () => void;
+  onSubmit: (rating: number, feedback: string) => Promise<void>;
+  onCancel: () => void;
 }
 
-const FeedbackPanel = ({ messageId, originalAnalysis, userId, onClose }: FeedbackPanelProps) => {
+const FeedbackPanel = ({ onSubmit, onCancel }: FeedbackPanelProps) => {
   const [feedback, setFeedback] = useState('');
   const [rating, setRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,39 +28,10 @@ const FeedbackPanel = ({ messageId, originalAnalysis, userId, onClose }: Feedbac
       return;
     }
 
-    if (!userId) {
-      toast({
-        title: "Usuário não identificado",
-        description: "Não foi possível processar o feedback.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
-      console.log('Enviando feedback para aprendizado...');
-
-      const { data, error } = await supabase.functions.invoke('chat-ai', {
-        body: {
-          feedback: feedback,
-          originalAnalysis: originalAnalysis,
-          userId: userId,
-          rating: rating
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      toast({
-        title: "Feedback enviado!",
-        description: "Suas sugestões foram processadas e o sistema aprenderá com elas.",
-      });
-
-      onClose();
+      await onSubmit(rating, feedback);
     } catch (error) {
       console.error('Erro ao enviar feedback:', error);
       toast({
@@ -130,7 +99,7 @@ const FeedbackPanel = ({ messageId, originalAnalysis, userId, onClose }: Feedbac
             {isSubmitting ? 'Enviando...' : 'Enviar Feedback'}
           </Button>
           <Button
-            onClick={onClose}
+            onClick={onCancel}
             variant="outline"
             className="border-slate-500 text-slate-300 hover:text-slate-100 text-xs"
             size="sm"

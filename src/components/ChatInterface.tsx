@@ -160,15 +160,30 @@ Use a seção "💡 Sugestões de Otimização" conforme definido no prompt.`;
     }
   };
 
-  const handleAddActiveToFormula = async (originalFormula: string, addedActives: any[]) => {
-    const activesText = addedActives.map(active => 
+  const handleAddActiveToFormula = async (actives: any[]) => {
+    // Get the last assistant message that contains formulas
+    const lastAssistantMessage = messages
+      .filter(msg => msg.role === 'assistant')
+      .reverse()
+      .find(msg => msg.content.includes('• ') && msg.content.includes('mg'));
+
+    if (!lastAssistantMessage) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível encontrar uma análise de fórmula recente.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const activesText = actives.map(active => 
       `- ${active.name} ${active.concentration}\n  Benefício: ${active.benefit}\n  Mecanismo: ${active.mechanism}`
     ).join('\n\n');
 
     const enhancedMessage = `Com base na análise anterior, inclua os seguintes ativos nas fórmulas e refaça a análise completa:
 
 FÓRMULA ORIGINAL:
-${originalFormula}
+${lastAssistantMessage.content}
 
 ATIVOS A INCLUIR:
 ${activesText}
@@ -177,7 +192,7 @@ INSTRUÇÃO: Refaça a análise das fórmulas incluindo estes novos ativos, most
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: `Incluir ${addedActives.length} ativo(s) nas fórmulas e reanalizar`,
+      content: `Incluir ${actives.length} ativo(s) nas fórmulas e reanalizar`,
       role: 'user',
       timestamp: new Date()
     };
