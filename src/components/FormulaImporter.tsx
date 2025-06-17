@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, Wand2, Check, X, Edit, Scissors } from 'lucide-react';
+import { Upload, Wand2, Check, X, Edit, Scissors, Clock } from 'lucide-react';
 
 interface ExtractedFormula {
   name: string;
@@ -16,6 +17,7 @@ interface ExtractedFormula {
   specialty: string;
   description?: string;
   clinical_indication?: string;
+  posology?: string;
   actives: {
     name: string;
     concentration_mg: number;
@@ -79,6 +81,7 @@ Analise este texto seguindo essa regra:
 - Tudo antes de uma posologia pertence à mesma fórmula
 - Tudo após uma posologia é uma nova fórmula
 - Agrupe ativos corretamente por fórmula
+- CAPTURE e INCLUA a posologia de cada fórmula
 
 Retorne APENAS um JSON válido:
 [
@@ -88,6 +91,7 @@ Retorne APENAS um JSON válido:
     "pharmaceutical_form": "cápsulas|óvulos|pomada|sabonete|creme|sachê",
     "specialty": "ginecologia|urologia|endocrinologia|geral",
     "clinical_indication": "indicação",
+    "posology": "1x ao dia, tomar à noite",
     "actives": [
       {
         "name": "Nome do Ativo",
@@ -155,15 +159,14 @@ ${chunk}`,
     
     // Padrões para identificar posologias (fim de fórmula)
     const posologyPatterns = [
-      /(\d+x?\s*ao\s*dia)/i,
-      /(tomar.*noite)/i,
-      /(tomar.*manhã)/i,
-      /(aplicar.*dia)/i,
-      /(usar.*vezes)/i,
-      /(posologia:?.*)/i,
-      /(modo de uso:?.*)/i,
-      /(administração:?.*)/i,
-      /(dosagem:?.*)/i
+      /(\d+x?\s*ao\s*dia[^.]*)/i,
+      /(tomar.*(?:noite|manhã|almoço|jantar)[^.]*)/i,
+      /(aplicar.*(?:dia|noite|manhã)[^.]*)/i,
+      /(usar.*(?:vezes|dia|noite)[^.]*)/i,
+      /(posologia:?[^.]*)/i,
+      /(modo de uso:?[^.]*)/i,
+      /(administração:?[^.]*)/i,
+      /(dosagem:?[^.]*)/i
     ];
     
     // Dividir o texto em linhas
@@ -176,15 +179,23 @@ ${chunk}`,
       const line = lines[i];
       console.log(`📝 Analisando linha ${i + 1}: "${line}"`);
       
-      // Verificar se a linha é uma posologia (fim de fórmula)
-      const isPosology = posologyPatterns.some(pattern => pattern.test(line));
+      // Verificar se a linha contém uma posologia (fim de fórmula)
+      let posologyMatch = null;
+      for (const pattern of posologyPatterns) {
+        const match = line.match(pattern);
+        if (match) {
+          posologyMatch = match[1] || match[0];
+          break;
+        }
+      }
       
-      if (isPosology) {
-        console.log(`💊 Posologia identificada: "${line}"`);
+      if (posologyMatch) {
+        console.log(`💊 Posologia identificada: "${posologyMatch}"`);
         
-        // Se temos uma fórmula em andamento, finalizá-la
+        // Se temos uma fórmula em andamento, finalizá-la com a posologia
         if (currentFormula && currentFormula.actives.length > 0) {
-          console.log(`✅ Finalizando fórmula: "${currentFormula.name}" com ${currentFormula.actives.length} ativos`);
+          currentFormula.posology = posologyMatch.trim();
+          console.log(`✅ Finalizando fórmula: "${currentFormula.name}" com ${currentFormula.actives.length} ativos e posologia: "${currentFormula.posology}"`);
           formulas.push(currentFormula);
         }
         
@@ -225,7 +236,7 @@ ${chunk}`,
       }
     }
     
-    // Adicionar última fórmula se houver
+    // Adicionar última fórmula se houver (sem posologia específica)
     if (currentFormula && currentFormula.actives.length > 0) {
       console.log(`✅ Finalizando última fórmula: "${currentFormula.name}" com ${currentFormula.actives.length} ativos`);
       formulas.push(currentFormula);
@@ -418,6 +429,7 @@ ${chunk}`,
           specialty: String(formula.specialty || 'geral').trim(),
           description: formula.description || null,
           clinical_indication: formula.clinical_indication || null,
+          posology: formula.posology || null,
           actives: (formula.actives || [])
             .filter((active: any) => active && (active.name || active.nome))
             .map((active: any) => ({
@@ -432,6 +444,146 @@ ${chunk}`,
       console.error('Erro no parse JSON:', error);
       throw new Error('JSON malformado na resposta da IA');
     }
+  };
+
+  const createNewFormula = (name: string, index: number): ExtractedFormula => {
+    const cleanName = name.replace(/^[-•]\s*/, '').trim();
+    
+    // Detectar forma farmacêutica
+    let pharmaceutical_form = 'cápsulas';
+    const nameLower = cleanName.toLowerCase();
+    if (nameLower.includes('óvulo')) pharmaceutical_form = 'óvulos';
+    else if (nameLower.includes('pomada')) pharmaceutical_form = 'pomada';
+    else if (nameLower.includes('sabonete')) pharmaceutical_form = 'sabonete';
+    else if (nameLower.includes('creme')) pharmaceutical_form = 'creme';
+    else if (nameLower.includes('sachê')) pharmaceutical_form = 'sachê';
+    
+    // Detectar especialidade
+    let specialty = 'geral';
+    if (nameLower.includes('vagina') || nameLower.includes('óvulo') || nameLower.includes('tpm')) {
+      specialty = 'ginecologia';
+    } else if (nameLower.includes('libido') || nameLower.includes('eret') || nameLower.includes('disfunção')) {
+      specialty = 'urologia';
+    } else if (nameLower.includes('emagre') || nameLower.includes('performance')) {
+      specialty = 'endocrinologia';
+    }
+    
+    return {
+      name: cleanName || `Fórmula ${index}`,
+      category: 'Geral',
+      pharmaceutical_form,
+      specialty,
+      clinical_indication: cleanName,
+      posology: undefined,
+      actives: []
+    };
+  };
+
+  const extractActiveFromLine = (line: string): { name: string; concentration_mg: number; concentration_text: string; role?: string } | null => {
+    // Ignorar linhas que claramente não são ativos
+    if (line.includes('Tomar') || 
+        line.includes('Aplicar') || 
+        line.includes('Usar') ||
+        line.length < 5 ||
+        /^\d+[x\s]*ao\s*dia/i.test(line)) {
+      return null;
+    }
+    
+    // Padrões para extrair ativos com concentrações
+    const patterns = [
+      // Bilhões/blh
+      /(.+?)\s+(\d+(?:\.\d+)?)\s*(?:bilhão|bilhões|blh)/i,
+      // Miligramas
+      /(.+?)\s+(\d+(?:\.\d+)?)\s*mg/i,
+      // Microgramas
+      /(.+?)\s+(\d+(?:\.\d+)?)\s*mcg/i,
+      // Unidades Internacionais
+      /(.+?)\s+(\d+(?:\.\d+)?)\s*UI/i,
+      // Percentuais
+      /(.+?)\s+(\d+(?:\.\d+)?)\s*%/i,
+      // Formato especial (Ex: "Ativo 100")
+      /(.+?)\s+(\d+(?:\.\d+)?)$/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = line.match(pattern);
+      if (match) {
+        let name = match[1].trim();
+        const value = parseFloat(match[2]);
+        
+        // Limpar nome do ativo
+        name = name.replace(/^[-•]\s*/, '').trim();
+        
+        if (name.length < 3 || value <= 0) continue;
+        
+        // Converter concentrações
+        let concentration_mg = value;
+        const unit = line.toLowerCase();
+        
+        if (unit.includes('bilhão') || unit.includes('blh')) {
+          concentration_mg = value * 1000;
+        } else if (unit.includes('mcg')) {
+          concentration_mg = value / 1000;
+        } else if (unit.includes('%')) {
+          concentration_mg = value * 100;
+        }
+        
+        return {
+          name,
+          concentration_mg,
+          concentration_text: match[0].trim(),
+          role: null
+        };
+      }
+    }
+    
+    return null;
+  };
+
+  const splitTextIntoChunks = (text: string): string[] => {
+    const sections: string[] = [];
+    const lines = text.split('\n');
+    let currentSection = '';
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      const isNewSection = line && (
+        line.includes('Tratamento') ||
+        line.includes('Prevenção') ||
+        line.includes('TPM') ||
+        line.includes('Libido') ||
+        line.includes('DISFUNÇÃO') ||
+        line.includes('Óvulos') && currentSection.length > 200 ||
+        line.includes('Pomada') ||
+        line.includes('Sabonete') ||
+        line.includes('CREME') ||
+        line.includes('ejaculação')
+      );
+
+      if (isNewSection && currentSection.length > 50) {
+        sections.push(currentSection.trim());
+        currentSection = line;
+      } else {
+        currentSection += '\n' + line;
+      }
+    }
+    
+    if (currentSection.trim()) {
+      sections.push(currentSection.trim());
+    }
+
+    const finalSections: string[] = [];
+    sections.forEach(section => {
+      if (section.length <= 1500) {
+        finalSections.push(section);
+      } else {
+        const chunks = section.match(/.{1,1500}/g) || [section];
+        finalSections.push(...chunks);
+      }
+    });
+
+    return finalSections.filter(s => s.length > 20);
   };
 
   const saveFormulasToDatabase = async () => {
@@ -556,7 +708,7 @@ ${chunk}`,
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="formula-text">
-              Cole o texto com as fórmulas (agora com detecção inteligente por posologia!)
+              Cole o texto com as fórmulas (agora com captura de posologias!)
             </Label>
             <Textarea
               id="formula-text"
@@ -564,7 +716,7 @@ ${chunk}`,
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Cole aqui o texto com as fórmulas... 
 
-NOVO: O sistema agora identifica automaticamente onde uma fórmula termina baseado nas posologias (ex: '1x ao dia', 'tomar à noite', etc.)"
+NOVO: O sistema agora captura as posologias (ex: '1x ao dia', 'tomar à noite') e as inclui nas fórmulas extraídas!"
               className="min-h-[200px]"
             />
           </div>
@@ -576,7 +728,7 @@ NOVO: O sistema agora identifica automaticamente onde uma fórmula termina basea
               className="flex-1"
             >
               <Wand2 className="w-4 h-4 mr-2" />
-              {isProcessing ? 'Processando...' : 'Extrair Fórmulas (Detecção por Posologia)'}
+              {isProcessing ? 'Processando...' : 'Extrair Fórmulas (Com Posologias)'}
             </Button>
             
             {inputText.length > 1500 && (
@@ -615,6 +767,14 @@ NOVO: O sistema agora identifica automaticamente onde uma fórmula termina basea
                           </p>
                           {formula.description && (
                             <p className="text-sm mt-1">{formula.description}</p>
+                          )}
+                          {formula.posology && (
+                            <div className="flex items-center mt-2 p-2 bg-blue-50 rounded-lg">
+                              <Clock className="w-4 h-4 text-blue-600 mr-2" />
+                              <span className="text-sm text-blue-800 font-medium">
+                                {formula.posology}
+                              </span>
+                            </div>
                           )}
                         </div>
                         <div className="flex space-x-2">
@@ -743,6 +903,15 @@ const EditFormulaForm = ({
             </SelectContent>
           </Select>
         </div>
+      </div>
+      
+      <div>
+        <Label>Posologia</Label>
+        <Input 
+          value={editedFormula.posology || ''}
+          onChange={(e) => setEditedFormula({...editedFormula, posology: e.target.value})}
+          placeholder="Ex: 1x ao dia, tomar à noite"
+        />
       </div>
       
       <div className="flex space-x-2">
