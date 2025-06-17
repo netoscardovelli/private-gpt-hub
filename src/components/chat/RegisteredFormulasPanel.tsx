@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { X, Plus, Send, Trash2 } from 'lucide-react';
+import { X, Plus, Send, Trash2, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Formula {

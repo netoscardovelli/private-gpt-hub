@@ -5,6 +5,9 @@ import MessageBubble from './chat/MessageBubble';
 import ChatHeader from './chat/ChatHeader';
 import ChatInput from './chat/ChatInput';
 import LoadingMessage from './chat/LoadingMessage';
+import FormulaButtons from './chat/FormulaButtons';
+import RegisteredFormulasPanel from './chat/RegisteredFormulasPanel';
+import FormulaSuggestionsPanel from './chat/FormulaSuggestionsPanel';
 import { exportChatToPDF } from '@/utils/exportToPDF';
 import { Download } from 'lucide-react';
 
@@ -317,6 +320,142 @@ INSTRUÇÃO ESPECIAL: Ao explicar fórmulas, faça uma explicação conversacion
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: `🚫 Ocorreu um erro. Tente novamente.\n\nErro: ${error.message}`,
+        role: 'assistant',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+
+      toast({
+        title: "Erro na análise",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegisteredFormulaSelect = async (formula: any) => {
+    const message = `Analisar fórmula cadastrada: ${formula.name}
+
+**Composição:** ${formula.composition}
+${formula.indication ? `**Indicação:** ${formula.indication}` : ''}
+${formula.dosage ? `**Posologia:** ${formula.dosage}` : ''}
+
+Por favor, faça uma análise completa desta fórmula incluindo compatibilidade, dosagens e sugestões de melhoria.`;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: `Analisar fórmula: ${formula.name}`,
+      role: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      const { data, error } = await supabase.functions.invoke('chat-ai', {
+        body: {
+          message,
+          conversationHistory,
+          customActives,
+          userId: user.id,
+          specialty: selectedSpecialty
+        }
+      });
+
+      if (error || data?.error || !data?.response) {
+        throw new Error(data?.details || error?.message || 'Erro desconhecido');
+      }
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: data.response,
+        role: 'assistant',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error: any) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: `🚫 Ocorreu um erro ao analisar a fórmula. Tente novamente.\n\nErro: ${error.message}`,
+        role: 'assistant',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+
+      toast({
+        title: "Erro na análise",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFormulaSuggestionSelect = async (suggestion: any) => {
+    const message = `Analisar sugestão de fórmula: ${suggestion.name}
+
+**Indicação:** ${suggestion.indication}
+**Composição:** ${suggestion.composition.join(', ')}
+**Descrição:** ${suggestion.description}
+
+Por favor, faça uma análise detalhada desta fórmula incluindo mecanismo de ação, compatibilidade entre ativos e orientações de uso.`;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: `Analisar sugestão: ${suggestion.name}`,
+      role: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      const { data, error } = await supabase.functions.invoke('chat-ai', {
+        body: {
+          message,
+          conversationHistory,
+          customActives,
+          userId: user.id,
+          specialty: selectedSpecialty
+        }
+      });
+
+      if (error || data?.error || !data?.response) {
+        throw new Error(data?.details || error?.message || 'Erro desconhecido');
+      }
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: data.response,
+        role: 'assistant',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error: any) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: `🚫 Ocorreu um erro ao analisar a sugestão. Tente novamente.\n\nErro: ${error.message}`,
         role: 'assistant',
         timestamp: new Date()
       };
