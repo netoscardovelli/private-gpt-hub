@@ -190,6 +190,7 @@ const MessageBubble = ({
               <div className="mt-3">
                 <ActiveSuggestions
                   onAddActiveToFormula={handleAddActiveToFormula}
+                  messageContent={message.content}
                   userId={userId}
                 />
               </div>
