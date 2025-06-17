@@ -5,8 +5,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Lightbulb, Target, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import QuickActiveAdder from './QuickActiveAdder';
-import { DRUG_DATABASE, getIndicationBasedSuggestions } from '@/data/pharmacologyData';
 
 interface ActiveSuggestionsProps {
   onAddActiveToFormula: (actives: any[]) => void;
@@ -15,7 +13,6 @@ interface ActiveSuggestionsProps {
 }
 
 const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: ActiveSuggestionsProps) => {
-  const [showQuickAdder, setShowQuickAdder] = useState(false);
   const { toast } = useToast();
 
   // Verificar se a mensagem contém uma análise REAL de fórmula (não apenas instruções)
@@ -101,22 +98,26 @@ const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: Act
       }
     }
     
-    // REMOVER berberina para fibromialgia - não há indicação clínica
-    // Berberina é indicada para diabetes/resistência insulínica, não fibromialgia
-    
     return suggestions.slice(0, 2); // Máximo 2 sugestões baseadas em evidência
   };
 
-  const handleAddActiveManually = (activeName: string) => {
-    const newActive = {
-      name: activeName,
-      concentration: 'A definir',
-      benefit: 'Conforme análise clínica',
-      mechanism: 'Revisar literatura'
-    };
+  // Função para adicionar ativo diretamente (igual ao QuickActiveAdder)
+  const handleAddActiveDirect = (suggestion: any) => {
+    onAddActiveToFormula([suggestion]);
     
-    onAddActiveToFormula([newActive]);
-    setShowQuickAdder(false);
+    toast({
+      title: "Ativo adicionado!",
+      description: `${suggestion.name} foi incluído na análise e será processado`,
+    });
+  };
+
+  const handleAddAllSuggestions = (suggestions: any[]) => {
+    onAddActiveToFormula(suggestions);
+    
+    toast({
+      title: "Ativos adicionados!",
+      description: `${suggestions.length} ativos foram incluídos na análise`,
+    });
   };
 
   const suggestions = generateSmartSuggestions();
@@ -125,16 +126,6 @@ const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: Act
   // Não mostrar nada se não há análise REAL de fórmula
   if (!hasFormulaAnalysis()) {
     return null;
-  }
-
-  if (showQuickAdder) {
-    return (
-      <QuickActiveAdder
-        onAddActive={handleAddActiveManually}
-        currentFormula={messageContent}
-        specialty="geral"
-      />
-    );
   }
 
   return (
@@ -179,7 +170,7 @@ const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: Act
                       )}
                     </div>
                     <Button
-                      onClick={() => onAddActiveToFormula([suggestion])}
+                      onClick={() => handleAddActiveDirect(suggestion)}
                       size="sm"
                       className="bg-emerald-600 hover:bg-emerald-700 text-white ml-2"
                     >
@@ -191,9 +182,9 @@ const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: Act
               ))}
             </div>
             
-            {suggestions.length > 0 && (
+            {suggestions.length > 1 && (
               <Button
-                onClick={() => onAddActiveToFormula(suggestions)}
+                onClick={() => handleAddAllSuggestions(suggestions)}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
                 size="sm"
               >
@@ -204,32 +195,11 @@ const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: Act
             
             <div className="text-xs text-slate-400 bg-slate-700/30 p-2 rounded flex items-center gap-2">
               <AlertTriangle className="w-3 h-3" />
-              Sugestões baseadas em literatura científica específica para a condição diagnóstica
+              Clique para adicionar diretamente na conversa - análise será feita automaticamente
             </div>
           </div>
         </Card>
       )}
-
-      {/* Adicionar Ativo Manualmente */}
-      <Card className="bg-slate-800/50 border-slate-600 p-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Plus className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm font-medium text-slate-200">
-              Esqueceu algum ativo?
-            </span>
-          </div>
-          <Button
-            onClick={() => setShowQuickAdder(true)}
-            size="sm"
-            variant="outline"
-            className="border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/20"
-          >
-            <Plus className="w-3 h-3 mr-1" />
-            Adicionar
-          </Button>
-        </div>
-      </Card>
     </div>
   );
 };
