@@ -95,7 +95,7 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
           <div className="mb-3 sm:mb-4">
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-2 sm:mb-3 leading-tight px-2">
               <span className="bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 bg-clip-text text-transparent">
-                ANÁLISE DE FÓRMULAS MAGISTRAIS
+                ANÁLISE DE FÓRMULAS MANIPULADAS
               </span>
             </h1>
           </div>
