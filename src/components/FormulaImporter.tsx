@@ -44,162 +44,190 @@ const FormulaImporter = () => {
     setIsProcessing(true);
     
     try {
-      console.log('Enviando texto para análise:', inputText.substring(0, 200) + '...');
+      console.log('Enviando texto para análise...');
       
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
-          message: `SISTEMA DE EXTRAÇÃO DE FÓRMULAS MAGISTRAIS:
-
-Analise o texto fornecido e extraia TODAS as fórmulas encontradas. Identifique:
-
-1. NOME/OBJETIVO da fórmula (ex: "Candidíase", "TPM", "Libido Masculina", etc)
-2. FORMA FARMACÊUTICA (cápsulas, óvulos, pomada, creme, xarope, sachê, etc)
-3. CATEGORIA/ÁREA (ginecologia, urologia, dermatologia, etc)
-4. TODOS OS ATIVOS com suas concentrações exatas
+          message: `Você é um extrator de fórmulas magistrais. Analise o texto e extraia TODAS as fórmulas encontradas.
 
 CONVERSÕES OBRIGATÓRIAS:
-- 1 bilhão = 1000mg
-- 2 bilhões = 2000mg  
-- 1000mcg = 1mg
-- 1g = 1000mg
-- Para % (ex: 10%), use valor numérico: 10mg
-- Para UI, mantenha o número: 2000 UI = 2000mg
+- 1 bilhão = 1000
+- 2 bilhões = 2000  
+- 1000mcg = 1
+- 1g = 1000
+- Para %, calcule baseado no total: 10% de 40g = 4000
+- Para UI, mantenha o número
 - Se não conseguir converter, use 0
 
-RETORNE APENAS JSON VÁLIDO:
+RETORNE APENAS JSON VÁLIDO sem explicações:
+
 {
   "formulas": [
     {
       "name": "Nome da fórmula",
-      "category": "categoria médica",
-      "pharmaceutical_form": "forma farmacêutica",
-      "specialty": "especialidade médica",
-      "description": "descrição breve",
-      "clinical_indication": "indicação clínica",
+      "category": "ginecologia",
+      "pharmaceutical_form": "cápsulas",
+      "specialty": "ginecologia", 
+      "description": "Descrição",
+      "clinical_indication": "Indicação",
       "actives": [
         {
-          "name": "nome do ativo",
-          "concentration_mg": numero_em_mg,
-          "concentration_text": "texto original da concentração",
-          "role": "função do ativo (opcional)"
+          "name": "Nome do ativo",
+          "concentration_mg": 1000,
+          "concentration_text": "1 bilhão",
+          "role": "probiótico"
         }
       ]
     }
   ]
 }
 
-INSTRUÇÕES ESPECÍFICAS:
-- Para fórmulas sem nome claro, use o objetivo (ex: "Fórmula para Candidíase")
-- Agrupe ativos que pertencem à mesma fórmula
-- Identifique corretamente a forma farmacêutica (óvulos, pomadas, cápsulas, etc)
-- Para especialidades, use: ginecologia, urologia, dermatologia, endocrinologia, medicina geral
-- Mantenha o texto original da concentração em "concentration_text"
-
-TEXTO PARA ANÁLISE:
-${inputText}`,
+Texto: ${inputText}`,
           specialty: 'geral'
         }
       });
 
-      console.log('Resposta da IA:', data);
+      console.log('Resposta recebida:', data);
 
       if (error) {
-        console.error('Erro na chamada da API:', error);
-        throw new Error('Erro ao processar fórmulas: ' + error.message);
+        console.error('Erro na API:', error);
+        throw new Error(`Erro na API: ${error.message}`);
       }
 
       if (!data?.response) {
         throw new Error('Resposta vazia da API');
       }
 
-      // Extrair JSON de forma mais robusta
-      let jsonText = data.response.trim();
-      console.log('Resposta completa:', jsonText);
+      let responseText = data.response.trim();
+      console.log('Resposta da IA (primeiros 500 chars):', responseText.substring(0, 500));
 
       // Remover texto antes e depois do JSON
-      const jsonStart = jsonText.indexOf('{');
-      const jsonEnd = jsonText.lastIndexOf('}');
+      let jsonStart = responseText.indexOf('{');
+      let jsonEnd = responseText.lastIndexOf('}');
       
-      if (jsonStart === -1 || jsonEnd === -1) {
-        console.error('JSON não encontrado na resposta');
+      // Se não encontrar { }, tentar procurar por ```json
+      if (jsonStart === -1) {
+        const jsonBlockStart = responseText.indexOf('```json');
+        if (jsonBlockStart !== -1) {
+          jsonStart = responseText.indexOf('{', jsonBlockStart);
+          const jsonBlockEnd = responseText.indexOf('```', jsonBlockStart + 7);
+          if (jsonBlockEnd !== -1) {
+            jsonEnd = responseText.lastIndexOf('}', jsonBlockEnd);
+          }
+        }
+      }
+      
+      if (jsonStart === -1 || jsonEnd === -1 || jsonStart >= jsonEnd) {
+        console.error('JSON não encontrado na resposta:', responseText);
         throw new Error('Formato de resposta inválido - JSON não encontrado');
       }
 
-      jsonText = jsonText.substring(jsonStart, jsonEnd + 1);
+      const jsonText = responseText.substring(jsonStart, jsonEnd + 1);
       console.log('JSON extraído:', jsonText);
 
       let extractedData;
       try {
         extractedData = JSON.parse(jsonText);
+        console.log('JSON parseado com sucesso:', extractedData);
       } catch (parseError) {
         console.error('Erro ao fazer parse do JSON:', parseError);
         console.error('JSON problemático:', jsonText);
         
-        // Tentar limpar e parsear novamente
+        // Tentar limpar o JSON
         try {
-          const cleanedJson = jsonText
+          let cleanedJson = jsonText
             .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove caracteres de controle
-            .replace(/,\s*}/g, '}') // Remove vírgulas antes de }
-            .replace(/,\s*]/g, ']'); // Remove vírgulas antes de ]
+            .replace(/,(\s*[}\]])/g, '$1') // Remove vírgulas antes de } e ]
+            .replace(/([{,]\s*)(\w+):/g, '$1"$2":') // Adiciona aspas em chaves sem aspas
+            .replace(/:\s*'([^']*)'/g, ': "$1"') // Converte aspas simples para duplas
+            .replace(/\\'/g, "'"); // Remove escapes desnecessários
           
           extractedData = JSON.parse(cleanedJson);
-          console.log('JSON limpo e parseado com sucesso');
+          console.log('JSON limpo e parseado:', extractedData);
         } catch (secondError) {
-          throw new Error('Erro ao interpretar resposta da IA. Tente novamente.');
+          console.error('Erro no segundo parse:', secondError);
+          throw new Error('Não foi possível interpretar a resposta da IA. Tente com um texto menor ou reformulado.');
         }
       }
       
+      if (!extractedData || typeof extractedData !== 'object') {
+        throw new Error('Resposta da IA não é um objeto válido');
+      }
+
       if (!extractedData.formulas || !Array.isArray(extractedData.formulas)) {
-        console.error('Estrutura inválida:', extractedData);
-        throw new Error('Estrutura de resposta inválida');
+        console.error('Estrutura inválida - formulas não é array:', extractedData);
+        throw new Error('Estrutura de resposta inválida - propriedade "formulas" não encontrada');
       }
 
       // Validar e processar fórmulas
       const validFormulas = extractedData.formulas
         .map((formula: any, index: number) => {
-          console.log(`Processando fórmula ${index}:`, formula);
+          console.log(`Validando fórmula ${index}:`, formula);
           
-          if (!formula.name || !formula.actives || !Array.isArray(formula.actives)) {
-            console.warn(`Fórmula ${index} inválida:`, formula);
+          if (!formula || typeof formula !== 'object') {
+            console.warn(`Fórmula ${index} não é um objeto válido:`, formula);
+            return null;
+          }
+
+          if (!formula.name || typeof formula.name !== 'string' || !formula.name.trim()) {
+            console.warn(`Fórmula ${index} sem nome válido:`, formula);
+            return null;
+          }
+
+          if (!formula.actives || !Array.isArray(formula.actives) || formula.actives.length === 0) {
+            console.warn(`Fórmula ${index} sem ativos válidos:`, formula);
             return null;
           }
 
           // Processar ativos
           const validActives = formula.actives
-            .map((active: any) => {
-              if (!active.name) return null;
+            .map((active: any, activeIndex: number) => {
+              if (!active || typeof active !== 'object') {
+                console.warn(`Ativo ${activeIndex} da fórmula ${index} não é objeto:`, active);
+                return null;
+              }
+
+              if (!active.name || typeof active.name !== 'string' || !active.name.trim()) {
+                console.warn(`Ativo ${activeIndex} da fórmula ${index} sem nome:`, active);
+                return null;
+              }
               
+              const concentrationMg = typeof active.concentration_mg === 'number' && !isNaN(active.concentration_mg) 
+                ? Math.max(0, active.concentration_mg) 
+                : 0;
+
               return {
                 name: active.name.trim(),
-                concentration_mg: typeof active.concentration_mg === 'number' ? Math.max(0, active.concentration_mg) : 0,
-                concentration_text: active.concentration_text || active.name || '',
+                concentration_mg: concentrationMg,
+                concentration_text: active.concentration_text || active.name.trim(),
                 role: active.role || null
               };
             })
             .filter(Boolean);
 
           if (validActives.length === 0) {
-            console.warn(`Fórmula ${index} sem ativos válidos`);
+            console.warn(`Fórmula ${index} sem ativos válidos após processamento`);
             return null;
           }
 
           return {
             name: formula.name.trim(),
-            category: formula.category || 'Geral',
-            pharmaceutical_form: formula.pharmaceutical_form || 'Cápsulas',
-            specialty: formula.specialty || 'Medicina Geral',
-            description: formula.description || null,
-            clinical_indication: formula.clinical_indication || null,
+            category: (formula.category || 'Geral').trim(),
+            pharmaceutical_form: (formula.pharmaceutical_form || 'Cápsulas').trim(),
+            specialty: (formula.specialty || 'Medicina Geral').trim(),
+            description: formula.description ? formula.description.trim() : null,
+            clinical_indication: formula.clinical_indication ? formula.clinical_indication.trim() : null,
             actives: validActives
           };
         })
         .filter(Boolean);
 
+      console.log(`Processamento concluído: ${validFormulas.length} fórmulas válidas de ${extractedData.formulas.length} tentativas`);
+
       if (validFormulas.length === 0) {
-        throw new Error('Nenhuma fórmula válida encontrada no texto');
+        throw new Error('Nenhuma fórmula válida foi encontrada no texto. Verifique se o formato está correto.');
       }
 
-      console.log('Fórmulas extraídas:', validFormulas);
       setExtractedFormulas(validFormulas);
       
       toast({
@@ -208,10 +236,10 @@ ${inputText}`,
       });
 
     } catch (error: any) {
-      console.error('Erro detalhado ao extrair fórmulas:', error);
+      console.error('Erro completo:', error);
       toast({
         title: "Erro na extração",
-        description: error.message || "Não foi possível extrair as fórmulas. Verifique o formato do texto.",
+        description: error.message || "Não foi possível extrair as fórmulas.",
         variant: "destructive"
       });
     } finally {
@@ -376,13 +404,7 @@ Tratamento para Candidíase
 Lactobacillus Rhamnosus 1 bilhão
 Lactobacillus Acidophilus 1 bilhão
 Fos 300 mg
-Tomar 1 dose à noite
-
-Fórmula para TPM
-Vitex Agnus 300 mg
-Ashwagandha 350 mg
-Vit B6 35 mg
-Tomar 1 dose 1 x ao dia"
+Tomar 1 dose à noite"
               className="min-h-[200px]"
             />
           </div>
