@@ -86,7 +86,7 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
 
           {/* Problema/Solução Statement */}
           <div className="mb-3 sm:mb-4">
-            <p className="text-lg sm:text-xl md:text-2xl text-red-400 font-bold mb-2 px-2">
+            <p className="text-lg sm:text-xl md:text-2xl text-yellow-400 font-bold mb-2 px-2 drop-shadow-lg">
               DIFICULDADE EM CRIAR E ANALISAR FÓRMULAS MANIPULADAS NUNCA MAIS
             </p>
           </div>
