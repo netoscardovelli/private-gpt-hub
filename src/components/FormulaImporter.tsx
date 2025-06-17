@@ -31,6 +31,198 @@ const FormulaImporter = () => {
   const [editingFormula, setEditingFormula] = useState<number | null>(null);
   const { toast } = useToast();
 
+  const parseAIResponse = (responseText: string): ExtractedFormula[] => {
+    console.log('Resposta bruta da IA:', responseText);
+
+    // Tentar encontrar JSON válido na resposta
+    let jsonText = '';
+    
+    // Procurar por array JSON primeiro
+    const arrayMatch = responseText.match(/\[[\s\S]*\]/);
+    if (arrayMatch) {
+      jsonText = arrayMatch[0];
+    } else {
+      // Procurar por objeto JSON
+      const objectMatch = responseText.match(/\{[\s\S]*\}/);
+      if (objectMatch) {
+        jsonText = objectMatch[0];
+      } else {
+        throw new Error('Nenhum JSON encontrado na resposta da IA');
+      }
+    }
+
+    console.log('JSON extraído:', jsonText);
+
+    // Limpar JSON comum
+    const cleanedJson = jsonText
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove caracteres de controle
+      .replace(/,(\s*[}\]])/g, '$1') // Remove vírgulas antes de } ou ]
+      .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":') // Adiciona aspas nas chaves
+      .replace(/:\s*'([^']*)'/g, ': "$1"') // Converte aspas simples em duplas
+      .replace(/\n/g, ' ') // Remove quebras de linha
+      .replace(/\t/g, ' ') // Remove tabs
+      .replace(/\s+/g, ' ') // Múltiplos espaços em um só
+      .trim();
+
+    console.log('JSON limpo:', cleanedJson);
+
+    let parsedData;
+    try {
+      parsedData = JSON.parse(cleanedJson);
+    } catch (parseError) {
+      console.error('Erro no parse do JSON limpo:', parseError);
+      
+      // Último recurso: tentar extrair dados manualmente
+      try {
+        parsedData = extractDataManually(responseText);
+      } catch (manualError) {
+        console.error('Erro na extração manual:', manualError);
+        throw new Error('Não foi possível interpretar a resposta da IA. Tente novamente com um texto menor ou mais estruturado.');
+      }
+    }
+
+    // Processar dados extraídos
+    let formulasArray: any[] = [];
+    
+    if (Array.isArray(parsedData)) {
+      formulasArray = parsedData;
+    } else if (parsedData.formulas && Array.isArray(parsedData.formulas)) {
+      formulasArray = parsedData.formulas;
+    } else if (typeof parsedData === 'object') {
+      // Se for um objeto único, transformar em array
+      formulasArray = [parsedData];
+    }
+
+    if (formulasArray.length === 0) {
+      throw new Error('Nenhuma fórmula válida encontrada na resposta');
+    }
+
+    // Validar e processar cada fórmula
+    const validFormulas: ExtractedFormula[] = formulasArray
+      .map((formula, index) => {
+        try {
+          if (!formula || typeof formula !== 'object') {
+            console.warn(`Fórmula ${index} não é um objeto válido:`, formula);
+            return null;
+          }
+
+          const name = String(formula.name || formula.titulo || `Fórmula ${index + 1}`).trim();
+          const actives = Array.isArray(formula.actives) ? formula.actives : 
+                         Array.isArray(formula.ativos) ? formula.ativos : [];
+
+          if (actives.length === 0) {
+            console.warn(`Fórmula ${index} sem ativos válidos`);
+            return null;
+          }
+
+          const validActives = actives
+            .filter((active: any) => active && (active.name || active.nome))
+            .map((active: any) => ({
+              name: String(active.name || active.nome).trim(),
+              concentration_mg: Number(active.concentration_mg || active.concentracao_mg || 0),
+              concentration_text: String(active.concentration_text || active.concentracao_texto || active.name || active.nome).trim(),
+              role: active.role || active.funcao || null
+            }));
+
+          if (validActives.length === 0) {
+            console.warn(`Fórmula ${index} sem ativos válidos após processamento`);
+            return null;
+          }
+
+          return {
+            name,
+            category: String(formula.category || formula.categoria || 'Geral').trim(),
+            pharmaceutical_form: String(formula.pharmaceutical_form || formula.forma_farmaceutica || 'Cápsulas').trim(),
+            specialty: String(formula.specialty || formula.especialidade || 'Medicina Geral').trim(),
+            description: formula.description || formula.descricao || null,
+            clinical_indication: formula.clinical_indication || formula.indicacao_clinica || null,
+            actives: validActives
+          };
+        } catch (formulaError) {
+          console.error(`Erro ao processar fórmula ${index}:`, formulaError);
+          return null;
+        }
+      })
+      .filter(Boolean) as ExtractedFormula[];
+
+    if (validFormulas.length === 0) {
+      throw new Error('Nenhuma fórmula válida foi processada');
+    }
+
+    return validFormulas;
+  };
+
+  const extractDataManually = (text: string): any[] => {
+    // Método de backup para extrair dados manualmente quando JSON falha
+    const formulas: any[] = [];
+    
+    // Dividir o texto em seções por fórmulas
+    const sections = text.split(/(?=\w+.*?:)/);
+    
+    sections.forEach((section, index) => {
+      if (section.trim().length < 10) return;
+      
+      const lines = section.split('\n').filter(line => line.trim());
+      if (lines.length === 0) return;
+      
+      const formula: any = {
+        name: `Fórmula Extraída ${index + 1}`,
+        category: 'Geral',
+        pharmaceutical_form: 'Cápsulas',
+        specialty: 'Medicina Geral',
+        actives: []
+      };
+      
+      // Tentar extrair nome da primeira linha
+      if (lines[0] && !lines[0].toLowerCase().includes('mg') && !lines[0].toLowerCase().includes('bilhão')) {
+        formula.name = lines[0].trim();
+      }
+      
+      // Extrair ativos das linhas
+      lines.forEach(line => {
+        const cleanLine = line.trim();
+        if (!cleanLine) return;
+        
+        // Padrões para identificar ativos
+        const patterns = [
+          /(.+?)\s+(\d+(?:\.\d+)?)\s*(?:bilhão|billion)/i,
+          /(.+?)\s+(\d+(?:\.\d+)?)\s*mg/i,
+          /(.+?)\s+(\d+(?:\.\d+)?)\s*mcg/i,
+          /(.+?)\s+(\d+(?:\.\d+)?)\s*UI/i,
+          /(.+?)\s+(\d+(?:\.\d+)?)\s*%/i
+        ];
+        
+        for (const pattern of patterns) {
+          const match = cleanLine.match(pattern);
+          if (match) {
+            const name = match[1].trim();
+            const value = parseFloat(match[2]);
+            
+            // Converter bilhões para mg
+            let concentration_mg = value;
+            if (cleanLine.toLowerCase().includes('bilhão')) {
+              concentration_mg = value * 1000;
+            }
+            
+            formula.actives.push({
+              name,
+              concentration_mg,
+              concentration_text: match[0].trim(),
+              role: null
+            });
+            break;
+          }
+        }
+      });
+      
+      if (formula.actives.length > 0) {
+        formulas.push(formula);
+      }
+    });
+    
+    return formulas;
+  };
+
   const extractFormulasWithAI = async () => {
     if (!inputText.trim()) {
       toast({
@@ -48,28 +240,30 @@ const FormulaImporter = () => {
       
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
-          message: `Extraia TODAS as fórmulas do texto e retorne APENAS um JSON válido:
+          message: `Analise este texto e extraia as fórmulas farmacêuticas. Retorne APENAS um array JSON válido.
 
-CONVERSÕES IMPORTANTES:
-- 1 bilhão = 1000
-- 2 bilhões = 2000  
-- 1000mcg = 1
-- 1g = 1000
-- Para %, calcule: 10% = 10000, 1% = 1000, 0,1% = 100, 7,5% = 7500
-- UI: mantenha o número original
+REGRAS DE CONVERSÃO:
+- 1 bilhão = 1000mg
+- 2 bilhões = 2000mg  
+- 1000mcg = 1mg
+- 1g = 1000mg
+- Para %: 10% = 10000mg, 1% = 1000mg, 0,1% = 100mg
 
-RETORNE APENAS:
+FORMATO DE RESPOSTA (retorne apenas o JSON):
 [
   {
-    "name": "Tratamento Candidíase 1",
-    "category": "ginecologia",
+    "name": "Nome da Fórmula",
+    "category": "categoria",
     "pharmaceutical_form": "cápsulas",
-    "specialty": "ginecologia",
-    "description": "",
-    "clinical_indication": "Tratamento candidíase",
+    "specialty": "especialidade",
+    "description": "descrição opcional",
+    "clinical_indication": "indicação clínica",
     "actives": [
-      {"name": "Lactobacillus Rhamnosus", "concentration_mg": 1000, "concentration_text": "1 bilhão"},
-      {"name": "FOS", "concentration_mg": 300, "concentration_text": "300mg"}
+      {
+        "name": "Nome do Ativo",
+        "concentration_mg": 1000,
+        "concentration_text": "1 bilhão"
+      }
     ]
   }
 ]
@@ -90,100 +284,9 @@ TEXTO: ${inputText}`,
         throw new Error('Resposta vazia da API');
       }
 
-      let responseText = data.response.trim();
-      console.log('Resposta completa da IA:', responseText);
-
-      // Procurar por array JSON
-      let arrayStart = responseText.indexOf('[');
-      let arrayEnd = responseText.lastIndexOf(']');
+      const validFormulas = parseAIResponse(data.response);
       
-      if (arrayStart === -1 || arrayEnd === -1) {
-        // Tentar procurar por objeto com propriedade formulas
-        arrayStart = responseText.indexOf('{');
-        arrayEnd = responseText.lastIndexOf('}');
-        
-        if (arrayStart === -1 || arrayEnd === -1) {
-          throw new Error('Nenhum JSON encontrado na resposta');
-        }
-      }
-      
-      const jsonText = responseText.substring(arrayStart, arrayEnd + 1);
-      console.log('JSON extraído:', jsonText);
-
-      let extractedData;
-      try {
-        extractedData = JSON.parse(jsonText);
-        console.log('JSON parseado:', extractedData);
-      } catch (parseError) {
-        console.error('Erro ao fazer parse do JSON:', parseError);
-        
-        // Tentar limpar JSON comum
-        const cleanedJson = jsonText
-          .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
-          .replace(/,(\s*[}\]])/g, '$1')
-          .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
-          .replace(/:\s*'([^']*)'/g, ': "$1"')
-          .replace(/\n/g, ' ')
-          .replace(/\t/g, ' ');
-        
-        try {
-          extractedData = JSON.parse(cleanedJson);
-          console.log('JSON limpo parseado:', extractedData);
-        } catch (secondError) {
-          console.error('Erro no segundo parse:', secondError);
-          throw new Error('Não foi possível interpretar a resposta. Tente novamente.');
-        }
-      }
-      
-      // Verificar se é array ou objeto com propriedade formulas
-      let formulasArray;
-      if (Array.isArray(extractedData)) {
-        formulasArray = extractedData;
-      } else if (extractedData.formulas && Array.isArray(extractedData.formulas)) {
-        formulasArray = extractedData.formulas;
-      } else {
-        throw new Error('Formato de resposta inválido');
-      }
-
-      // Validar e processar fórmulas
-      const validFormulas = formulasArray
-        .map((formula: any, index: number) => {
-          if (!formula || !formula.name || !formula.actives || !Array.isArray(formula.actives)) {
-            console.warn(`Fórmula ${index} inválida:`, formula);
-            return null;
-          }
-
-          const validActives = formula.actives
-            .filter((active: any) => active && active.name)
-            .map((active: any) => ({
-              name: String(active.name).trim(),
-              concentration_mg: Number(active.concentration_mg) || 0,
-              concentration_text: String(active.concentration_text || active.name).trim(),
-              role: active.role || null
-            }));
-
-          if (validActives.length === 0) {
-            console.warn(`Fórmula ${index} sem ativos válidos`);
-            return null;
-          }
-
-          return {
-            name: String(formula.name).trim(),
-            category: String(formula.category || 'Geral').trim(),
-            pharmaceutical_form: String(formula.pharmaceutical_form || 'Cápsulas').trim(),
-            specialty: String(formula.specialty || 'Medicina Geral').trim(),
-            description: formula.description ? String(formula.description).trim() : null,
-            clinical_indication: formula.clinical_indication ? String(formula.clinical_indication).trim() : null,
-            actives: validActives
-          };
-        })
-        .filter(Boolean);
-
       console.log(`Processamento concluído: ${validFormulas.length} fórmulas válidas`);
-
-      if (validFormulas.length === 0) {
-        throw new Error('Nenhuma fórmula válida foi encontrada. Verifique o formato do texto.');
-      }
 
       setExtractedFormulas(validFormulas);
       
