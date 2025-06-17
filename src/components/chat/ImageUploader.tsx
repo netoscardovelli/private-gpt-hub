@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Image as ImageIcon, X, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ImageUploaderProps {
   onImageExtracted: (text: string, imageUrl: string) => void;
@@ -38,23 +39,29 @@ const ImageUploader = ({ onImageExtracted, isLoading, setIsLoading }: ImageUploa
       const formData = new FormData();
       formData.append('image', file);
 
-      // Simular OCR - em produção, usar um serviço real
-      const mockExtractedText = `Texto extraído da imagem: ${file.name}
-      
-Esta é uma simulação de OCR. Em produção, aqui seria o texto real extraído da imagem.
-Incluindo fórmulas, receitas médicas, bulas de medicamentos, etc.`;
+      // Call the OCR edge function
+      const { data, error } = await supabase.functions.invoke('ocr-analysis', {
+        body: formData
+      });
 
+      if (error || !data?.success) {
+        throw new Error(data?.error || 'Erro ao processar imagem');
+      }
+
+      const extractedText = data.extractedText;
       const imageUrl = URL.createObjectURL(file);
-      onImageExtracted(mockExtractedText, imageUrl);
+      
+      onImageExtracted(extractedText, imageUrl);
 
       toast({
         title: "Imagem processada!",
         description: "Texto extraído com sucesso da imagem",
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erro no OCR:', error);
       toast({
         title: "Erro no processamento",
-        description: "Não foi possível extrair texto da imagem",
+        description: error.message || "Não foi possível extrair texto da imagem",
         variant: "destructive"
       });
     } finally {
@@ -141,7 +148,7 @@ Incluindo fórmulas, receitas médicas, bulas de medicamentos, etc.`;
               <ImageIcon className="w-6 h-6 text-slate-400" />
             )}
             <p className="text-sm text-slate-400">
-              {isLoading ? 'Processando...' : 'Clique ou arraste uma imagem para extrair texto'}
+              {isLoading ? 'Processando imagem...' : 'Clique ou arraste uma imagem para extrair texto'}
             </p>
           </div>
         </label>
