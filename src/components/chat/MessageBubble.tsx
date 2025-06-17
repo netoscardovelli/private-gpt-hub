@@ -84,6 +84,38 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
 
   const hasActivesList = message.content.includes('• ') && message.content.includes('mg');
 
+  // Function to render message content with quick action buttons
+  const renderMessageContent = (content: string) => {
+    const parts = content.split(/(<quick-action>.*?<\/quick-action>)/);
+    
+    return parts.map((part, index) => {
+      const quickActionMatch = part.match(/<quick-action>(.*?)<\/quick-action>/);
+      
+      if (quickActionMatch) {
+        const action = quickActionMatch[1];
+        const buttonText = action === 'analise' ? 'Analisar Fórmulas' : action;
+        
+        return (
+          <div key={index} className="my-4">
+            <Button
+              onClick={() => onQuickAction(action)}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium px-6 py-3 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              {buttonText}
+            </Button>
+          </div>
+        );
+      }
+      
+      return (
+        <span key={index} className="whitespace-pre-wrap">
+          {part}
+        </span>
+      );
+    });
+  };
+
   return (
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
       <div className={`max-w-4xl ${message.role === 'user' ? 'bg-emerald-700' : 'bg-slate-700'} rounded-lg p-4 shadow-lg`}>
@@ -103,7 +135,7 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
         <div className={`prose prose-sm max-w-none ${
           message.role === 'user' ? 'text-emerald-50' : 'text-slate-100'
         }`}>
-          <div className="whitespace-pre-wrap">{message.content}</div>
+          {renderMessageContent(message.content)}
         </div>
 
         {/* Análise de Segurança Farmacêutica - apenas para mensagens do assistente com listas de ativos */}
@@ -160,20 +192,6 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
               <Badge className="bg-green-600/30 text-green-300 text-xs">
                 Feedback enviado
               </Badge>
-            )}
-
-            {/* Quick Actions */}
-            {index === 0 && (
-              <div className="flex gap-2 ml-auto">
-                <Button
-                  onClick={() => onQuickAction('analise')}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-xs px-3 py-1 h-auto"
-                  size="sm"
-                >
-                  <MessageSquare className="w-3 h-3 mr-1" />
-                  Analisar Fórmulas
-                </Button>
-              </div>
             )}
           </div>
         )}
