@@ -145,20 +145,13 @@ Quanto mais detalhado o caso, mais precisa e personalizada será minha sugestão
         addMessage({
           content: `Excelente escolha! 👩‍⚕️👨‍⚕️
 
-Vou te guiar através de algumas perguntas estratégicas para construirmos juntos o melhor perfil de fórmulas para seu paciente.
+Vamos construir o caso clínico juntos para criar as melhores fórmulas para seu paciente.
 
-Vamos começar com as informações básicas:
+**Primeira pergunta:**
 
-**1. Nome do paciente:** (importante para personalizar a prescrição)
+**Qual é o nome do paciente?** 
 
-**2. Qual a idade do paciente?**
-
-**3. Sexo:** Masculino ou Feminino?
-
-**4. Qual é o objetivo clínico principal?** 
-(Ex: emagrecimento, ansiedade, insônia, libido, performance, anti-aging, etc.)
-
-Pode responder essas 4 primeiras perguntas e depois vou personalizando as próximas com base no que você me disser! 😊`,
+(Importante para personalizar a prescrição e o futuro PDF)`,
           role: 'assistant'
         });
         setIsLoading(false);
