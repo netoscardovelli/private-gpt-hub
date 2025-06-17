@@ -17,10 +17,10 @@ const Index = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSupportChat, setShowSupportChat] = useState(false);
 
-  // Mock user data - in a real app this would come from authentication
+  // Mock user data - agora com nome real
   const mockUser = {
     id: "mock-user-id",
-    name: "Usuário",
+    name: "Neto Scardovelli",
     plan: "Free",
     dailyLimit: 10,
     usageToday: 2
