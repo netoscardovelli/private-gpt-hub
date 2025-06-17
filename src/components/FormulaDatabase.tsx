@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Plus, Upload, Filter, Database } from 'lucide-react';
+import { Search, Plus, Upload, Filter, Database, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import FormulaImporter from './FormulaImporter';
@@ -34,7 +34,7 @@ const FormulaDatabase = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const categories = ['all', 'performance', 'emagrecimento', 'antienvelhecimento', 'libido', 'sono', 'ansiedade'];
+  const categories = ['all', 'performance', 'emagrecimento', 'antienvelhecimento', 'libido', 'sono', 'ansiedade', 'Geral'];
   const specialties = ['all', 'endocrinologia', 'dermatologia', 'medicina esportiva', 'ginecologia', 'urologia', 'geral'];
 
   useEffect(() => {
@@ -44,7 +44,19 @@ const FormulaDatabase = () => {
   const loadFormulas = async () => {
     try {
       setIsLoading(true);
+      console.log('🔄 Carregando fórmulas do banco de dados...');
       
+      // Primeiro, vamos verificar quantas fórmulas existem
+      const { count, error: countError } = await supabase
+        .from('reference_formulas')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error('❌ Erro ao contar fórmulas:', countError);
+      } else {
+        console.log(`📊 Total de fórmulas encontradas: ${count}`);
+      }
+
       const { data, error } = await supabase
         .from('reference_formulas')
         .select(`
@@ -58,14 +70,34 @@ const FormulaDatabase = () => {
         `)
         .order('name');
 
-      if (error) throw error;
+      console.log('📦 Dados retornados:', data);
+      console.log('⚠️ Erro (se houver):', error);
 
+      if (error) {
+        console.error('❌ Erro detalhado:', error);
+        throw error;
+      }
+
+      console.log(`✅ ${data?.length || 0} fórmulas carregadas com sucesso`);
       setFormulas(data || []);
+      
+      if (data && data.length > 0) {
+        toast({
+          title: "Fórmulas carregadas!",
+          description: `${data.length} fórmula(s) encontrada(s) no banco.`,
+        });
+      } else {
+        toast({
+          title: "Nenhuma fórmula encontrada",
+          description: "O banco de dados está vazio ou houve um problema na consulta.",
+          variant: "destructive"
+        });
+      }
     } catch (error: any) {
-      console.error('Erro ao carregar fórmulas:', error);
+      console.error('💥 Erro completo ao carregar fórmulas:', error);
       toast({
         title: "Erro ao carregar",
-        description: "Não foi possível carregar o banco de fórmulas.",
+        description: `Não foi possível carregar o banco de fórmulas: ${error.message}`,
         variant: "destructive"
       });
     } finally {
@@ -90,6 +122,7 @@ const FormulaDatabase = () => {
         <div className="text-center">
           <Database className="w-12 h-12 mx-auto mb-4 text-emerald-600 animate-pulse" />
           <p className="text-lg font-medium">Carregando banco de fórmulas...</p>
+          <p className="text-sm text-slate-600 mt-2">Verificando conexão com o banco...</p>
         </div>
       </div>
     );
@@ -104,6 +137,15 @@ const FormulaDatabase = () => {
             {formulas.length} fórmulas de referência disponíveis
           </p>
         </div>
+        <Button 
+          onClick={loadFormulas} 
+          variant="outline" 
+          size="sm"
+          className="flex items-center space-x-2"
+        >
+          <RefreshCw className="w-4 h-4" />
+          <span>Atualizar</span>
+        </Button>
       </div>
 
       <Tabs defaultValue="browse" className="w-full">
@@ -173,13 +215,27 @@ const FormulaDatabase = () => {
 
           {/* Lista de Fórmulas */}
           <div className="grid gap-4">
-            {filteredFormulas.length === 0 ? (
+            {formulas.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Database className="w-12 h-12 mx-auto mb-4 text-slate-400" />
+                  <h3 className="text-lg font-medium mb-2">Banco de fórmulas vazio</h3>
+                  <p className="text-slate-600 mb-4">
+                    Não há fórmulas salvas ainda. Use a aba "Importar Fórmulas" para adicionar fórmulas ao banco.
+                  </p>
+                  <Button onClick={loadFormulas} variant="outline">
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Verificar novamente
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : filteredFormulas.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12">
                   <Database className="w-12 h-12 mx-auto mb-4 text-slate-400" />
                   <h3 className="text-lg font-medium mb-2">Nenhuma fórmula encontrada</h3>
                   <p className="text-slate-600">
-                    Tente ajustar os filtros ou importar novas fórmulas
+                    Tente ajustar os filtros de busca ou limpar os termos de pesquisa
                   </p>
                 </CardContent>
               </Card>
