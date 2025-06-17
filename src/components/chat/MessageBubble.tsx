@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -117,9 +118,9 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
           {content.replace(/<quick-action>.*?<\/quick-action>/g, '')}
         </span>
         
-        {/* Render quick action buttons if they exist - reduced spacing from mt-4 to mt-2 */}
+        {/* Render quick action buttons if they exist - reduced spacing to mt-1 */}
         {hasQuickActions && (
-          <div className="flex flex-wrap gap-3 mt-2">
+          <div className="flex flex-wrap gap-3 mt-1">
             {content.includes('<quick-action>analise</quick-action>') && (
               <Button
                 onClick={() => onQuickAction('analise')}
