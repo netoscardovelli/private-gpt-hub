@@ -88,7 +88,7 @@ const MessageBubble = ({
               onClick={() => setShowQuickActiveAdder(false)}
               variant="ghost"
               size="sm"
-              className="text-slate-600 hover:text-slate-800"
+              className="text-emerald-600 hover:text-emerald-800"
             >
               ← Voltar
             </Button>
@@ -103,7 +103,7 @@ const MessageBubble = ({
       <Card className={`max-w-[85%] p-4 ${
         message.role === 'user' 
           ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-none' 
-          : 'bg-white border-slate-200 text-slate-900 shadow-sm'
+          : 'bg-white border-emerald-200 text-emerald-900 shadow-sm'
       }`}>
         <div className="flex items-start space-x-3">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -149,7 +149,7 @@ const MessageBubble = ({
             )}
 
             <div className="flex items-center justify-between mt-3">
-              <span className={`text-xs ${message.role === 'user' ? 'opacity-70' : 'text-slate-500'}`}>
+              <span className={`text-xs ${message.role === 'user' ? 'opacity-70' : 'text-emerald-500'}`}>
                 {message.timestamp.toLocaleTimeString()}
               </span>
               <div className="flex items-center space-x-2">
@@ -157,7 +157,7 @@ const MessageBubble = ({
                   onClick={copyToClipboard}
                   size="sm"
                   variant="ghost"
-                  className={`text-xs hover:opacity-100 ${message.role === 'user' ? 'opacity-70 text-white hover:text-white' : 'text-slate-500 hover:text-slate-700'}`}
+                  className={`text-xs hover:opacity-100 ${message.role === 'user' ? 'opacity-70 text-white hover:text-white' : 'text-emerald-500 hover:text-emerald-700'}`}
                 >
                   {copied ? (
                     <Check className="w-3 h-3" />

@@ -11,7 +11,7 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
   const handleStartClick = onStartChat || onGetStarted || (() => {});
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-gray-50 to-emerald-50 overflow-hidden px-4">
+    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-emerald-50 to-green-100 overflow-hidden px-4">
       {/* Simplified Background Elements for mobile */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-4 w-2 h-2 bg-emerald-400 rounded-full animate-bounce opacity-70"></div>
@@ -25,7 +25,7 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
         <div 
           className="w-full h-full animate-pulse"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3Ccircle cx='15' cy='15' r='2'/%3E%3Ccircle cx='45' cy='45' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2310B981' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3Ccircle cx='15' cy='15' r='2'/%3E%3Ccircle cx='45' cy='45' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }}
         />
       </div>
@@ -34,7 +34,7 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
         <div className="text-center">
           {/* Professional Authority Section - Mais compacto */}
           <div className="mb-4 sm:mb-6">
-            <div className="bg-gradient-to-r from-white/95 to-gray-50/95 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-emerald-500/30 shadow-2xl max-w-3xl mx-auto">
+            <div className="bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-lg rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-emerald-500/30 shadow-2xl max-w-3xl mx-auto">
               <div className="flex flex-col items-center space-y-2 sm:space-y-3">
                 {/* Professional Avatar - Menor */}
                 <div className="relative">
@@ -55,7 +55,7 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
 
                 {/* Professional Title - Mais compacto */}
                 <div className="text-center space-y-1 sm:space-y-2">
-                  <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-800 leading-tight">
+                  <h2 className="text-base sm:text-lg lg:text-xl font-bold text-emerald-800 leading-tight">
                     Treinado por Médicos e Especialistas
                   </h2>
                   <p className="text-sm sm:text-base lg:text-lg text-emerald-600 font-medium">
@@ -64,8 +64,8 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
                 </div>
 
                 {/* Professional Credentials - Mais compacto */}
-                <div className="bg-gray-100/80 rounded-lg px-3 py-2 sm:px-4 sm:py-2 border border-gray-200/60">
-                  <div className="flex flex-wrap justify-center gap-3 sm:gap-4 text-xs text-gray-600">
+                <div className="bg-emerald-100/80 rounded-lg px-3 py-2 sm:px-4 sm:py-2 border border-emerald-200/60">
+                  <div className="flex flex-wrap justify-center gap-3 sm:gap-4 text-xs text-emerald-700">
                     <span className="flex items-center space-x-1">
                       <Shield className="w-3 h-3 text-emerald-500" />
                       <span>Validado Cientificamente</span>
@@ -86,7 +86,7 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
 
           {/* Main Title - Mais compacto */}
           <div className="mb-3 sm:mb-4">
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-800 mb-2 sm:mb-3 leading-tight px-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-emerald-800 mb-2 sm:mb-3 leading-tight px-2">
               <span className="bg-gradient-to-r from-emerald-600 via-green-600 to-emerald-700 bg-clip-text text-transparent">
                 ANÁLISE DE FÓRMULAS MANIPULADAS
               </span>
@@ -101,7 +101,7 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
           </div>
 
           {/* Subtitle - Mais compacto */}
-          <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 mb-4 sm:mb-6 max-w-3xl mx-auto leading-relaxed px-2">
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl text-emerald-600 mb-4 sm:mb-6 max-w-3xl mx-auto leading-relaxed px-2">
             IA TREINADA POR MÉDICO PARA AUXILIAR NO SEU DIA A DIA DO CONSULTÓRIO
           </p>
 
@@ -119,7 +119,7 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
             <Button 
               variant="outline" 
               size="lg"
-              className="border-2 border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-emerald-400 px-6 sm:px-8 py-4 sm:py-5 text-sm sm:text-base rounded-xl backdrop-blur-sm hover:scale-105 transition-all duration-300 w-full sm:w-auto max-w-xs sm:max-w-none"
+              className="border-2 border-emerald-300 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-400 px-6 sm:px-8 py-4 sm:py-5 text-sm sm:text-base rounded-xl backdrop-blur-sm hover:scale-105 transition-all duration-300 w-full sm:w-auto max-w-xs sm:max-w-none"
             >
               <Beaker className="mr-2 w-4 h-4" />
               Ver Exemplos
@@ -156,10 +156,10 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
                     <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                 </div>
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-800 mb-1 group-hover:text-emerald-600 transition-colors leading-tight">
+                <h3 className="text-xs sm:text-sm font-semibold text-emerald-800 mb-1 group-hover:text-emerald-600 transition-colors leading-tight">
                   {feature.title}
                 </h3>
-                <p className="text-xs text-gray-500 leading-relaxed px-1 hidden sm:block">
+                <p className="text-xs text-emerald-600 leading-relaxed px-1 hidden sm:block">
                   {feature.description}
                 </p>
               </div>
@@ -169,7 +169,7 @@ const Hero = ({ onGetStarted, onStartChat }: HeroProps) => {
       </div>
 
       {/* Bottom decoration - Menor */}
-      <div className="absolute bottom-0 left-0 right-0 h-8 sm:h-12 bg-gradient-to-t from-gray-100 to-transparent"></div>
+      <div className="absolute bottom-0 left-0 right-0 h-8 sm:h-12 bg-gradient-to-t from-emerald-100 to-transparent"></div>
       
       {/* CSS para efeito pulse no botão */}
       <style>{`
