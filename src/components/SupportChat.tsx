@@ -159,7 +159,7 @@ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex items-center space-x-3 text-slate-300">
-            <MessageCircleQuestion className="w-5 h-5 text-blue-400" />
+            <MessageCircleQuestion className="w-5 h-5 text-emerald-400" />
             <span className="text-sm font-medium">Chat de Dúvidas - Suporte IA</span>
           </div>
         </div>
@@ -172,14 +172,14 @@ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
             <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <Card className={`max-w-[80%] p-4 ${
                 message.role === 'user' 
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none' 
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-none'
                   : 'bg-slate-800 border-slate-700 text-slate-100'
               }`}>
                 <div className="flex items-start space-x-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                     message.role === 'user' 
                       ? 'bg-white/20' 
-                      : 'bg-gradient-to-r from-blue-500 to-blue-600'
+                      : 'bg-gradient-to-r from-emerald-500 to-emerald-600'
                   }`}>
                     {message.role === 'user' ? (
                       <User className="w-4 h-4" />
@@ -204,7 +204,7 @@ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
             <div className="flex justify-start">
               <Card className="max-w-[80%] p-4 bg-slate-800 border-slate-700">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center justify-center">
                     <MessageCircleQuestion className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex items-center space-x-2 text-slate-300">
@@ -234,7 +234,7 @@ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
             <Button 
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
             >
               <Send className="w-4 h-4" />
             </Button>

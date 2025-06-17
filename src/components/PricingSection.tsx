@@ -83,20 +83,20 @@ const PricingSection = ({ onSelectPlan }: PricingSectionProps) => {
             return (
               <Card 
                 key={index} 
-                className={`relative bg-slate-800/50 border-slate-700 hover:border-blue-500/50 transition-all duration-300 hover:transform hover:scale-105 ${
-                  plan.popular ? 'ring-2 ring-blue-500 shadow-2xl shadow-blue-500/20' : ''
+                className={`relative bg-slate-800/50 border-slate-700 hover:border-emerald-500/50 transition-all duration-300 hover:transform hover:scale-105 ${
+                  plan.popular ? 'ring-2 ring-emerald-500 shadow-2xl shadow-emerald-500/20' : ''
                 }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                    <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
                       Mais Popular
                     </span>
                   </div>
                 )}
 
                 <CardHeader className="text-center pb-8">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                     <IconComponent className="w-6 h-6 text-white" />
                   </div>
                   <CardTitle className="text-2xl font-bold text-white">{plan.name}</CardTitle>
@@ -121,8 +121,8 @@ const PricingSection = ({ onSelectPlan }: PricingSectionProps) => {
 
                   <Button 
                     className={`w-full py-6 text-lg font-semibold rounded-xl transition-all duration-200 ${
-                      plan.variant === 'default' 
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl'
+                      plan.variant === 'default'
+                        ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl'
                         : 'border-slate-600 text-slate-300 hover:bg-slate-700'
                     }`}
                     variant={plan.variant}
