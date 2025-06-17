@@ -41,6 +41,30 @@ const ActiveSuggestions = ({
   const [parsedSuggestions, setParsedSuggestions] = useState<SuggestedActive[]>([]);
   const { toast } = useToast();
 
+  // Função para obter badge da forma farmacêutica
+  const getFormBadge = (form?: 'capsule' | 'powder' | 'new-formula') => {
+    switch (form) {
+      case 'powder':
+        return <Badge className="bg-orange-600/30 text-orange-300 text-xs">Pó/Sachê</Badge>;
+      case 'new-formula':
+        return <Badge className="bg-purple-600/30 text-purple-300 text-xs">Nova Fórmula</Badge>;
+      default:
+        return <Badge className="bg-green-600/30 text-green-300 text-xs">Cápsula</Badge>;
+    }
+  };
+
+  // Função para obter ícone da forma farmacêutica
+  const getFormIcon = (form?: 'capsule' | 'powder' | 'new-formula') => {
+    switch (form) {
+      case 'powder':
+        return <Package className="w-3 h-3 text-orange-400" />;
+      case 'new-formula':
+        return <Plus className="w-3 h-3 text-purple-400" />;
+      default:
+        return <Pill className="w-3 h-3 text-green-400" />;
+    }
+  };
+
   // Função para analisar a viabilidade da cápsula baseada no peso total
   const analyzeCapsuleViability = (currentFormula: string, newActive: string, concentration: string): string => {
     // Extrair ativos atuais e suas concentrações
