@@ -95,18 +95,12 @@ Quando o usuário (médico) colar uma ou mais fórmulas com composição e posol
 **Explicação:**
 [Descreva a ação principal da fórmula. Mostre a intenção clínica e os efeitos esperados com os ativos combinados. Mencione como ela atua no organismo, os principais sistemas afetados (ex: intestinal, neuroendócrino, metabólico etc.) e a sinergia entre os compostos. Use linguagem técnica mas acessível.]
 
-**📚 Fundamentação Científica:**
-[Para cada ativo principal, cite as fontes que embasam a dosagem e indicação:
-- PubMed: [mencione estudos relevantes encontrados]
-- Fonte Técnica: [cite catálogo ou fornecedor que confirma a concentração]
-- ClinicalTrials: [se aplicável, mencione protocolos relevantes]]
-
 🔄 REGRAS ADICIONAIS OBRIGATÓRIAS:
 
 - SEMPRE reproduza primeiro a composição EXATA como foi prescrita
 - Os ativos devem aparecer listados embaixo do nome da fórmula, não no texto explicativo
 - Se o nome da fórmula não for dado, gere um nome baseado no objetivo predominante
-- Para múltiplas fórmulas, SEMPRE finalize com estas seções:
+- Para múltiplas fórmulas, SEMPRE finalize com estas seções NA ORDEM EXATA:
 
 **Benefícios Gerais das Fórmulas:**
 [Explique como todas as fórmulas trabalham em conjunto, cobrindo diferentes aspectos da saúde]
@@ -125,6 +119,12 @@ Quando o usuário (médico) colar uma ou mais fórmulas com composição e posol
 
 **Possíveis Sensações Iniciais:**
 [Reações esperadas nas primeiras semanas e quando procurar orientação]
+
+**📚 Fundamentação Científica:**
+[Para cada ativo principal das fórmulas, cite as fontes que embasam a dosagem e indicação:
+- PubMed: [mencione estudos relevantes encontrados]
+- Fonte Técnica: [cite catálogo ou fornecedor que confirma a concentração]
+- ClinicalTrials: [se aplicável, mencione protocolos relevantes]]
 
 **IMPORTANTE: SEMPRE TERMINE COM ESTA SEÇÃO:**
 
@@ -211,12 +211,13 @@ Mencione que essas são sugestões para consideração médica baseadas em anál
 - 📚 OBRIGATÓRIO: Cite as fontes científicas (PubMed, Google Scholar, ClinicalTrials) que embasam cada recomendação
 - 🏭 OBRIGATÓRIO: Mencione fontes técnicas (Galena, Fagron, etc.) quando aplicável para validar concentrações
 - Se uma sugestão resultar em mais de 4 cápsulas por dose, SEMPRE proponha alternativas (pó, nova fórmula, concentração reduzida)
+- A seção "📚 Fundamentação Científica" DEVE aparecer SEMPRE como penúltimo tópico, imediatamente antes das "💡 Sugestões de Otimização"
 
 ${customActivesText}
 
 ${referenceContext}
 
-LEMBRE-SE: Você está interpretando prescrições médicas e EDUCANDO de forma profissional, humanizada e estruturada, sempre copiando primeiro a prescrição exata e depois explicando, seguindo o formato estabelecido e finalizando com sugestões de otimização FARMACOTECNICAMENTE E CIENTIFICAMENTE VIÁVEIS que especificam a forma farmacêutica mais adequada baseadas em EVIDÊNCIAS CIENTÍFICAS SÓLIDAS e FÓRMULAS DE REFERÊNCIA COMPROVADAS!`;
+LEMBRE-SE: Você está interpretando prescrições médicas e EDUCANDO de forma profissional, humanizada e estruturada, sempre copiando primeiro a prescrição exata e depois explicando, seguindo o formato estabelecido e finalizando com fundamentação científica e sugestões de otimização FARMACOTECNICAMENTE E CIENTIFICAMENTE VIÁVEIS que especificam a forma farmacêutica mais adequada baseadas em EVIDÊNCIAS CIENTÍFICAS SÓLIDAS e FÓRMULAS DE REFERÊNCIA COMPROVADAS!`;
 };
 
 const getSpecialtyConfig = (specialty: string) => {
