@@ -1,4 +1,3 @@
-
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { User, Bot, Copy, Check } from 'lucide-react';
@@ -54,21 +53,9 @@ const MessageBubble = ({
     }
   };
 
-  const handleAddActiveFromAdder = (activeName: string, concentration?: string) => {
-    const newActive = {
-      name: activeName,
-      concentration: concentration || 'A definir',
-      benefit: 'Conforme análise clínica',
-      mechanism: 'Revisar literatura'
-    };
-    
-    onAddActiveToFormula([newActive]);
+  const handleAddActiveFromAdder = (actives: any[]) => {
+    onAddActiveToFormula(actives);
     setShowQuickActiveAdder(false);
-    
-    toast({
-      title: "Ativo adicionado!",
-      description: `${activeName} foi incluído na análise`,
-    });
   };
 
   const hasQuickActions = message.content.includes('<quick-action>');
