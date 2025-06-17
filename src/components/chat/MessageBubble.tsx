@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import QuickActionButtons from './QuickActionButtons';
 import FormulaSuggestionButtons from './FormulaSuggestionButtons';
+import ActiveSuggestions from './ActiveSuggestions';
 import { detectFormulaAnalysis } from './FormulaDetection';
 
 interface Message {
@@ -97,17 +98,21 @@ const MessageBubble = ({
               />
             )}
 
-            {/* Formula Suggestion Buttons - Forçar exibição para teste */}
+            {/* Active Suggestions - O componente que estava perfeito! */}
             {message.role === 'assistant' && isFormulaAnalysis && (
-              <div>
-                <div className="text-xs text-green-400 mb-2">
-                  🟢 Botões de sugestão detectados e carregando...
-                </div>
-                <FormulaSuggestionButtons 
-                  onQuickAction={onQuickAction}
-                  onAddActiveToFormula={onAddActiveToFormula}
-                />
-              </div>
+              <ActiveSuggestions
+                onAddActiveToFormula={onAddActiveToFormula}
+                messageContent={message.content}
+                userId={userId}
+              />
+            )}
+
+            {/* Formula Suggestion Buttons */}
+            {message.role === 'assistant' && isFormulaAnalysis && (
+              <FormulaSuggestionButtons 
+                onQuickAction={onQuickAction}
+                onAddActiveToFormula={onAddActiveToFormula}
+              />
             )}
 
             <div className="flex items-center justify-between mt-3">
