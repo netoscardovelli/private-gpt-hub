@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -41,7 +40,7 @@ const Header = ({
             <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">FM</span>
             </div>
-            <span className="text-xl font-bold text-white">Formula.AI</span>
+            <span className="text-xl font-bold text-white">FORMULA-AI</span>
           </div>
 
           {/* Desktop Navigation */}
