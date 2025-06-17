@@ -1,9 +1,12 @@
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, Bot, Copy, Check, Lightbulb, Plus } from 'lucide-react';
+import { User, Bot, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import QuickActionButtons from './QuickActionButtons';
+import FormulaSuggestionButtons from './FormulaSuggestionButtons';
+import { detectFormulaAnalysis } from './FormulaDetection';
 
 interface Message {
   id: string;
@@ -48,74 +51,11 @@ const MessageBubble = ({
     }
   };
 
-  const handleQuickActionClick = (action: string) => {
-    console.log('Quick action clicked:', action);
-    onQuickAction(action);
-  };
-
-  const renderQuickActions = (content: string) => {
-    const quickActionRegex = /<quick-action>(.*?)<\/quick-action>/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = quickActionRegex.exec(content)) !== null) {
-      // Adicionar texto antes do match
-      if (match.index > lastIndex) {
-        parts.push(content.slice(lastIndex, match.index));
-      }
-      
-      // Verificar se o match[1] existe antes de usar
-      const actionValue = match[1];
-      if (actionValue) {
-        parts.push(
-          <Button
-            key={match.index}
-            onClick={() => handleQuickActionClick(actionValue)}
-            size="sm"
-            className="mx-1 my-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-          >
-            {getActionLabel(actionValue)}
-          </Button>
-        );
-      }
-      
-      lastIndex = match.index + match[0].length;
-    }
-    
-    // Adicionar texto restante
-    if (lastIndex < content.length) {
-      parts.push(content.slice(lastIndex));
-    }
-    
-    return parts;
-  };
-
-  const getActionLabel = (action: string) => {
-    const labels: { [key: string]: string } = {
-      'analise': '🔬 Análise de Fórmulas',
-      'formulas-cadastradas': '📋 Fórmulas Cadastradas',
-      'sugestao-formulas': '💡 Sugestões de Fórmulas'
-    };
-    return labels[action] || action;
-  };
-
   const hasQuickActions = message.content.includes('<quick-action>');
+  const isFormulaAnalysis = detectFormulaAnalysis(message);
   
-  // Verificar se a mensagem contém análise de fórmula - detecção melhorada
-  const isFormulaAnalysis = message.role === 'assistant' && (
-    message.content.includes('**Composição') || 
-    message.content.includes('Análise da Fórmula') ||
-    message.content.includes('**Benefícios Gerais') ||
-    message.content.includes('**Importância do Uso') ||
-    message.content.includes('📚 Fundamentação Científica') ||
-    message.content.includes('**Instruções de Uso') ||
-    message.content.includes('Essa fórmula foi desenvolvida') ||
-    message.content.includes('elaborei essa fórmula') ||
-    (message.content.includes('mg') && message.content.includes('UI') && message.content.includes('mcg')) ||
-    // Detectar múltiplos ativos com dosagens
-    (message.content.match(/\d+\s*(mg|mcg|UI|g)/g) || []).length >= 3
-  );
+  // Conteúdo limpo sem quick actions para exibição
+  const cleanContent = message.content.replace(/<quick-action>.*?<\/quick-action>/g, '');
 
   console.log('🔍 Análise de detecção de fórmula:', {
     messageId: message.id,
@@ -147,77 +87,23 @@ const MessageBubble = ({
           </div>
           <div className="flex-1">
             <div className="whitespace-pre-wrap">
-              {message.role === 'assistant' && hasQuickActions 
-                ? renderQuickActions(message.content.replace(/<quick-action>.*?<\/quick-action>/g, ''))
-                : message.content}
+              {cleanContent}
             </div>
             
-            {message.role === 'assistant' && hasQuickActions && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {renderQuickActions(message.content).filter(part => 
-                  typeof part === 'object' && part?.type === Button
-                )}
-              </div>
+            {/* Quick Action Buttons */}
+            {message.role === 'assistant' && (
+              <QuickActionButtons 
+                content={message.content}
+                onQuickAction={onQuickAction}
+              />
             )}
 
-            {/* Botões de sugestão de otimização para análises de fórmula */}
+            {/* Formula Suggestion Buttons */}
             {isFormulaAnalysis && (
-              <div className="mt-4 space-y-3">
-                {/* Botão de Sugestão de Otimização */}
-                <div className="p-3 bg-gradient-to-r from-purple-600/20 to-emerald-600/20 rounded-lg border border-purple-500/30">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h4 className="text-sm font-medium text-purple-300 mb-1">
-                        Quer otimizar suas fórmulas?
-                      </h4>
-                      <p className="text-xs text-slate-400">
-                        Receba sugestões de ativos complementares baseadas na análise científica
-                      </p>
-                    </div>
-                    <Button
-                      onClick={() => handleQuickActionClick('suggest-improvements')}
-                      size="sm"
-                      className="bg-gradient-to-r from-purple-600 to-emerald-600 hover:from-purple-700 hover:to-emerald-700 text-white ml-3"
-                    >
-                      <Lightbulb className="w-4 h-4 mr-1" />
-                      Sugerir Ativos
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Botão de Ativos Esquecidos */}
-                <div className="p-3 bg-gradient-to-r from-orange-600/20 to-red-600/20 rounded-lg border border-orange-500/30">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h4 className="text-sm font-medium text-orange-300 mb-1">
-                        Ativos esquecidos?
-                      </h4>
-                      <p className="text-xs text-slate-400">
-                        Adicione ativos personalizados às suas fórmulas
-                      </p>
-                    </div>
-                    <Button
-                      onClick={() => {
-                        const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
-                        if (customActives.length > 0) {
-                          onAddActiveToFormula(customActives);
-                        } else {
-                          toast({
-                            title: "Nenhum ativo personalizado",
-                            description: "Cadastre ativos personalizados na aba 'Ativos Personalizados'",
-                            variant: "destructive"
-                          });
-                        }
-                      }}
-                      size="sm"
-                      className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white ml-3"
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Adicionar
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <FormulaSuggestionButtons 
+                onQuickAction={onQuickAction}
+                onAddActiveToFormula={onAddActiveToFormula}
+              />
             )}
 
             <div className="flex items-center justify-between mt-3">
