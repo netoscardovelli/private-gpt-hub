@@ -99,6 +99,8 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
     };
 
     console.log('🚀 Adicionando ativo:', newActive);
+    
+    // Chama a função correta que irá processar o ativo e gerar nova análise
     onAddActive([newActive]);
     
     toast({
@@ -106,7 +108,7 @@ const QuickActiveAdder = ({ onAddActive, currentFormula, specialty }: QuickActiv
       description: `${activeToAdd} será incluído na análise`,
     });
 
-    // Reset
+    // Reset form
     setSearchTerm('');
     setSelectedActive('');
     setDosage('');

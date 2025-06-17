@@ -1,3 +1,4 @@
+
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -201,10 +202,31 @@ Seja específico e prático nas recomendações.`;
   };
 
   const handleAddActiveToFormula = async (actives: any[]) => {
+    console.log('🔄 Processando adição de ativos:', actives);
+
+    if (!actives || actives.length === 0) {
+      toast({
+        title: "Erro",
+        description: "Nenhum ativo fornecido para adicionar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const activeToAdd = actives[0]; // Pega o primeiro ativo
+    console.log('📋 Ativo a ser adicionado:', activeToAdd);
+
+    // Buscar a última mensagem do assistente que contenha análise de fórmula
     const lastAssistantMessage = messages
       .filter(msg => msg.role === 'assistant')
       .reverse()
-      .find(msg => msg.content.includes('• ') && msg.content.includes('mg'));
+      .find(msg => {
+        const content = msg.content;
+        return content.includes('**Composição') || 
+               content.includes('**COMPOSIÇÃO') ||
+               content.includes('📋 **FÓRMULAS PRESCRITAS:**') ||
+               (content.includes('• ') && content.includes('mg'));
+      });
 
     if (!lastAssistantMessage) {
       toast({
@@ -215,24 +237,59 @@ Seja específico e prático nas recomendações.`;
       return;
     }
 
-    const activesText = actives.map(active => 
-      `- ${active.name} ${active.concentration}\n  Benefício: ${active.benefit}\n  Mecanismo: ${active.mechanism}`
-    ).join('\n\n');
+    console.log('📄 Última análise encontrada para modificar');
 
-    const enhancedMessage = `Com base na análise anterior, inclua os seguintes ativos nas fórmulas e refaça a análise completa:
+    let enhancedMessage = '';
 
-FÓRMULA ORIGINAL:
+    if (activeToAdd.createNew) {
+      // Criar nova fórmula
+      enhancedMessage = `Criar uma nova fórmula incluindo o seguinte ativo:
+
+**NOVO ATIVO PARA FÓRMULA:**
+• ${activeToAdd.name} ${activeToAdd.concentration}
+
+**INSTRUÇÕES:**
+1. Crie uma nova fórmula magistral incluindo este ativo
+2. Sugira outros ativos complementares que funcionem em sinergia
+3. Defina dosagens adequadas para todos os componentes
+4. Forneça análise completa da nova formulação
+5. Explique os benefícios e mecanismos de ação
+6. Inclua orientações de uso e precauções
+
+Desenvolva uma fórmula completa e eficaz com base neste ativo principal.`;
+
+      addMessage({
+        content: `Criar nova fórmula com ${activeToAdd.name}`,
+        role: 'user'
+      });
+    } else {
+      // Adicionar à fórmula existente
+      const formulaIndex = activeToAdd.formulaIndex || 0;
+      
+      enhancedMessage = `Com base na análise de fórmula anterior, ADICIONE o seguinte ativo e refaça a análise completa:
+
+**FÓRMULA ORIGINAL:**
 ${lastAssistantMessage.content}
 
-ATIVOS A INCLUIR:
-${activesText}
+**ATIVO A INCLUIR:**
+• ${activeToAdd.name} ${activeToAdd.concentration}
 
-INSTRUÇÃO: Refaça a análise das fórmulas incluindo estes novos ativos, mostrando como eles se integram com os demais componentes e potencializam os resultados. Para cada ativo, adicione-o especificamente à fórmula mencionada em sua sugestão. Use o formato padrão de análise com composição atualizada e nova explicação.`;
+**INSTRUÇÕES ESPECÍFICAS:**
+1. Adicione este ativo à fórmula ${formulaIndex >= 0 ? `número ${formulaIndex + 1}` : 'existente'}
+2. Recalcule toda a composição considerando o novo ativo
+3. Avalie possíveis interações e sinergias
+4. Ajuste dosagens se necessário para manter eficácia e segurança
+5. Forneça nova análise completa da fórmula modificada
+6. Explique como o novo ativo potencializa os resultados
+7. Mantenha o formato padrão de análise com composição atualizada
 
-    addMessage({
-      content: `Incluir ${actives.length} ativo(s) nas fórmulas e reanalizar`,
-      role: 'user'
-    });
+IMPORTANTE: Mostre a fórmula completa com o novo ativo integrado e explique os benefícios da combinação.`;
+
+      addMessage({
+        content: `Adicionar ${activeToAdd.name} à fórmula e reanalizar`,
+        role: 'user'
+      });
+    }
 
     setIsLoading(true);
 
@@ -242,6 +299,8 @@ INSTRUÇÃO: Refaça a análise das fórmulas incluindo estes novos ativos, most
         role: msg.role,
         content: msg.content
       }));
+
+      console.log('🚀 Enviando requisição para incluir ativo...');
 
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
@@ -257,18 +316,28 @@ INSTRUÇÃO: Refaça a análise das fórmulas incluindo estes novos ativos, most
         throw new Error(data?.details || error?.message || 'Erro desconhecido');
       }
 
+      console.log('✅ Nova análise gerada com ativo incluído');
+
       addMessage({
         content: data.response,
         role: 'assistant'
       });
+
+      toast({
+        title: "Ativo incluído!",
+        description: `${activeToAdd.name} foi adicionado e a fórmula foi reanalisada`,
+      });
+
     } catch (error: any) {
+      console.error('❌ Erro ao incluir ativo:', error);
+      
       addMessage({
-        content: `🚫 Ocorreu um erro ao incluir os ativos nas fórmulas. Tente novamente.\n\nErro: ${error.message}`,
+        content: `🚫 Ocorreu um erro ao incluir o ativo na fórmula. Tente novamente.\n\nErro: ${error.message}`,
         role: 'assistant'
       });
 
       toast({
-        title: "Erro ao incluir ativos",
+        title: "Erro ao incluir ativo",
         description: error.message,
         variant: "destructive"
       });
