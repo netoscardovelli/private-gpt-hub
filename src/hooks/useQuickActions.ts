@@ -149,14 +149,16 @@ Vou te guiar através de algumas perguntas estratégicas para construirmos junto
 
 Vamos começar com as informações básicas:
 
-**1. Qual a idade do paciente?**
+**1. Nome do paciente:** (importante para personalizar a prescrição)
 
-**2. Sexo:** Masculino ou Feminino?
+**2. Qual a idade do paciente?**
 
-**3. Qual é o objetivo clínico principal?** 
+**3. Sexo:** Masculino ou Feminino?
+
+**4. Qual é o objetivo clínico principal?** 
 (Ex: emagrecimento, ansiedade, insônia, libido, performance, anti-aging, etc.)
 
-Pode responder essas 3 primeiras perguntas e depois vou personalizando as próximas com base no que você me disser! 😊`,
+Pode responder essas 4 primeiras perguntas e depois vou personalizando as próximas com base no que você me disser! 😊`,
           role: 'assistant'
         });
         setIsLoading(false);
