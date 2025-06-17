@@ -17,7 +17,7 @@ const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: Act
   const [showQuickAdder, setShowQuickAdder] = useState(false);
   const { toast } = useToast();
 
-  // Verificar se a mensagem contém uma análise de fórmula
+  // Verificar se a mensagem contém uma análise REAL de fórmula (não apenas instruções)
   const hasFormulaAnalysis = () => {
     const analysisIndicators = [
       '• ',  // Lista de ativos
@@ -28,6 +28,17 @@ const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: Act
       'Incompatibilidade',
       'Compatibilidade'
     ];
+    
+    // Verificar se NÃO é uma mensagem de instrução inicial
+    const isInstructionMessage = messageContent.includes('Cole suas fórmulas aqui') ||
+      messageContent.includes('Cole sua fórmula e vamos começar') ||
+      messageContent.includes('Perfeito! Cole suas fórmulas') ||
+      messageContent.includes('vamos começar!');
+    
+    // Se for mensagem de instrução, não mostrar sugestões
+    if (isInstructionMessage) {
+      return false;
+    }
     
     return analysisIndicators.some(indicator => 
       messageContent.toLowerCase().includes(indicator.toLowerCase())
@@ -118,7 +129,7 @@ const ActiveSuggestions = ({ onAddActiveToFormula, messageContent, userId }: Act
   const suggestions = generateSmartSuggestions();
   const showSuggestions = hasFormulaAnalysis() && suggestions.length > 0;
 
-  // Não mostrar nada se não há análise de fórmula
+  // Não mostrar nada se não há análise REAL de fórmula
   if (!hasFormulaAnalysis()) {
     return null;
   }
