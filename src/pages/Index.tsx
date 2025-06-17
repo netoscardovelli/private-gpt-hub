@@ -45,10 +45,16 @@ const Index = () => {
   };
 
   const handleChatClick = () => {
+    console.log('Chat button clicked, isAuthenticated:', isAuthenticated, 'showChat:', showChat);
     if (!isAuthenticated) {
       setShowAuthModal(true);
     } else {
-      setShowChat(true);
+      // Se já estamos no chat, não fazer nada ou voltar ao início
+      if (showChat) {
+        console.log('Already in chat, staying in chat');
+      } else {
+        setShowChat(true);
+      }
     }
   };
 
