@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import Header from "@/components/Header";
@@ -43,6 +44,14 @@ const Index = () => {
     }
   };
 
+  const handleChatClick = () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+    } else {
+      setShowChat(true);
+    }
+  };
+
   const handleSelectPlan = (plan: string) => {
     console.log('Selected plan:', plan);
   };
@@ -72,6 +81,7 @@ const Index = () => {
         onLogout={handleLogout}
         onSettingsClick={handleSettingsClick}
         onSupportClick={handleSupportClick}
+        onChatClick={handleChatClick}
         userName={isAuthenticated ? mockUser.name : undefined}
       />
       
