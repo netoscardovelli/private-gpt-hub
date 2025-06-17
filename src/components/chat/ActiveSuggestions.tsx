@@ -260,6 +260,9 @@ const ActiveSuggestions = ({
   // Usar sugestões extraídas do texto se disponíveis, senão usar as passadas via props
   const activeSuggestions = parsedSuggestions.length > 0 ? parsedSuggestions : suggestions;
 
+  // SEMPRE mostrar o QuickActiveAdder se for uma mensagem com análise
+  const shouldShowQuickAdder = messageContent.includes('• ') && messageContent.includes('mg');
+
   if (activeSuggestions.length === 0 && !messageContent.includes('💡 Sugestões de Otimização:')) {
     return (
       <div className="mt-4 space-y-4">
@@ -273,125 +276,129 @@ const ActiveSuggestions = ({
           {isLoading ? 'Analisando...' : '💡 Sugerir Ativos para Otimizar'}
         </Button>
         
+        {shouldShowQuickAdder && (
+          <QuickActiveAdder 
+            onAddActive={handleAddCustomActive}
+            currentFormula={messageContent}
+            specialty={specialty}
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-3">
+      {activeSuggestions.length > 0 && (
+        <>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Lightbulb className="w-4 h-4 text-amber-400" />
+              <h4 className="text-sm font-semibold text-slate-200">Sugestões de Otimização</h4>
+              <Badge className="bg-slate-700 text-slate-300 text-xs">Análise Farmacotécnica</Badge>
+            </div>
+            
+            {selectedActives.size > 0 && (
+              <Button
+                onClick={handleSendSelected}
+                className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-xs px-3 py-2 h-auto flex items-center gap-2"
+                size="sm"
+              >
+                <Send className="w-3 h-3" />
+                Incluir {selectedActives.size} Selecionado(s)
+              </Button>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            {activeSuggestions.map((active, index) => (
+              <Card key={index} className="bg-slate-700/50 border-slate-600 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-slate-100 text-sm">{active.name}</span>
+                      <Badge variant="outline" className="border-emerald-400 text-emerald-400 text-xs">
+                        {active.concentration}
+                      </Badge>
+                      {getFormBadge(active.suggestedForm)}
+                    </div>
+
+                    {/* Indicação da fórmula alvo */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="w-3 h-3 text-blue-400" />
+                      <Badge className="bg-blue-600/30 text-blue-300 text-xs font-medium">
+                        → {active.targetFormula}
+                      </Badge>
+                      {getFormIcon(active.suggestedForm)}
+                    </div>
+
+                    {/* Nota prática sobre viabilidade */}
+                    {active.practicalNote && (
+                      <div className="mb-2 p-2 bg-amber-900/30 border border-amber-700/50 rounded text-xs">
+                        <div className="flex items-center gap-1 text-amber-300">
+                          <Package className="w-3 h-3" />
+                          <span className="font-medium">Análise Farmacotécnica:</span>
+                        </div>
+                        <p className="text-amber-200 mt-1">{active.practicalNote}</p>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-slate-300 mb-2">{active.benefit}</p>
+                    
+                    <p className="text-xs text-slate-400 mb-2">{active.mechanism}</p>
+
+                    {/* Razão pela qual vai nessa fórmula específica */}
+                    <p className="text-xs text-blue-300 mb-2 italic">
+                      {active.targetFormulaReason}
+                    </p>
+                    
+                    {active.synergyWith.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {active.synergyWith.map((synergy, idx) => (
+                          <Badge key={idx} className="bg-purple-600/30 text-purple-300 text-xs">
+                            Sinergia: {synergy}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Button
+                    onClick={() => handleToggleActive(active)}
+                    size="sm"
+                    className={`h-8 px-3 text-xs ${
+                      isSelected(active.name)
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        : 'bg-slate-600 hover:bg-slate-500 text-slate-200'
+                    }`}
+                  >
+                    {isSelected(active.name) ? (
+                      <>
+                        <Check className="w-3 h-3 mr-1" />
+                        Selecionado
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-3 h-3 mr-1" />
+                        Selecionar
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* SEMPRE mostrar o QuickActiveAdder se é uma análise */}
+      {shouldShowQuickAdder && (
         <QuickActiveAdder 
           onAddActive={handleAddCustomActive}
           currentFormula={messageContent}
           specialty={specialty}
         />
-      </div>
-    );
-  }
-
-  if (activeSuggestions.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="mt-4 space-y-3">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Lightbulb className="w-4 h-4 text-amber-400" />
-          <h4 className="text-sm font-semibold text-slate-200">Sugestões de Otimização</h4>
-          <Badge className="bg-slate-700 text-slate-300 text-xs">Análise Farmacotécnica</Badge>
-        </div>
-        
-        {selectedActives.size > 0 && (
-          <Button
-            onClick={handleSendSelected}
-            className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-xs px-3 py-2 h-auto flex items-center gap-2"
-            size="sm"
-          >
-            <Send className="w-3 h-3" />
-            Incluir {selectedActives.size} Selecionado(s)
-          </Button>
-        )}
-      </div>
-      
-      <div className="space-y-2">
-        {activeSuggestions.map((active, index) => (
-          <Card key={index} className="bg-slate-700/50 border-slate-600 p-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-slate-100 text-sm">{active.name}</span>
-                  <Badge variant="outline" className="border-emerald-400 text-emerald-400 text-xs">
-                    {active.concentration}
-                  </Badge>
-                  {getFormBadge(active.suggestedForm)}
-                </div>
-
-                {/* Indicação da fórmula alvo */}
-                <div className="flex items-center gap-2 mb-2">
-                  <Target className="w-3 h-3 text-blue-400" />
-                  <Badge className="bg-blue-600/30 text-blue-300 text-xs font-medium">
-                    → {active.targetFormula}
-                  </Badge>
-                  {getFormIcon(active.suggestedForm)}
-                </div>
-
-                {/* Nota prática sobre viabilidade */}
-                {active.practicalNote && (
-                  <div className="mb-2 p-2 bg-amber-900/30 border border-amber-700/50 rounded text-xs">
-                    <div className="flex items-center gap-1 text-amber-300">
-                      <Package className="w-3 h-3" />
-                      <span className="font-medium">Análise Farmacotécnica:</span>
-                    </div>
-                    <p className="text-amber-200 mt-1">{active.practicalNote}</p>
-                  </div>
-                )}
-
-                <p className="text-xs text-slate-300 mb-2">{active.benefit}</p>
-                
-                <p className="text-xs text-slate-400 mb-2">{active.mechanism}</p>
-
-                {/* Razão pela qual vai nessa fórmula específica */}
-                <p className="text-xs text-blue-300 mb-2 italic">
-                  {active.targetFormulaReason}
-                </p>
-                
-                {active.synergyWith.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {active.synergyWith.map((synergy, idx) => (
-                      <Badge key={idx} className="bg-purple-600/30 text-purple-300 text-xs">
-                        Sinergia: {synergy}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              <Button
-                onClick={() => handleToggleActive(active)}
-                size="sm"
-                className={`h-8 px-3 text-xs ${
-                  isSelected(active.name)
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    : 'bg-slate-600 hover:bg-slate-500 text-slate-200'
-                }`}
-              >
-                {isSelected(active.name) ? (
-                  <>
-                    <Check className="w-3 h-3 mr-1" />
-                    Selecionado
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-3 h-3 mr-1" />
-                    Selecionar
-                  </>
-                )}
-              </Button>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {/* Componente para adicionar ativos esquecidos */}
-      <QuickActiveAdder 
-        onAddActive={handleAddCustomActive}
-        currentFormula={messageContent}
-        specialty={specialty}
-      />
+      )}
     </div>
   );
 };
