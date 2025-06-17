@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Copy, ThumbsUp, ThumbsDown, Lightbulb, MessageSquare, User, Bot } from 'lucide-react';
+import { Copy, ThumbsUp, ThumbsDown, Lightbulb, MessageSquare, User, Bot, Microscope, BookOpen, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ActiveSuggestions from './ActiveSuggestions';
@@ -118,6 +117,71 @@ const MessageBubble = ({ message, index, onQuickAction, onAddActiveToFormula, us
         </span>
       );
     });
+  };
+
+  const renderQuickActions = (content: string) => {
+    const quickActionRegex = /<quick-action>(.*?)<\/quick-action>/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = quickActionRegex.exec(content)) !== null) {
+      // Add text before the quick action
+      if (match.index > lastIndex) {
+        parts.push(content.slice(lastIndex, match.index));
+      }
+
+      const action = match[1];
+      let buttonText = '';
+      let buttonIcon = null;
+      let buttonClass = '';
+
+      switch (action) {
+        case 'analise':
+          buttonText = '🔬 Analisar Fórmulas';
+          buttonIcon = <Microscope className="w-4 h-4" />;
+          buttonClass = 'bg-emerald-600 hover:bg-emerald-700';
+          break;
+        case 'formulas-cadastradas':
+          buttonText = '📚 Fórmulas Cadastradas';
+          buttonIcon = <BookOpen className="w-4 h-4" />;
+          buttonClass = 'bg-blue-600 hover:bg-blue-700';
+          break;
+        case 'sugestao-formulas':
+          buttonText = '💡 Sugestão de Fórmulas';
+          buttonIcon = <Lightbulb className="w-4 h-4" />;
+          buttonClass = 'bg-purple-600 hover:bg-purple-700';
+          break;
+        case 'suggest-improvements':
+          buttonText = '✨ Sugerir Melhorias';
+          buttonIcon = <Sparkles className="w-4 h-4" />;
+          buttonClass = 'bg-amber-600 hover:bg-amber-700';
+          break;
+        default:
+          buttonText = action;
+          buttonClass = 'bg-slate-600 hover:bg-slate-700';
+      }
+
+      parts.push(
+        <Button
+          key={`quick-action-${match.index}`}
+          onClick={() => onQuickAction(action)}
+          className={`${buttonClass} text-white font-medium px-4 py-2 rounded-lg shadow-md transition-all hover:shadow-lg flex items-center space-x-2 mb-2`}
+        >
+          {buttonIcon}
+          <span>{buttonText}</span>
+        </Button>
+      );
+
+      lastIndex = quickActionRegex.lastIndex;
+    }
+
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push(content.slice(lastIndex));
+    }
+
+    return parts;
   };
 
   return (

@@ -30,9 +30,13 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
       id: '1',
       content: `Olá ${user.name}! Sou seu assistente especializado em análise de fórmulas de manipulação farmacêutica.
 
-Clique no botão abaixo para começar a análise:
+Escolha uma das opções abaixo para começar:
 
-<quick-action>analise</quick-action>`,
+<quick-action>analise</quick-action>
+
+<quick-action>formulas-cadastradas</quick-action>
+
+<quick-action>sugestao-formulas</quick-action>`,
       role: 'assistant',
       timestamp: new Date()
     }
@@ -92,6 +96,14 @@ Clique no botão abaixo para começar a análise:
         setMessages(prev => [...prev, response]);
         setIsLoading(false);
       }, 1000);
+    }
+
+    if (action === 'formulas-cadastradas') {
+      setShowRegisteredFormulas(true);
+    }
+
+    if (action === 'sugestao-formulas') {
+      setShowFormulaSuggestions(true);
     }
 
     if (action === 'suggest-improvements') {
@@ -487,7 +499,7 @@ Por favor, faça uma análise detalhada desta fórmula incluindo mecanismo de a�
     }
   };
 
-  const showFormulaButtons = conversationMode === 'analysis' && !showRegisteredFormulas && !showFormulaSuggestions && !isLoading;
+  const showFormulaButtons = false; // Desabilitamos os botões antigos
 
   return (
     <div className="flex flex-col h-screen bg-slate-900">
@@ -514,14 +526,6 @@ Por favor, faça uma análise detalhada desta fórmula incluindo mecanismo de a�
             userId={user.id}
           />
         ))}
-
-        {showFormulaButtons && (
-          <FormulaButtons
-            onShowRegisteredFormulas={() => setShowRegisteredFormulas(true)}
-            onShowFormulaSuggestions={() => setShowFormulaSuggestions(true)}
-            showButtons={true}
-          />
-        )}
 
         {showRegisteredFormulas && (
           <RegisteredFormulasPanel
