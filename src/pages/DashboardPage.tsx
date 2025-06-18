@@ -1,26 +1,18 @@
 
-import { useDashboardData } from '@/hooks/useDashboardData';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
-import DashboardStats from '@/components/dashboard/DashboardStats';
+import DashboardMetrics from '@/components/dashboard/DashboardMetrics';
 import OrganizationInfo from '@/components/dashboard/OrganizationInfo';
-import RecentActivity from '@/components/dashboard/RecentActivity';
 import QuickActions from '@/components/dashboard/QuickActions';
+import { useDashboardData } from '@/hooks/useDashboardData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 
 const DashboardPage = () => {
   const { profile } = useAuth();
-  const { 
-    organizationData, 
-    todayStats, 
-    doctorCount, 
-    formulaCount, 
-    recentSessions, 
-    isLoading 
-  } = useDashboardData();
+  const { organizationData, isLoading: orgLoading } = useDashboardData();
 
-  if (isLoading) {
+  if (orgLoading) {
     return (
       <div className="min-h-screen bg-slate-900 text-white">
         <Header />
@@ -61,29 +53,24 @@ const DashboardPage = () => {
           </h1>
           <p className="text-slate-300">
             {organizationData?.name ? 
-              `Gerencie sua farmácia ${organizationData.name} através do painel de controle.` :
-              'Gerencie sua farmácia através do painel de controle.'
+              `Acompanhe o desempenho da ${organizationData.name} através do painel de controle.` :
+              'Acompanhe o desempenho da sua farmácia através do painel de controle.'
             }
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <DashboardStats
-          organizationData={organizationData}
-          todayStats={todayStats}
-          doctorCount={doctorCount}
-          formulaCount={formulaCount}
-          recentSessions={recentSessions}
-        />
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <OrganizationInfo organizationData={organizationData} />
-          <RecentActivity recentSessions={recentSessions} />
+        {/* Métricas do Dashboard */}
+        <div className="mb-8">
+          <DashboardMetrics />
         </div>
 
-        {/* Quick Actions */}
-        <QuickActions />
+        {/* Informações da Organização e Ações Rápidas */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <OrganizationInfo organizationData={organizationData} />
+          <div>
+            <QuickActions />
+          </div>
+        </div>
       </main>
     </div>
   );
