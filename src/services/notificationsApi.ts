@@ -19,7 +19,7 @@ export const fetchNotificationsApi = async (
 
   const { data, error } = await query;
   if (error) throw error;
-  return data || [];
+  return (data || []) as Notification[];
 };
 
 // Marcar notificação como lida
@@ -54,7 +54,7 @@ export const createNotificationApi = async (
     .single();
 
   if (error) throw error;
-  return data;
+  return data as Notification;
 };
 
 // Buscar configurações de notificação do usuário
@@ -66,7 +66,7 @@ export const fetchNotificationSettingsApi = async (userId: string): Promise<Noti
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return data as NotificationSettings | null;
 };
 
 // Atualizar configurações de notificação
@@ -89,7 +89,7 @@ export const updateNotificationSettingsApi = async (
       .single();
 
     if (error) throw error;
-    return data;
+    return data as NotificationSettings;
   } else {
     const { data, error } = await supabase
       .from('notification_settings')
@@ -98,7 +98,7 @@ export const updateNotificationSettingsApi = async (
       .single();
 
     if (error) throw error;
-    return data;
+    return data as NotificationSettings;
   }
 };
 
@@ -111,7 +111,7 @@ export const fetchAutomatedAlertsApi = async (organizationId: string): Promise<A
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data || [];
+  return (data || []) as AutomatedAlert[];
 };
 
 // Criar alerta automático
@@ -125,7 +125,7 @@ export const createAutomatedAlertApi = async (
     .single();
 
   if (error) throw error;
-  return data;
+  return data as AutomatedAlert;
 };
 
 // Atualizar alerta automático
@@ -141,7 +141,7 @@ export const updateAutomatedAlertApi = async (
     .single();
 
   if (error) throw error;
-  return data;
+  return data as AutomatedAlert;
 };
 
 // Deletar alerta automático
