@@ -22,6 +22,7 @@ const Auth = () => {
 
   // Redirect if already authenticated
   if (user) {
+    console.log('✅ Usuário autenticado, redirecionando...');
     return <Navigate to="/" replace />;
   }
 
@@ -31,22 +32,50 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    await signIn(formData.email, formData.password);
-    setLoading(false);
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+    console.log('🔐 Formulário de login enviado');
     
-    if (formData.password !== formData.confirmPassword) {
+    if (!formData.email || !formData.password) {
+      console.log('❌ Campos obrigatórios não preenchidos');
       return;
     }
 
     setLoading(true);
-    await signUp(formData.email, formData.password, formData.fullName);
+    const result = await signIn(formData.email, formData.password);
     setLoading(false);
+    
+    if (!result.error) {
+      console.log('✅ Login bem-sucedido');
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('🔐 Formulário de cadastro enviado');
+    
+    if (!formData.email || !formData.password || !formData.fullName) {
+      console.log('❌ Campos obrigatórios não preenchidos');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      console.log('❌ Senhas não coincidem');
+      return;
+    }
+
+    setLoading(true);
+    const result = await signUp(formData.email, formData.password, formData.fullName);
+    setLoading(false);
+    
+    if (!result.error) {
+      console.log('✅ Cadastro bem-sucedido');
+      // Limpar formulário após cadastro
+      setFormData({
+        email: '',
+        password: '',
+        fullName: '',
+        confirmPassword: ''
+      });
+    }
   };
 
   return (

@@ -41,6 +41,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('🔐 Configurando auth listener...');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -49,9 +51,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user profile
-          setTimeout(async () => {
-            await fetchUserProfile(session.user.id);
+          // Fetch user profile without causing infinite loop
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
           }, 0);
         } else {
           setProfile(null);
@@ -63,6 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔐 Sessão existente:', session?.user?.id || 'Nenhuma');
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -71,11 +74,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('🔐 Limpando auth listener');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('👤 Buscando perfil do usuário:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -83,48 +90,83 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        console.error('❌ Erro ao buscar perfil:', error);
         return;
       }
 
       if (data) {
+        console.log('✅ Perfil encontrado:', data);
         setProfile(data);
+      } else {
+        console.log('⚠️ Perfil não encontrado, criando...');
+        // Se não existe perfil, criar um básico
+        await createDefaultProfile(userId);
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('❌ Erro ao buscar perfil:', error);
+    }
+  };
+
+  const createDefaultProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          full_name: 'Usuário',
+          role: 'user'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erro ao criar perfil:', error);
+        return;
+      }
+
+      console.log('✅ Perfil criado:', data);
+      setProfile(data);
+    } catch (error) {
+      console.error('❌ Erro ao criar perfil:', error);
     }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log('🔐 Tentando fazer login:', email);
+    setLoading(true);
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
 
     if (error) {
+      console.error('❌ Erro no login:', error);
       toast({
         title: "Erro no login",
         description: error.message,
         variant: "destructive"
       });
     } else {
+      console.log('✅ Login realizado:', data.user?.id);
       toast({
         title: "Login realizado!",
         description: "Bem-vindo de volta!"
       });
     }
 
+    setLoading(false);
     return { error };
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    console.log('🔐 Tentando criar conta:', email);
+    setLoading(true);
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName
         }
@@ -132,26 +174,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (error) {
+      console.error('❌ Erro no cadastro:', error);
       toast({
         title: "Erro no cadastro",
         description: error.message,
         variant: "destructive"
       });
     } else {
+      console.log('✅ Conta criada:', data.user?.id);
       toast({
         title: "Conta criada!",
-        description: "Verifique seu email para confirmar a conta."
+        description: "Você já pode fazer login."
       });
     }
 
+    setLoading(false);
     return { error };
   };
 
   const signOut = async () => {
+    console.log('🔐 Fazendo logout...');
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error('Error signing out:', error);
+      console.error('❌ Erro no logout:', error);
     } else {
+      console.log('✅ Logout realizado');
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso."
