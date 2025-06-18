@@ -47,7 +47,7 @@ export const useSystemSettings = () => {
         });
       } else {
         console.log('✅ Configurações carregadas:', data);
-        setSettings(data as SystemSettings | null);
+        setSettings(data);
       }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
@@ -158,7 +158,7 @@ export const useSystemSettings = () => {
       }
 
       console.log('✅ Configurações salvas:', result.data);
-      setSettings(result.data as SystemSettings);
+      setSettings(result.data);
       
       // Aplicar as cores e nome ao sistema
       applySystemSettings(primaryColor, secondaryColor, companyName, logoUrl);

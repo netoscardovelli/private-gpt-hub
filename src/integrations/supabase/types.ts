@@ -641,32 +641,40 @@ export type Database = {
           created_at: string
           id: string
           logo_url: string | null
+          organization_id: string | null
           primary_color: string
           secondary_color: string
           updated_at: string
-          user_id: string
         }
         Insert: {
           company_name: string
           created_at?: string
           id?: string
           logo_url?: string | null
+          organization_id?: string | null
           primary_color?: string
           secondary_color?: string
           updated_at?: string
-          user_id: string
         }
         Update: {
           company_name?: string
           created_at?: string
           id?: string
           logo_url?: string | null
+          organization_id?: string | null
           primary_color?: string
           secondary_color?: string
           updated_at?: string
-          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "system_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       usage_stats: {
         Row: {
