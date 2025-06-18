@@ -1,190 +1,88 @@
 
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { 
-  LayoutDashboard, 
-  MessageSquare, 
   BarChart3, 
+  Users, 
+  FileText, 
   Settings, 
-  Users,
+  Menu,
   Heart,
   Upload,
-  FileText,
   Building2,
-  Palette
+  Palette,
+  Bell,
+  Plug
 } from 'lucide-react';
 
-const NavigationMenuComponent = () => {
+const NavigationMenu = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
-  const navigationItems = [
-    {
-      title: "Dashboard",
-      href: "/dashboard",
-      icon: LayoutDashboard,
-      description: "Visão geral da farmácia"
-    },
-    {
-      title: "Chat IA",
-      href: "/",
-      icon: MessageSquare,
-      description: "Assistente de formulação"
-    },
-    {
-      title: "Analytics",
-      href: "/analytics",
-      icon: BarChart3,
-      description: "Métricas e análises"
-    },
-    {
-      title: "Relatórios",
-      href: "/reports",
-      icon: FileText,
-      description: "Relatórios avançados"
-    }
+  const menuItems = [
+    { to: '/dashboard', icon: BarChart3, label: 'Dashboard' },
+    { to: '/analytics', icon: BarChart3, label: 'Analytics' },
+    { to: '/reports', icon: FileText, label: 'Relatórios' },
+    { to: '/doctors', icon: Users, label: 'Médicos' },
+    { to: '/actives-favorites', icon: Heart, label: 'Ativos Favoritos' },
+    { to: '/formulas-favorites', icon: Heart, label: 'Fórmulas Favoritas' },
+    { to: '/formulas-import', icon: Upload, label: 'Importar Fórmulas' },
+    { to: '/pharmacy-onboarding', icon: Building2, label: 'Onboarding' },
+    { to: '/system-customization', icon: Palette, label: 'Personalização' },
+    { to: '/notifications', icon: Bell, label: 'Notificações' },
+    { to: '/api-management', icon: Plug, label: 'APIs' },
+    { to: '/admin', icon: Settings, label: 'Admin' },
   ];
 
-  const managementItems = [
-    {
-      title: "Médicos Parceiros",
-      href: "/doctors",
-      icon: Users,
-      description: "Gerenciar médicos parceiros"
-    },
-    {
-      title: "Ativos Favoritos",
-      href: "/actives-favorites", 
-      icon: Heart,
-      description: "Seus ativos preferidos"
-    },
-    {
-      title: "Fórmulas Favoritas",
-      href: "/formulas-favorites",
-      icon: Heart,
-      description: "Suas fórmulas preferidas"
-    },
-    {
-      title: "Importar Fórmulas",
-      href: "/formulas-import",
-      icon: Upload,
-      description: "Importar base de fórmulas"
-    }
-  ];
+  const isActive = (path: string) => location.pathname === path;
 
-  const configItems = [
-    {
-      title: "Administração",
-      href: "/admin",
-      icon: Settings,
-      description: "Configurações do sistema"
-    },
-    {
-      title: "Onboarding",
-      href: "/pharmacy-onboarding",
-      icon: Building2,
-      description: "Configurar farmácia"
-    },
-    {
-      title: "Personalização",
-      href: "/system-customization",
-      icon: Palette,
-      description: "Personalizar sistema"
-    }
-  ];
+  const NavigationItems = () => (
+    <>
+      {menuItems.map((item) => {
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            onClick={() => setIsOpen(false)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              isActive(item.to)
+                ? 'bg-white/10 text-white'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </>
+  );
 
   return (
-    <NavigationMenu>
-      <NavigationMenuList>
-        <NavigationMenuItem>
-          <NavigationMenuTrigger>Principal</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <div className="grid gap-3 p-6 w-[400px]">
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className={`flex items-center space-x-3 rounded-lg p-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
-                      isActive ? 'bg-accent text-accent-foreground' : ''
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <div>
-                      <div className="font-medium">{item.title}</div>
-                      <div className="text-muted-foreground">{item.description}</div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
+    <>
+      {/* Desktop Navigation */}
+      <nav className="hidden md:flex items-center space-x-1">
+        <NavigationItems />
+      </nav>
 
-        <NavigationMenuItem>
-          <NavigationMenuTrigger>Gerenciamento</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <div className="grid gap-3 p-6 w-[400px]">
-              {managementItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className={`flex items-center space-x-3 rounded-lg p-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
-                      isActive ? 'bg-accent text-accent-foreground' : ''
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <div>
-                      <div className="font-medium">{item.title}</div>
-                      <div className="text-muted-foreground">{item.description}</div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
-
-        <NavigationMenuItem>
-          <NavigationMenuTrigger>Configurações</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <div className="grid gap-3 p-6 w-[400px]">
-              {configItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className={`flex items-center space-x-3 rounded-lg p-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
-                      isActive ? 'bg-accent text-accent-foreground' : ''
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <div>
-                      <div className="font-medium">{item.title}</div>
-                      <div className="text-muted-foreground">{item.description}</div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
-      </NavigationMenuList>
-    </NavigationMenu>
+      {/* Mobile Navigation */}
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="sm" className="md:hidden">
+            <Menu className="w-5 h-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="bg-slate-900 border-slate-800">
+          <div className="flex flex-col space-y-2 mt-8">
+            <NavigationItems />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
 
-export default NavigationMenuComponent;
+export default NavigationMenu;
