@@ -9,6 +9,10 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AdminPage from "./pages/AdminPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
+import FormulasImportPage from "./pages/FormulasImportPage";
+import FormulasFavoritesPage from "./pages/FormulasFavoritesPage";
+import ActivesFavoritesPage from "./pages/ActivesFavoritesPage";
+import DoctorsPage from "./pages/DoctorsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +32,24 @@ const App = () => {
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
+              
+              {/* Rotas de Configurações - Fórmulas */}
+              <Route path="/formulas/import" element={<FormulasImportPage />} />
+              <Route path="/formulas/favorites" element={<FormulasFavoritesPage />} />
+              <Route path="/actives/favorites" element={<ActivesFavoritesPage />} />
+              
+              {/* Rotas de Configurações - Farmácia */}
+              <Route path="/doctors" element={<DoctorsPage />} />
+              
+              {/* Rotas placeholder para outras páginas */}
+              <Route path="/settings/customization" element={<NotFound />} />
+              <Route path="/reports/formulas" element={<NotFound />} />
+              <Route path="/reports/doctors" element={<NotFound />} />
+              <Route path="/reports/financial" element={<NotFound />} />
+              <Route path="/help/documentation" element={<NotFound />} />
+              <Route path="/help/support" element={<NotFound />} />
+              <Route path="/help/tutorials" element={<NotFound />} />
+              
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
