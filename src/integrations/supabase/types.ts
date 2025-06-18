@@ -364,6 +364,48 @@ export type Database = {
           },
         ]
       }
+      doctor_performance: {
+        Row: {
+          average_formula_complexity: number | null
+          created_at: string
+          doctor_id: string
+          id: string
+          month_year: string
+          organization_id: string
+          patient_satisfaction: number | null
+          specialties_covered: Json | null
+          total_prescriptions: number | null
+          unique_formulas: number | null
+          updated_at: string
+        }
+        Insert: {
+          average_formula_complexity?: number | null
+          created_at?: string
+          doctor_id: string
+          id?: string
+          month_year: string
+          organization_id: string
+          patient_satisfaction?: number | null
+          specialties_covered?: Json | null
+          total_prescriptions?: number | null
+          unique_formulas?: number | null
+          updated_at?: string
+        }
+        Update: {
+          average_formula_complexity?: number | null
+          created_at?: string
+          doctor_id?: string
+          id?: string
+          month_year?: string
+          organization_id?: string
+          patient_satisfaction?: number | null
+          specialties_covered?: Json | null
+          total_prescriptions?: number | null
+          unique_formulas?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       doctor_profiles: {
         Row: {
           concentration_preferences: Json | null
@@ -425,6 +467,129 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      financial_metrics: {
+        Row: {
+          average_formula_value: number | null
+          created_at: string
+          date: string
+          growth_rate: number | null
+          id: string
+          organization_id: string
+          top_category: string | null
+          total_formulas: number | null
+          total_revenue: number | null
+          updated_at: string
+        }
+        Insert: {
+          average_formula_value?: number | null
+          created_at?: string
+          date?: string
+          growth_rate?: number | null
+          id?: string
+          organization_id: string
+          top_category?: string | null
+          total_formulas?: number | null
+          total_revenue?: number | null
+          updated_at?: string
+        }
+        Update: {
+          average_formula_value?: number | null
+          created_at?: string
+          date?: string
+          growth_rate?: number | null
+          id?: string
+          organization_id?: string
+          top_category?: string | null
+          total_formulas?: number | null
+          total_revenue?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      formula_statistics: {
+        Row: {
+          average_rating: number | null
+          created_at: string
+          formula_id: string
+          id: string
+          month_year: string
+          organization_id: string
+          prescription_count: number | null
+          success_rate: number | null
+          total_revenue: number | null
+          unique_doctors: number | null
+          updated_at: string
+        }
+        Insert: {
+          average_rating?: number | null
+          created_at?: string
+          formula_id: string
+          id?: string
+          month_year: string
+          organization_id: string
+          prescription_count?: number | null
+          success_rate?: number | null
+          total_revenue?: number | null
+          unique_doctors?: number | null
+          updated_at?: string
+        }
+        Update: {
+          average_rating?: number | null
+          created_at?: string
+          formula_id?: string
+          id?: string
+          month_year?: string
+          organization_id?: string
+          prescription_count?: number | null
+          success_rate?: number | null
+          total_revenue?: number | null
+          unique_doctors?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      generated_reports: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          file_url: string | null
+          filters: Json | null
+          id: string
+          organization_id: string
+          report_name: string
+          report_type: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          file_url?: string | null
+          filters?: Json | null
+          id?: string
+          organization_id: string
+          report_name: string
+          report_type: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          file_url?: string | null
+          filters?: Json | null
+          id?: string
+          organization_id?: string
+          report_name?: string
+          report_type?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       organization_favorite_formulas: {
         Row: {

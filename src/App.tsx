@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,58 +10,43 @@ import Auth from "./pages/Auth";
 import DashboardPage from "./pages/DashboardPage";
 import AdminPage from "./pages/AdminPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
-import FormulasImportPage from "./pages/FormulasImportPage";
-import FormulasFavoritesPage from "./pages/FormulasFavoritesPage";
-import ActivesFavoritesPage from "./pages/ActivesFavoritesPage";
-import SystemCustomizationPage from "./pages/SystemCustomizationPage";
-import DoctorsPage from "./pages/DoctorsPage";
-import PharmacyOnboardingPage from "./pages/PharmacyOnboardingPage";
+import ReportsPage from "./pages/ReportsPage";
 import NotFound from "./pages/NotFound";
+import DoctorsPage from "./pages/DoctorsPage";
+import ActivesFavoritesPage from "./pages/ActivesFavoritesPage";
+import FormulasFavoritesPage from "./pages/FormulasFavoritesPage";
+import FormulasImportPage from "./pages/FormulasImportPage";
+import PharmacyOnboardingPage from "./pages/PharmacyOnboardingPage";
+import SystemCustomizationPage from "./pages/SystemCustomizationPage";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  console.log('🚀 App component renderizando...');
-  
-  return (
-    <QueryClientProvider client={queryClient}>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
       <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/analytics" element={<AnalyticsPage />} />
-              
-              {/* Rotas de Configurações - Fórmulas */}
-              <Route path="/formulas/import" element={<FormulasImportPage />} />
-              <Route path="/formulas/favorites" element={<FormulasFavoritesPage />} />
-              <Route path="/actives/favorites" element={<ActivesFavoritesPage />} />
-              
-              {/* Rotas de Configurações - Farmácia */}
-              <Route path="/settings/customization" element={<SystemCustomizationPage />} />
-              <Route path="/doctors" element={<DoctorsPage />} />
-              <Route path="/pharmacy/onboarding" element={<PharmacyOnboardingPage />} />
-              
-              {/* Rotas placeholder para outras páginas */}
-              <Route path="/reports/formulas" element={<NotFound />} />
-              <Route path="/reports/doctors" element={<NotFound />} />
-              <Route path="/reports/financial" element={<NotFound />} />
-              <Route path="/help/documentation" element={<NotFound />} />
-              <Route path="/help/support" element={<NotFound />} />
-              <Route path="/help/tutorials" element={<NotFound />} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/doctors" element={<DoctorsPage />} />
+            <Route path="/actives-favorites" element={<ActivesFavoritesPage />} />
+            <Route path="/formulas-favorites" element={<FormulasFavoritesPage />} />
+            <Route path="/formulas-import" element={<FormulasImportPage />} />
+            <Route path="/pharmacy-onboarding" element={<PharmacyOnboardingPage />} />
+            <Route path="/system-customization" element={<SystemCustomizationPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </TooltipProvider>
-    </QueryClientProvider>
-  );
-};
+    </AuthProvider>
+  </QueryClientProvider>
+);
 
 export default App;

@@ -1,175 +1,190 @@
 
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from '@/components/ui/navigation-menu';
 import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-} from '@/components/ui/dropdown-menu';
-import { 
-  Settings, 
-  Import, 
-  Heart, 
-  Pill, 
-  Palette, 
-  UserPlus, 
-  BarChart3, 
-  FileText, 
-  HelpCircle, 
+  LayoutDashboard, 
   MessageSquare, 
-  FlaskConical, 
-  Users, 
-  Building, 
-  ChevronDown 
+  BarChart3, 
+  Settings, 
+  Users,
+  Heart,
+  Upload,
+  FileText,
+  Building2,
+  Palette
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 
-const NavigationMenu = () => {
-  const navigate = useNavigate();
-  const { profile } = useAuth();
-  const canAccessAdmin = profile?.role && ['admin', 'super_admin'].includes(profile.role);
+const NavigationMenuComponent = () => {
+  const location = useLocation();
+
+  const navigationItems = [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+      description: "Visão geral da farmácia"
+    },
+    {
+      title: "Chat IA",
+      href: "/",
+      icon: MessageSquare,
+      description: "Assistente de formulação"
+    },
+    {
+      title: "Analytics",
+      href: "/analytics",
+      icon: BarChart3,
+      description: "Métricas e análises"
+    },
+    {
+      title: "Relatórios",
+      href: "/reports",
+      icon: FileText,
+      description: "Relatórios avançados"
+    }
+  ];
+
+  const managementItems = [
+    {
+      title: "Médicos Parceiros",
+      href: "/doctors",
+      icon: Users,
+      description: "Gerenciar médicos parceiros"
+    },
+    {
+      title: "Ativos Favoritos",
+      href: "/actives-favorites", 
+      icon: Heart,
+      description: "Seus ativos preferidos"
+    },
+    {
+      title: "Fórmulas Favoritas",
+      href: "/formulas-favorites",
+      icon: Heart,
+      description: "Suas fórmulas preferidas"
+    },
+    {
+      title: "Importar Fórmulas",
+      href: "/formulas-import",
+      icon: Upload,
+      description: "Importar base de fórmulas"
+    }
+  ];
+
+  const configItems = [
+    {
+      title: "Administração",
+      href: "/admin",
+      icon: Settings,
+      description: "Configurações do sistema"
+    },
+    {
+      title: "Onboarding",
+      href: "/pharmacy-onboarding",
+      icon: Building2,
+      description: "Configurar farmácia"
+    },
+    {
+      title: "Personalização",
+      href: "/system-customization",
+      icon: Palette,
+      description: "Personalizar sistema"
+    }
+  ];
 
   return (
-    <div className="flex-1 flex justify-center">
-      <div className="flex items-center space-x-4">
-        {/* Dashboard */}
-        <Button
-          variant="ghost"
-          className="text-slate-300 hover:text-white color-transition"
-          onClick={() => navigate('/dashboard')}
-        >
-          <BarChart3 className="w-4 h-4 mr-2" />
-          Dashboard
-        </Button>
+    <NavigationMenu>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>Principal</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <div className="grid gap-3 p-6 w-[400px]">
+              {navigationItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={`flex items-center space-x-3 rounded-lg p-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
+                      isActive ? 'bg-accent text-accent-foreground' : ''
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <div>
+                      <div className="font-medium">{item.title}</div>
+                      <div className="text-muted-foreground">{item.description}</div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
 
-        {/* Chat */}
-        <Button
-          variant="ghost"
-          className="text-slate-300 hover:text-white color-transition"
-          onClick={() => navigate('/')}
-        >
-          <MessageSquare className="w-4 h-4 mr-2" />
-          Chat
-        </Button>
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>Gerenciamento</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <div className="grid gap-3 p-6 w-[400px]">
+              {managementItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={`flex items-center space-x-3 rounded-lg p-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
+                      isActive ? 'bg-accent text-accent-foreground' : ''
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <div>
+                      <div className="font-medium">{item.title}</div>
+                      <div className="text-muted-foreground">{item.description}</div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
 
-        {/* Administration Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="text-slate-300 hover:text-white color-transition"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Administração
-              <ChevronDown className="w-4 h-4 ml-1" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-80">
-            {/* Formulas Section */}
-            <DropdownMenuLabel>Fórmulas</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigate('/formulas/import')}>
-              <Import className="w-4 h-4 mr-2 text-blue-500" />
-              Importação de Fórmulas
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/formulas/favorites')}>
-              <Heart className="w-4 h-4 mr-2 text-red-500" />
-              Fórmulas Preferenciais
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/actives/favorites')}>
-              <Pill className="w-4 h-4 mr-2 dynamic-primary" />
-              Ativos Preferenciais
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator />
-
-            {/* Pharmacy Settings Section */}
-            <DropdownMenuLabel>Configurações da Farmácia</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigate('/settings/customization')}>
-              <Palette className="w-4 h-4 mr-2 text-purple-500" />
-              Personalização do Sistema
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/doctors')}>
-              <UserPlus className="w-4 h-4 mr-2 text-blue-600" />
-              Cadastro de Médicos
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator />
-
-            {/* Analytics */}
-            <DropdownMenuItem onClick={() => navigate('/analytics')}>
-              <BarChart3 className="w-4 h-4 mr-2 dynamic-primary" />
-              Analytics
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator />
-
-            {/* Reports Submenu */}
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <FileText className="w-4 h-4 mr-2" />
-                Relatórios
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem onClick={() => navigate('/reports/formulas')}>
-                  <FlaskConical className="w-4 h-4 mr-2 dynamic-primary" />
-                  Relatórios de Fórmulas
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/reports/doctors')}>
-                  <Users className="w-4 h-4 mr-2 text-blue-500" />
-                  Relatórios de Médicos
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/reports/financial')}>
-                  <Building className="w-4 h-4 mr-2 dynamic-primary" />
-                  Relatórios Financeiros
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-
-            <DropdownMenuSeparator />
-
-            {/* Help Submenu */}
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <HelpCircle className="w-4 h-4 mr-2" />
-                Ajuda
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem onClick={() => navigate('/help/documentation')}>
-                  <FileText className="w-4 h-4 mr-2 text-blue-500" />
-                  Documentação
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/help/support')}>
-                  <MessageSquare className="w-4 h-4 mr-2 dynamic-primary" />
-                  Suporte
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/help/tutorials')}>
-                  <HelpCircle className="w-4 h-4 mr-2 text-purple-500" />
-                  Tutoriais
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-
-            {/* Admin Section (only for admins) */}
-            {canAccessAdmin && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/admin')}>
-                  <Users className="w-4 h-4 mr-2 text-orange-500" />
-                  Painel Administrativo
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>Configurações</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <div className="grid gap-3 p-6 w-[400px]">
+              {configItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={`flex items-center space-x-3 rounded-lg p-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
+                      isActive ? 'bg-accent text-accent-foreground' : ''
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <div>
+                      <div className="font-medium">{item.title}</div>
+                      <div className="text-muted-foreground">{item.description}</div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
   );
 };
 
-export default NavigationMenu;
+export default NavigationMenuComponent;
