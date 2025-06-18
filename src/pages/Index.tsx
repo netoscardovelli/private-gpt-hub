@@ -1,77 +1,98 @@
 
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
+import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import ChatInterface from "@/components/ChatInterface";
 import PricingSection from "@/components/PricingSection";
 import SupportChat from "@/components/SupportChat";
-import AuthModal from "@/components/AuthModal";
 import CustomActives from "@/components/CustomActives";
 import FormulaDatabase from "@/components/FormulaDatabase";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const Index = () => {
   console.log('🏠 Index component renderizando...');
   
+  const { user, profile, loading: authLoading, signOut } = useAuth();
+  const { createCheckoutSession } = useSubscription();
   const [showChat, setShowChat] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSupportChat, setShowSupportChat] = useState(false);
 
-  // Mock user data - agora com UUID válido
+  console.log('🏠 Estado atual:', {
+    user: !!user,
+    profile,
+    showChat,
+    showSupportChat,
+    authLoading
+  });
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white via-emerald-50 to-green-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-sm">FA</span>
+          </div>
+          <p className="text-emerald-700">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to auth if not authenticated
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
   const mockUser = {
-    id: "550e8400-e29b-41d4-a716-446655440000", // UUID válido
-    name: "Neto Scardovelli",
+    id: user.id,
+    name: profile?.full_name || user.email?.split('@')[0] || "Usuário",
     plan: "Free",
     dailyLimit: 10,
     usageToday: 2
   };
 
-  console.log('🏠 Estado atual:', {
-    showChat,
-    isAuthenticated,
-    showAuthModal,
-    showSupportChat
-  });
-
   const handleLogin = () => {
-    console.log('🔐 Login executado');
-    setIsAuthenticated(true);
-    setShowAuthModal(false);
+    // Not needed anymore - handled by auth system
   };
 
   const handleLogout = () => {
     console.log('🚪 Logout executado');
-    setIsAuthenticated(false);
+    signOut();
     setShowChat(false);
   };
 
   const handleStartChat = () => {
-    console.log('💬 Iniciar chat clicado, isAuthenticated:', isAuthenticated);
-    if (!isAuthenticated) {
-      setShowAuthModal(true);
+    console.log('💬 Iniciar chat clicado');
+    setShowChat(true);
+  };
+
+  const handleChatClick = () => {
+    console.log('Chat button clicked, showChat:', showChat);
+    if (showChat) {
+      console.log('Already in chat, staying in chat');
     } else {
       setShowChat(true);
     }
   };
 
-  const handleChatClick = () => {
-    console.log('Chat button clicked, isAuthenticated:', isAuthenticated, 'showChat:', showChat);
-    if (!isAuthenticated) {
-      setShowAuthModal(true);
-    } else {
-      // Se já estamos no chat, não fazer nada ou voltar ao início
-      if (showChat) {
-        console.log('Already in chat, staying in chat');
-      } else {
-        setShowChat(true);
-      }
-    }
-  };
-
   const handleSelectPlan = (plan: string) => {
     console.log('Selected plan:', plan);
+    // Get price ID based on plan
+    const priceIds = {
+      'pro': 'price_1234567890', // Replace with actual Stripe price IDs
+      'premium': 'price_0987654321',
+      'enterprise': 'price_1122334455'
+    };
+    
+    const priceId = priceIds[plan as keyof typeof priceIds];
+    if (priceId && profile?.organization_id) {
+      createCheckoutSession(priceId);
+    }
   };
 
   const handleSettingsClick = () => {
@@ -98,13 +119,13 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-emerald-50 to-green-100">
       <Header 
-        isAuthenticated={isAuthenticated}
-        onLogin={() => setShowAuthModal(true)}
+        isAuthenticated={true}
+        onLogin={handleLogin}
         onLogout={handleLogout}
         onSettingsClick={handleSettingsClick}
         onSupportClick={handleSupportClick}
         onChatClick={handleChatClick}
-        userName={isAuthenticated ? mockUser.name : undefined}
+        userName={mockUser.name}
       />
       
       {!showChat ? (
@@ -136,11 +157,6 @@ const Index = () => {
         </div>
       )}
 
-      <AuthModal 
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onLogin={handleLogin}
-      />
       <Toaster />
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { monitoring } from '@/services/MonitoringService';
 import { Button } from '@/components/ui/button';
 
@@ -19,32 +20,29 @@ interface UsageStats {
   avg_daily: number;
 }
 
-export const useSmartLimits = (userId: string) => {
-  console.log('🔧 useSmartLimits hook inicializado para userId:', userId);
+export const useSmartLimits = () => {
+  const { user } = useAuth();
+  console.log('🔧 useSmartLimits hook inicializado para userId:', user?.id);
   
   const [userTier, setUserTier] = useState<UserTier | null>(null);
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Validar se é um UUID válido
-  const isValidUUID = (uuid: string) => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(uuid);
-  };
-
   // Carregar tier e estatísticas do usuário
   useEffect(() => {
-    if (userId && isValidUUID(userId)) {
+    if (user?.id) {
       console.log('🔧 UUID válido, carregando dados do usuário...');
       loadUserData();
     } else {
-      console.log('🔧 UUID inválido ou não fornecido:', userId);
+      console.log('🔧 User não disponível:', user?.id);
       setLoading(false);
     }
-  }, [userId]);
+  }, [user?.id]);
 
   const loadUserData = async () => {
+    if (!user?.id) return;
+
     try {
       console.log('🔧 Iniciando loadUserData...');
       setLoading(true);
@@ -54,7 +52,7 @@ export const useSmartLimits = (userId: string) => {
       const { data: tier, error: tierError } = await supabase
         .from('user_tiers')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .maybeSingle();
 
       if (tierError && tierError.code !== 'PGRST116') {
@@ -68,7 +66,7 @@ export const useSmartLimits = (userId: string) => {
         const { data: newTier } = await supabase
           .from('user_tiers')
           .insert({
-            user_id: userId,
+            user_id: user.id,
             tier_name: 'free',
             daily_limit: 10,
             monthly_limit: 200,
@@ -104,7 +102,7 @@ export const useSmartLimits = (userId: string) => {
       const { data: stats, error: statsError } = await supabase
         .from('usage_stats')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .eq('date', new Date().toISOString().split('T')[0])
         .maybeSingle();
 
@@ -119,7 +117,7 @@ export const useSmartLimits = (userId: string) => {
         const { data: newStats } = await supabase
           .from('usage_stats')
           .insert({
-            user_id: userId,
+            user_id: user.id,
             queries_today: 0,
             queries_this_month: 0,
             streak_days: 0,
@@ -198,7 +196,7 @@ export const useSmartLimits = (userId: string) => {
   };
 
   const incrementUsage = async () => {
-    if (!usageStats) return;
+    if (!usageStats || !user?.id) return;
 
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -212,7 +210,7 @@ export const useSmartLimits = (userId: string) => {
           last_query_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .eq('date', today)
         .select()
         .single();
@@ -271,7 +269,7 @@ export const useSmartLimits = (userId: string) => {
   };
 
   const upgradeTier = async (newTier: UserTier['tier_name']) => {
-    if (!userTier) return;
+    if (!userTier || !user?.id) return;
 
     const tierLimits = {
       free: { daily_limit: 10, monthly_limit: 200, cache_access: false },
@@ -288,7 +286,7 @@ export const useSmartLimits = (userId: string) => {
           ...tierLimits[newTier],
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .select()
         .single();
 
@@ -304,7 +302,7 @@ export const useSmartLimits = (userId: string) => {
         await monitoring.trackEvent('user_upgrade', {
           fromTier: userTier.tier_name,
           toTier: newTier,
-          userId
+          userId: user.id
         });
 
         toast({

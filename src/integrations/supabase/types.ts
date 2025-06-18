@@ -156,6 +156,45 @@ export type Database = {
         }
         Relationships: []
       }
+      organizations: {
+        Row: {
+          created_at: string | null
+          domain: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          plan_type: string | null
+          slug: string
+          stripe_customer_id: string | null
+          subscription_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          domain?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          plan_type?: string | null
+          slug: string
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          domain?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          plan_type?: string | null
+          slug?: string
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       performance_metrics: {
         Row: {
           created_at: string | null
@@ -185,6 +224,44 @@ export type Database = {
           value?: number
         }
         Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          organization_id: string | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          organization_id?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          organization_id?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_profiles_organization"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       query_cache: {
         Row: {
@@ -314,6 +391,56 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          organization_id: string | null
+          plan_name: string
+          price_per_month: number | null
+          status: string
+          stripe_subscription_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          organization_id?: string | null
+          plan_name: string
+          price_per_month?: number | null
+          status: string
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          organization_id?: string | null
+          plan_name?: string
+          price_per_month?: number | null
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_stats: {
         Row: {
           avg_daily: number | null
@@ -393,6 +520,7 @@ export type Database = {
           daily_limit: number
           id: string
           monthly_limit: number
+          organization_id: string | null
           priority_bonus: number | null
           tier_name: string
           updated_at: string | null
@@ -404,6 +532,7 @@ export type Database = {
           daily_limit?: number
           id?: string
           monthly_limit?: number
+          organization_id?: string | null
           priority_bonus?: number | null
           tier_name: string
           updated_at?: string | null
@@ -415,12 +544,21 @@ export type Database = {
           daily_limit?: number
           id?: string
           monthly_limit?: number
+          organization_id?: string | null
           priority_bonus?: number | null
           tier_name?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_tiers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
