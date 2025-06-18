@@ -22,6 +22,7 @@ const SystemCustomizationPage = () => {
   // Carregar configurações existentes quando disponíveis
   useEffect(() => {
     if (settings) {
+      console.log('📋 Carregando configurações na interface:', settings);
       setPrimaryColor(settings.primary_color || '#10b981');
       setSecondaryColor(settings.secondary_color || '#6366f1');
       setCompanyName(settings.company_name || '');
@@ -43,17 +44,27 @@ const SystemCustomizationPage = () => {
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      console.log('📁 Arquivo selecionado:', file.name);
       setLogoFile(file);
     }
   };
 
   const handleSave = async () => {
+    console.log('💾 Iniciando salvamento...');
     setIsSaving(true);
     const success = await saveSettings(primaryColor, secondaryColor, companyName, logoFile);
     if (success) {
       setLogoFile(null); // Limpar o arquivo após salvamento bem-sucedido
+      console.log('✅ Salvamento concluído com sucesso');
+    } else {
+      console.log('❌ Erro no salvamento');
     }
     setIsSaving(false);
+  };
+
+  const previewStyle = {
+    background: `linear-gradient(135deg, ${primaryColor}20, ${secondaryColor}20)`,
+    borderColor: primaryColor 
   };
 
   return (
@@ -117,11 +128,6 @@ const SystemCustomizationPage = () => {
                   />
                 </div>
               </div>
-              
-              <Button variant="outline" className="w-full">
-                <Eye className="w-4 h-4 mr-2" />
-                Visualizar Mudanças
-              </Button>
             </CardContent>
           </Card>
 
@@ -202,15 +208,12 @@ const SystemCustomizationPage = () => {
             <CardContent>
               <div 
                 className="p-6 rounded-lg border-2" 
-                style={{ 
-                  background: `linear-gradient(135deg, ${primaryColor}20, ${secondaryColor}20)`,
-                  borderColor: primaryColor 
-                }}
+                style={previewStyle}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  {settings?.logo_url ? (
+                  {(logoFile && URL.createObjectURL(logoFile)) || settings?.logo_url ? (
                     <img 
-                      src={settings.logo_url} 
+                      src={logoFile ? URL.createObjectURL(logoFile) : settings?.logo_url} 
                       alt="Logo" 
                       className="w-12 h-12 rounded-lg object-contain"
                     />
@@ -251,8 +254,9 @@ const SystemCustomizationPage = () => {
         <div className="mt-8 flex justify-end">
           <Button 
             onClick={handleSave}
-            disabled={isSaving}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            disabled={isSaving || !companyName.trim()}
+            style={{ backgroundColor: primaryColor }}
+            className="text-white hover:opacity-90"
           >
             <Save className="w-4 h-4 mr-2" />
             {isSaving ? 'Salvando...' : 'Salvar Configurações'}

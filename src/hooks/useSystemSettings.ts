@@ -31,6 +31,8 @@ export const useSystemSettings = () => {
 
     setLoading(true);
     try {
+      console.log('🔧 Carregando configurações para usuário:', user.id);
+      
       const { data, error } = await supabase
         .from('system_settings')
         .select('*')
@@ -45,6 +47,7 @@ export const useSystemSettings = () => {
           variant: 'destructive',
         });
       } else {
+        console.log('✅ Configurações carregadas:', data);
         setSettings(data as SystemSettings | null);
       }
     } catch (error) {
@@ -61,6 +64,7 @@ export const useSystemSettings = () => {
     logoFile?: File | null
   ) => {
     if (!user) {
+      console.error('❌ Usuário não autenticado');
       toast({
         title: 'Erro',
         description: 'Usuário não autenticado.',
@@ -71,10 +75,16 @@ export const useSystemSettings = () => {
 
     setLoading(true);
     try {
+      console.log('💾 Iniciando salvamento das configurações...');
+      console.log('🔧 User ID:', user.id);
+      console.log('🎨 Cores:', { primaryColor, secondaryColor });
+      console.log('🏢 Nome da empresa:', companyName);
+      
       let logoUrl = settings?.logo_url;
 
       // Upload do logo se um arquivo foi fornecido
       if (logoFile) {
+        console.log('📁 Fazendo upload do logo...');
         const fileExt = logoFile.name.split('.').pop();
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
         
@@ -97,6 +107,7 @@ export const useSystemSettings = () => {
           .getPublicUrl(uploadData.path);
         
         logoUrl = urlData.publicUrl;
+        console.log('✅ Logo uploadado:', logoUrl);
       }
 
       const settingsData = {
@@ -107,8 +118,11 @@ export const useSystemSettings = () => {
         logo_url: logoUrl,
       };
 
+      console.log('💾 Dados para salvar:', settingsData);
+
       let result;
       if (settings?.id) {
+        console.log('🔄 Atualizando configurações existentes...');
         // Atualizar configurações existentes
         result = await supabase
           .from('system_settings')
@@ -117,6 +131,7 @@ export const useSystemSettings = () => {
           .select()
           .single();
       } else {
+        console.log('🆕 Criando novas configurações...');
         // Criar novas configurações
         result = await supabase
           .from('system_settings')
@@ -135,7 +150,12 @@ export const useSystemSettings = () => {
         return false;
       }
 
+      console.log('✅ Configurações salvas:', result.data);
       setSettings(result.data as SystemSettings);
+      
+      // Aplicar as cores ao sistema
+      applyColorsToSystem(primaryColor, secondaryColor);
+      
       toast({
         title: 'Sucesso',
         description: 'Configurações salvas com sucesso!',
@@ -153,6 +173,28 @@ export const useSystemSettings = () => {
       setLoading(false);
     }
   };
+
+  const applyColorsToSystem = (primaryColor: string, secondaryColor: string) => {
+    console.log('🎨 Aplicando cores ao sistema:', { primaryColor, secondaryColor });
+    
+    // Aplicar as cores como CSS custom properties
+    document.documentElement.style.setProperty('--primary-color', primaryColor);
+    document.documentElement.style.setProperty('--secondary-color', secondaryColor);
+    
+    // Também podemos aplicar algumas classes específicas
+    const root = document.documentElement;
+    root.style.setProperty('--emerald-500', primaryColor);
+    root.style.setProperty('--emerald-600', primaryColor);
+    root.style.setProperty('--green-500', primaryColor);
+    root.style.setProperty('--green-600', primaryColor);
+  };
+
+  // Aplicar cores quando as configurações são carregadas
+  useEffect(() => {
+    if (settings) {
+      applyColorsToSystem(settings.primary_color, settings.secondary_color);
+    }
+  }, [settings]);
 
   return {
     settings,
