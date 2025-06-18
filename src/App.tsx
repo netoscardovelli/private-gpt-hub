@@ -43,6 +43,7 @@ const App = () => {
               {/* Rotas de Configurações - Farmácia */}
               <Route path="/settings/customization" element={<SystemCustomizationPage />} />
               <Route path="/doctors" element={<DoctorsPage />} />
+              <Route path="/pharmacy/onboarding" element={<PharmacyOnboardingPage />} />
               
               {/* Rotas placeholder para outras páginas */}
               <Route path="/reports/formulas" element={<NotFound />} />

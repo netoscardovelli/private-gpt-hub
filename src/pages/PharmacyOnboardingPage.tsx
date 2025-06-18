@@ -1,413 +1,411 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { usePharmacyOnboarding } from '@/hooks/usePharmacyOnboarding';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import OnboardingSteps from '@/components/onboarding/OnboardingSteps';
+import { Building, Check, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { Building2, CreditCard, CheckCircle, ArrowRight } from 'lucide-react';
-import PricingSection from '@/components/PricingSection';
-
-interface PharmacyData {
-  name: string;
-  slug: string;
-  domain: string;
-  description: string;
-  address: string;
-  phone: string;
-  contactEmail: string;
-}
 
 const PharmacyOnboardingPage = () => {
-  const [step, setStep] = useState(1);
-  const [pharmacyData, setPharmacyData] = useState<PharmacyData>({
+  const [currentStep, setCurrentStep] = useState(1);
+  const [pharmacyData, setPharmacyData] = useState({
     name: '',
     slug: '',
     domain: '',
-    description: '',
-    address: '',
+    contactEmail: '',
     phone: '',
-    contactEmail: ''
+    address: '',
+    description: ''
   });
-  const [loading, setLoading] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<string>('');
-  const { user, profile, updateProfile } = useAuth();
+  const [selectedPlan, setSelectedPlan] = useState('');
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [checkingSlug, setCheckingSlug] = useState(false);
+
+  const { loading, checkSlugAvailability, completeOnboarding } = usePharmacyOnboarding();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim()
-      .substring(0, 50);
-  };
+  const steps = [
+    'Informações da Farmácia',
+    'Escolha do Plano',
+    'Confirmação e Finalização'
+  ];
 
-  const handleNameChange = (name: string) => {
-    setPharmacyData(prev => ({
-      ...prev,
-      name,
-      slug: generateSlug(name)
-    }));
-  };
+  const plans = [
+    {
+      id: 'gratuito',
+      name: 'Plano Gratuito',
+      price: 'R$ 0',
+      period: '/mês',
+      description: 'Ideal para começar',
+      features: [
+        'Até 50 consultas por dia',
+        'Fórmulas básicas',
+        'Suporte por email',
+        'Dashboard básico'
+      ],
+      popular: false
+    },
+    {
+      id: 'profissional',
+      name: 'Plano Profissional',
+      price: 'R$ 297',
+      period: '/mês',
+      description: 'Para farmácias em crescimento',
+      features: [
+        'Consultas ilimitadas',
+        'Fórmulas avançadas + personalizadas',
+        'Convite de médicos',
+        'Relatórios detalhados',
+        'Suporte prioritário',
+        'Branding personalizado'
+      ],
+      popular: true
+    }
+  ];
 
-  const checkSlugAvailability = async (slug: string) => {
-    if (!slug) return false;
+  const handleSlugChange = async (value: string) => {
+    const slug = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    setPharmacyData(prev => ({ ...prev, slug }));
     
-    const { data, error } = await supabase
-      .from('organizations')
-      .select('id')
-      .eq('slug', slug)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Erro ao verificar slug:', error);
-      return false;
+    if (slug.length >= 3) {
+      setCheckingSlug(true);
+      try {
+        const available = await checkSlugAvailability(slug);
+        setSlugAvailable(available);
+      } catch (error) {
+        console.error('Erro ao verificar slug:', error);
+        setSlugAvailable(null);
+      } finally {
+        setCheckingSlug(false);
+      }
+    } else {
+      setSlugAvailable(null);
     }
-
-    return !data;
   };
 
-  const createOrganization = async () => {
-    if (!user) {
-      toast({
-        title: "Erro",
-        description: "Usuário não autenticado",
-        variant: "destructive"
-      });
-      return null;
-    }
-
-    const isSlugAvailable = await checkSlugAvailability(pharmacyData.slug);
-    if (!isSlugAvailable) {
-      toast({
-        title: "Slug indisponível",
-        description: "Este nome já está em uso. Tente outro nome para sua farmácia.",
-        variant: "destructive"
-      });
-      return null;
-    }
-
-    const { data: organization, error } = await supabase
-      .from('organizations')
-      .insert({
-        name: pharmacyData.name,
-        slug: pharmacyData.slug,
-        domain: pharmacyData.domain,
-        plan_type: selectedPlan.toLowerCase() === 'gratuito' ? 'free' : 'pro'
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Erro ao criar organização:', error);
-      toast({
-        title: "Erro",
-        description: "Falha ao criar farmácia. Tente novamente.",
-        variant: "destructive"
-      });
-      return null;
-    }
-
-    return organization;
-  };
-
-  const setupInitialConfiguration = async (organizationId: string) => {
-    // Criar configurações iniciais do sistema
-    const { error: settingsError } = await supabase
-      .from('system_settings')
-      .insert({
-        organization_id: organizationId,
-        company_name: pharmacyData.name,
-        primary_color: '#10b981',
-        secondary_color: '#6366f1'
-      });
-
-    if (settingsError) {
-      console.error('Erro ao criar configurações:', settingsError);
-    }
-
-    // Atualizar perfil do usuário para ser owner da organização
-    await updateProfile({
-      organization_id: organizationId,
-      role: 'owner'
-    });
-  };
-
-  const handleStep1Submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!pharmacyData.name || !pharmacyData.contactEmail) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Nome da farmácia e email são obrigatórios",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setStep(2);
-  };
-
-  const handleFinalSubmit = async () => {
-    if (!selectedPlan) {
-      toast({
-        title: "Selecione um plano",
-        description: "Escolha um plano para continuar",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const organization = await createOrganization();
-      if (!organization) {
-        setLoading(false);
+  const handleNext = () => {
+    if (currentStep === 1) {
+      if (!pharmacyData.name || !pharmacyData.slug || !pharmacyData.contactEmail || slugAvailable === false) {
+        toast({
+          title: "Campos obrigatórios",
+          description: "Preencha todos os campos obrigatórios e verifique se o nome da farmácia está disponível.",
+          variant: "destructive"
+        });
         return;
       }
-
-      await setupInitialConfiguration(organization.id);
-
-      if (selectedPlan.toLowerCase() !== 'gratuito') {
-        // Redirecionar para pagamento para planos pagos
+    }
+    
+    if (currentStep === 2) {
+      if (!selectedPlan) {
         toast({
-          title: "Farmácia criada!",
-          description: "Redirecionando para o pagamento...",
+          title: "Selecione um plano",
+          description: "Escolha um plano para continuar.",
+          variant: "destructive"
         });
-        // Aqui você integraria com Stripe
-        setTimeout(() => {
-          navigate('/');
-        }, 2000);
-      } else {
-        toast({
-          title: "Farmácia criada com sucesso!",
-          description: "Sua farmácia foi configurada e está pronta para uso.",
-        });
-        navigate('/');
+        return;
       }
-    } catch (error) {
-      console.error('Erro no onboarding:', error);
-      toast({
-        title: "Erro",
-        description: "Falha no processo de cadastro. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+    }
+
+    setCurrentStep(prev => prev + 1);
+  };
+
+  const handleBack = () => {
+    if (currentStep === 1) {
+      navigate('/');
+    } else {
+      setCurrentStep(prev => prev - 1);
     }
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>Acesso Restrito</CardTitle>
-            <CardDescription>
-              Você precisa estar logado para acessar o cadastro de farmácias.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={() => navigate('/auth')} 
-              className="w-full"
-            >
-              Fazer Login
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const handleComplete = async () => {
+    const success = await completeOnboarding(pharmacyData, selectedPlan);
+    if (!success) {
+      toast({
+        title: "Erro no cadastro",
+        description: "Ocorreu um erro ao criar sua farmácia. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+    <div className="min-h-screen bg-slate-900 text-white">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Building2 className="w-8 h-8 text-emerald-500" />
-            <h1 className="text-3xl font-bold text-white">Cadastro de Farmácia</h1>
-          </div>
-          <p className="text-slate-300 max-w-2xl mx-auto">
-            Configure sua farmácia na plataforma em poucos passos simples
-          </p>
-        </div>
-
-        {/* Progress Steps */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center space-x-4">
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-              step >= 1 ? 'bg-emerald-500 text-white' : 'bg-slate-600 text-slate-300'
-            }`}>
-              {step > 1 ? <CheckCircle className="w-5 h-5" /> : '1'}
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Building className="w-8 h-8 text-emerald-500" />
+              <h1 className="text-3xl font-bold">Cadastro da Farmácia</h1>
             </div>
-            <div className={`w-12 h-1 ${step > 1 ? 'bg-emerald-500' : 'bg-slate-600'}`} />
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-              step >= 2 ? 'bg-emerald-500 text-white' : 'bg-slate-600 text-slate-300'
-            }`}>
-              {step > 2 ? <CheckCircle className="w-5 h-5" /> : '2'}
-            </div>
+            <p className="text-slate-300">Configure sua farmácia na plataforma</p>
           </div>
-        </div>
 
-        {/* Step 1: Pharmacy Information */}
-        {step === 1 && (
-          <div className="max-w-2xl mx-auto">
-            <Card className="bg-slate-800/50 border-slate-700">
+          {/* Steps */}
+          <OnboardingSteps currentStep={currentStep} steps={steps} />
+
+          {/* Step 1: Pharmacy Info */}
+          {currentStep === 1 && (
+            <Card className="bg-slate-800 border-slate-700">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Building2 className="w-5 h-5" />
-                  Informações da Farmácia
-                </CardTitle>
-                <CardDescription>
-                  Preencha os dados básicos da sua farmácia
+                <CardTitle className="text-white">Informações da Farmácia</CardTitle>
+                <CardDescription className="text-slate-300">
+                  Conte-nos sobre sua farmácia
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleStep1Submit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name" className="text-white">Nome da Farmácia *</Label>
-                      <Input
-                        id="name"
-                        value={pharmacyData.name}
-                        onChange={(e) => handleNameChange(e.target.value)}
-                        placeholder="Ex: Farmácia Central"
-                        className="bg-slate-700 border-slate-600 text-white"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="slug" className="text-white">URL da Farmácia</Label>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-white">Nome da Farmácia *</Label>
+                    <Input
+                      id="name"
+                      value={pharmacyData.name}
+                      onChange={(e) => setPharmacyData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Ex: Farmácia São João"
+                      className="bg-slate-700 border-slate-600 text-white"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="slug" className="text-white">Nome no Sistema *</Label>
+                    <div className="relative">
                       <Input
                         id="slug"
                         value={pharmacyData.slug}
-                        onChange={(e) => setPharmacyData(prev => ({ ...prev, slug: e.target.value }))}
-                        placeholder="farmacia-central"
-                        className="bg-slate-700 border-slate-600 text-white"
+                        onChange={(e) => handleSlugChange(e.target.value)}
+                        placeholder="ex: farmacia-sao-joao"
+                        className="bg-slate-700 border-slate-600 text-white pr-10"
                       />
-                      <p className="text-xs text-slate-400 mt-1">
-                        Esta será sua URL: app.exemplo.com/{pharmacyData.slug}
-                      </p>
+                      {checkingSlug && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        </div>
+                      )}
+                      {slugAvailable === true && (
+                        <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                      )}
+                      {slugAvailable === false && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-red-500 rounded-full"></div>
+                      )}
                     </div>
+                    {slugAvailable === false && (
+                      <p className="text-red-400 text-sm">Este nome já está em uso</p>
+                    )}
+                    {slugAvailable === true && (
+                      <p className="text-green-400 text-sm">Nome disponível!</p>
+                    )}
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="contactEmail" className="text-white">Email de Contato *</Label>
-                      <Input
-                        id="contactEmail"
-                        type="email"
-                        value={pharmacyData.contactEmail}
-                        onChange={(e) => setPharmacyData(prev => ({ ...prev, contactEmail: e.target.value }))}
-                        placeholder="contato@farmacia.com"
-                        className="bg-slate-700 border-slate-600 text-white"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone" className="text-white">Telefone</Label>
-                      <Input
-                        id="phone"
-                        value={pharmacyData.phone}
-                        onChange={(e) => setPharmacyData(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="(11) 99999-9999"
-                        className="bg-slate-700 border-slate-600 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="domain" className="text-white">Domínio Personalizado (Opcional)</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="contactEmail" className="text-white">Email de Contato *</Label>
                     <Input
-                      id="domain"
-                      value={pharmacyData.domain}
-                      onChange={(e) => setPharmacyData(prev => ({ ...prev, domain: e.target.value }))}
-                      placeholder="www.farmacia.com"
+                      id="contactEmail"
+                      type="email"
+                      value={pharmacyData.contactEmail}
+                      onChange={(e) => setPharmacyData(prev => ({ ...prev, contactEmail: e.target.value }))}
+                      placeholder="contato@farmacia.com"
                       className="bg-slate-700 border-slate-600 text-white"
                     />
                   </div>
-
-                  <div>
-                    <Label htmlFor="address" className="text-white">Endereço</Label>
-                    <Textarea
-                      id="address"
-                      value={pharmacyData.address}
-                      onChange={(e) => setPharmacyData(prev => ({ ...prev, address: e.target.value }))}
-                      placeholder="Rua, número, bairro, cidade, estado, CEP"
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-white">Telefone</Label>
+                    <Input
+                      id="phone"
+                      value={pharmacyData.phone}
+                      onChange={(e) => setPharmacyData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="(11) 99999-9999"
                       className="bg-slate-700 border-slate-600 text-white"
-                      rows={3}
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <Label htmlFor="description" className="text-white">Descrição</Label>
-                    <Textarea
-                      id="description"
-                      value={pharmacyData.description}
-                      onChange={(e) => setPharmacyData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Breve descrição sobre sua farmácia e especialidades"
-                      className="bg-slate-700 border-slate-600 text-white"
-                      rows={3}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address" className="text-white">Endereço</Label>
+                  <Input
+                    id="address"
+                    value={pharmacyData.address}
+                    onChange={(e) => setPharmacyData(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="Rua das Flores, 123 - Centro"
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
 
-                  <Button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600">
-                    Continuar
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </form>
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-white">Descrição</Label>
+                  <Textarea
+                    id="description"
+                    value={pharmacyData.description}
+                    onChange={(e) => setPharmacyData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Conte um pouco sobre sua farmácia..."
+                    className="bg-slate-700 border-slate-600 text-white"
+                    rows={3}
+                  />
+                </div>
               </CardContent>
             </Card>
-          </div>
-        )}
+          )}
 
-        {/* Step 2: Plan Selection */}
-        {step === 2 && (
-          <div>
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-white mb-2">Escolha seu Plano</h2>
-              <p className="text-slate-300">
-                Selecione o plano ideal para sua farmácia
-              </p>
-            </div>
-
-            <PricingSection onSelectPlan={setSelectedPlan} />
-
-            {selectedPlan && (
-              <div className="max-w-md mx-auto mt-8">
-                <Card className="bg-slate-800/50 border-slate-700">
-                  <CardHeader>
-                    <CardTitle className="text-white text-center">
-                      Plano Selecionado: {selectedPlan}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Button 
-                      onClick={handleFinalSubmit}
-                      disabled={loading}
-                      className="w-full bg-emerald-500 hover:bg-emerald-600"
+          {/* Step 2: Plan Selection */}
+          {currentStep === 2 && (
+            <Card className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-white text-center">Escolha seu Plano</CardTitle>
+                <CardDescription className="text-slate-300 text-center">
+                  Selecione o plano que melhor atende suas necessidades
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {plans.map((plan) => (
+                    <div
+                      key={plan.id}
+                      className={`relative border-2 rounded-lg p-6 cursor-pointer transition-all ${
+                        selectedPlan === plan.id
+                          ? 'border-emerald-500 bg-emerald-500/10'
+                          : 'border-slate-600 hover:border-slate-500'
+                      } ${plan.popular ? 'ring-2 ring-emerald-500' : ''}`}
+                      onClick={() => setSelectedPlan(plan.id)}
                     >
-                      {loading ? 'Configurando...' : 'Finalizar Cadastro'}
-                      <CreditCard className="w-4 h-4 ml-2" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
+                      {plan.popular && (
+                        <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-emerald-500">
+                          Mais Popular
+                        </Badge>
+                      )}
+                      
+                      <div className="text-center mb-4">
+                        <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
+                        <div className="mb-2">
+                          <span className="text-3xl font-bold text-white">{plan.price}</span>
+                          <span className="text-slate-400">{plan.period}</span>
+                        </div>
+                        <p className="text-slate-300 text-sm">{plan.description}</p>
+                      </div>
+
+                      <ul className="space-y-2 mb-6">
+                        {plan.features.map((feature, index) => (
+                          <li key={index} className="flex items-center gap-2 text-sm">
+                            <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                            <span className="text-slate-300">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div className="flex items-center justify-center">
+                        <div className={`w-4 h-4 rounded-full border-2 ${
+                          selectedPlan === plan.id 
+                            ? 'bg-emerald-500 border-emerald-500' 
+                            : 'border-slate-400'
+                        }`}>
+                          {selectedPlan === plan.id && (
+                            <Check className="w-3 h-3 text-white transform translate-x-0.5 -translate-y-0.5" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 3: Confirmation */}
+          {currentStep === 3 && (
+            <Card className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-white text-center">Confirmação</CardTitle>
+                <CardDescription className="text-slate-300 text-center">
+                  Revise suas informações antes de finalizar
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-white font-medium mb-3">Informações da Farmácia</h4>
+                    <div className="space-y-2 text-sm">
+                      <p><span className="text-slate-400">Nome:</span> <span className="text-white">{pharmacyData.name}</span></p>
+                      <p><span className="text-slate-400">Sistema:</span> <span className="text-white">{pharmacyData.slug}</span></p>
+                      <p><span className="text-slate-400">Email:</span> <span className="text-white">{pharmacyData.contactEmail}</span></p>
+                      {pharmacyData.phone && (
+                        <p><span className="text-slate-400">Telefone:</span> <span className="text-white">{pharmacyData.phone}</span></p>
+                      )}
+                      {pharmacyData.address && (
+                        <p><span className="text-slate-400">Endereço:</span> <span className="text-white">{pharmacyData.address}</span></p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-white font-medium mb-3">Plano Selecionado</h4>
+                    {selectedPlan && (
+                      <div className="border border-slate-600 rounded-lg p-4">
+                        {(() => {
+                          const plan = plans.find(p => p.id === selectedPlan);
+                          return plan ? (
+                            <>
+                              <h5 className="text-white font-medium">{plan.name}</h5>
+                              <p className="text-slate-300 text-sm mb-2">{plan.description}</p>
+                              <p className="text-emerald-400 font-bold">{plan.price}{plan.period}</p>
+                            </>
+                          ) : null;
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                  <h4 className="text-blue-400 font-medium mb-2">Próximos Passos</h4>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                    <li>✓ Sua farmácia será criada no sistema</li>
+                    <li>✓ Você se tornará o administrador principal</li>
+                    <li>✓ Poderá convidar médicos para usar o sistema</li>
+                    <li>✓ Acesso completo a fórmulas e relatórios</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Navigation */}
+          <div className="flex justify-between items-center mt-8">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {currentStep === 1 ? 'Voltar ao Início' : 'Voltar'}
+            </Button>
+
+            {currentStep < 3 ? (
+              <Button
+                onClick={handleNext}
+                className="bg-emerald-500 hover:bg-emerald-600 text-white"
+              >
+                Próximo
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleComplete}
+                disabled={loading}
+                className="bg-emerald-500 hover:bg-emerald-600 text-white"
+              >
+                {loading ? 'Criando Farmácia...' : 'Finalizar Cadastro'}
+              </Button>
             )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
