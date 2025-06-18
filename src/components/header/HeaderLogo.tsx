@@ -32,7 +32,7 @@ const HeaderLogo = () => {
       {logoUrl ? (
         <img 
           src={logoUrl} 
-          alt="Logo" 
+          alt="Logo"
           className="w-8 h-8 rounded-lg object-contain"
         />
       ) : (

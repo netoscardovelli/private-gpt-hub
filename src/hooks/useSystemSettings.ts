@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -95,7 +96,7 @@ export const useSystemSettings = () => {
       if (logoFile) {
         console.log('📁 Fazendo upload do logo...');
         const fileExt = logoFile.name.split('.').pop();
-        const fileName = `${profile.organization_id}-${Date.now()}.${fileExt}`;
+        const fileName = `${profile.organization_id}/${Date.now()}.${fileExt}`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('logos')
