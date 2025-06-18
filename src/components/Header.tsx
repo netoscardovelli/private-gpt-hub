@@ -1,167 +1,135 @@
 
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useRoles } from '@/hooks/useRoles';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, Menu, X, Settings, CreditCard, MessageCircle } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { LogOut, Settings, Shield, Building } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import OrganizationSelector from '@/components/multi-tenant/OrganizationSelector';
 
-interface HeaderProps {
-  isAuthenticated: boolean;
-  user?: { name: string; email: string; plan: string };
-  onLogin: () => void;
-  onLogout: () => void;
-  onSettingsClick: () => void;
-  onBillingClick?: () => void;
-  onChatClick?: () => void;
-  onSupportClick: () => void;
-  userName?: string;
-}
+const Header = () => {
+  const { user, profile, signOut } = useAuth();
+  const { currentRole, hasPermission } = useRoles();
 
-const Header = ({ 
-  isAuthenticated, 
-  user, 
-  onLogin, 
-  onLogout, 
-  onSettingsClick, 
-  onBillingClick = () => {}, 
-  onChatClick = () => {}, 
-  onSupportClick,
-  userName 
-}: HeaderProps) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
-  const displayName = userName || user?.name;
-  const displayPlan = user?.plan || "Free";
+  const getRoleColor = (role: string) => {
+    const colors = {
+      user: 'secondary',
+      moderator: 'default',
+      admin: 'destructive',
+      super_admin: 'destructive',
+      partner: 'outline'
+    };
+    return colors[role as keyof typeof colors] || 'secondary';
+  };
 
   return (
-    <header className="bg-white border-b border-emerald-200 sticky top-0 z-50 shadow-sm">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
+    <header className="border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-50">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">FA</span>
             </div>
             <span className="text-xl font-bold text-emerald-700">FORMULA-AI</span>
-          </div>
+          </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
-            {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-emerald-600">
-                  Plano: <span className="text-emerald-700 font-semibold">{displayPlan}</span>
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onChatClick}
-                  className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Chat
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link to="/" className="text-gray-600 hover:text-emerald-600 transition-colors">
+              Chat
+            </Link>
+            
+            {hasPermission('canAccessAnalytics') && (
+              <Link to="/analytics" className="text-gray-600 hover:text-emerald-600 transition-colors">
+                Analytics
+              </Link>
+            )}
+            
+            {hasPermission('canManageOrganizations') && (
+              <Link to="/admin" className="text-gray-600 hover:text-emerald-600 transition-colors">
+                Admin
+              </Link>
+            )}
+          </nav>
+
+          {/* User section */}
+          <div className="flex items-center space-x-4">
+            {user && (
+              <>
+                {/* Organization Selector */}
+                <OrganizationSelector />
+
+                {/* User dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || ''} />
+                        <AvatarFallback>
+                          {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <div className="flex flex-col space-y-1 p-2">
+                      <p className="text-sm font-medium leading-none">{profile?.full_name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                      <div className="pt-1">
+                        <Badge variant={getRoleColor(currentRole)} className="text-xs">
+                          {currentRole}
+                        </Badge>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings" className="flex items-center">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Configurações</span>
+                      </Link>
+                    </DropdownMenuItem>
+
+                    {hasPermission('canManageOrganizations') && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="flex items-center">
+                          <Shield className="mr-2 h-4 w-4" />
+                          <span>Painel Admin</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sair</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+
+            {!user && (
+              <div className="flex items-center space-x-2">
+                <Button variant="ghost" asChild>
+                  <Link to="/auth">Entrar</Link>
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onSettingsClick}
-                  className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Configurações
+                <Button asChild>
+                  <Link to="/auth">Cadastrar</Link>
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onBillingClick}
-                  className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Assinatura
-                </Button>
-                <div className="flex items-center space-x-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarFallback className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm">
-                      {displayName?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onLogout}
-                    className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </Button>
-                </div>
               </div>
-            ) : (
-              <Button onClick={onLogin} className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white">
-                Entrar
-              </Button>
             )}
           </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-emerald-700"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
         </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-emerald-200 pt-4">
-            {isAuthenticated ? (
-              <div className="space-y-3">
-                <div className="text-sm text-emerald-600">
-                  Plano: <span className="text-emerald-700 font-semibold">{displayPlan}</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onChatClick}
-                  className="w-full justify-start text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Chat
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onSettingsClick}
-                  className="w-full justify-start text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Configurações
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onBillingClick}
-                  className="w-full justify-start text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Assinatura
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onLogout}
-                  className="w-full justify-start text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sair
-                </Button>
-              </div>
-            ) : (
-              <Button onClick={onLogin} className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white">
-                Entrar
-              </Button>
-            )}
-          </div>
-        )}
       </div>
     </header>
   );
