@@ -19,9 +19,9 @@ const Index = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSupportChat, setShowSupportChat] = useState(false);
 
-  // Mock user data - agora com nome real
+  // Mock user data - agora com UUID válido
   const mockUser = {
-    id: "mock-user-id",
+    id: "550e8400-e29b-41d4-a716-446655440000", // UUID válido
     name: "Neto Scardovelli",
     plan: "Free",
     dailyLimit: 10,

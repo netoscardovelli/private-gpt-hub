@@ -27,13 +27,19 @@ export const useSmartLimits = (userId: string) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Validar se é um UUID válido
+  const isValidUUID = (uuid: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  };
+
   // Carregar tier e estatísticas do usuário
   useEffect(() => {
-    if (userId) {
-      console.log('🔧 Carregando dados do usuário...');
+    if (userId && isValidUUID(userId)) {
+      console.log('🔧 UUID válido, carregando dados do usuário...');
       loadUserData();
     } else {
-      console.log('🔧 userId não fornecido, pulando carregamento');
+      console.log('🔧 UUID inválido ou não fornecido:', userId);
       setLoading(false);
     }
   }, [userId]);
