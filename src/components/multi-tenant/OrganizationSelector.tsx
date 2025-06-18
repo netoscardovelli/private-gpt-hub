@@ -90,7 +90,9 @@ const OrganizationSelector = () => {
 
   const handleOrganizationChange = async (organizationId: string) => {
     try {
-      await updateProfile({ organization_id: organizationId });
+      // Convert "none" back to null for the database
+      const actualOrgId = organizationId === "none" ? null : organizationId;
+      await updateProfile({ organization_id: actualOrgId });
       toast({
         title: "Sucesso",
         description: "Organização alterada com sucesso!"
@@ -112,7 +114,7 @@ const OrganizationSelector = () => {
   return (
     <div className="flex items-center gap-2">
       <Select
-        value={profile?.organization_id || ''}
+        value={profile?.organization_id || 'none'}
         onValueChange={handleOrganizationChange}
       >
         <SelectTrigger className="w-48">
@@ -124,7 +126,7 @@ const OrganizationSelector = () => {
           </div>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Nenhuma organização</SelectItem>
+          <SelectItem value="none">Nenhuma organização</SelectItem>
           {organizations.map((org) => (
             <SelectItem key={org.id} value={org.id}>
               {org.name}
