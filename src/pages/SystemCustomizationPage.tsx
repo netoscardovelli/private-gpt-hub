@@ -6,18 +6,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Palette, Upload, Save, Eye } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Palette, Upload, Save, Eye, Shield, Building } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 
 const SystemCustomizationPage = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const { settings, loading: settingsLoading, saveSettings } = useSystemSettings();
   const [primaryColor, setPrimaryColor] = useState('#10b981');
   const [secondaryColor, setSecondaryColor] = useState('#6366f1');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [companyName, setCompanyName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Verificar se o usuário tem permissão para editar configurações
+  const canEdit = profile?.role && ['admin', 'super_admin', 'owner'].includes(profile.role);
 
   // Carregar configurações existentes quando disponíveis
   useEffect(() => {
@@ -41,6 +45,22 @@ const SystemCustomizationPage = () => {
     return <Navigate to="/auth" replace />;
   }
 
+  if (!profile?.organization_id) {
+    return (
+      <div className="min-h-screen bg-slate-900">
+        <Header />
+        <div className="container mx-auto p-6">
+          <Alert>
+            <Building className="h-4 w-4" />
+            <AlertDescription>
+              Você precisa estar vinculado a uma organização para acessar as configurações do sistema.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -54,7 +74,7 @@ const SystemCustomizationPage = () => {
     setIsSaving(true);
     const success = await saveSettings(primaryColor, secondaryColor, companyName, logoFile);
     if (success) {
-      setLogoFile(null); // Limpar o arquivo após salvamento bem-sucedido
+      setLogoFile(null);
       console.log('✅ Salvamento concluído com sucesso');
     } else {
       console.log('❌ Erro no salvamento');
@@ -73,8 +93,18 @@ const SystemCustomizationPage = () => {
       <div className="container mx-auto p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Personalização do Sistema</h1>
-          <p className="text-slate-300">Configure a aparência e identidade visual da sua farmácia</p>
+          <p className="text-slate-300">Configure a aparência e identidade visual da sua organização</p>
         </div>
+
+        {!canEdit && (
+          <Alert className="mb-6">
+            <Shield className="h-4 w-4" />
+            <AlertDescription>
+              Apenas administradores da organização podem alterar as configurações do sistema. 
+              Entre em contato com o administrador da sua organização para fazer alterações.
+            </AlertDescription>
+          </Alert>
+        )}
         
         <div className="grid gap-6 md:grid-cols-2">
           {/* Configuração de Cores */}
@@ -98,6 +128,7 @@ const SystemCustomizationPage = () => {
                     value={primaryColor}
                     onChange={(e) => setPrimaryColor(e.target.value)}
                     className="w-16 h-10 p-1 border rounded"
+                    disabled={!canEdit}
                   />
                   <Input
                     type="text"
@@ -105,6 +136,7 @@ const SystemCustomizationPage = () => {
                     onChange={(e) => setPrimaryColor(e.target.value)}
                     placeholder="#10b981"
                     className="flex-1"
+                    disabled={!canEdit}
                   />
                 </div>
               </div>
@@ -118,6 +150,7 @@ const SystemCustomizationPage = () => {
                     value={secondaryColor}
                     onChange={(e) => setSecondaryColor(e.target.value)}
                     className="w-16 h-10 p-1 border rounded"
+                    disabled={!canEdit}
                   />
                   <Input
                     type="text"
@@ -125,6 +158,7 @@ const SystemCustomizationPage = () => {
                     onChange={(e) => setSecondaryColor(e.target.value)}
                     placeholder="#6366f1"
                     className="flex-1"
+                    disabled={!canEdit}
                   />
                 </div>
               </div>
@@ -136,21 +170,22 @@ const SystemCustomizationPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Upload className="w-5 h-5" />
-                Logotipo da Farmácia
+                Logotipo da Organização
               </CardTitle>
               <CardDescription>
-                Faça upload do logo da sua farmácia
+                Faça upload do logo da sua organização
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="company-name">Nome da Farmácia</Label>
+                <Label htmlFor="company-name">Nome da Organização</Label>
                 <Input
                   id="company-name"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Digite o nome da sua farmácia"
+                  placeholder="Digite o nome da sua organização"
                   className="mt-2"
+                  disabled={!canEdit}
                 />
               </div>
               
@@ -183,12 +218,14 @@ const SystemCustomizationPage = () => {
                     accept="image/*"
                     onChange={handleLogoUpload}
                     className="hidden"
+                    disabled={!canEdit}
                   />
                   <Button
                     type="button"
                     variant="outline"
                     className="mt-3"
                     onClick={() => document.getElementById('logo-upload')?.click()}
+                    disabled={!canEdit}
                   >
                     {logoFile || settings?.logo_url ? 'Alterar Arquivo' : 'Selecionar Arquivo'}
                   </Button>
@@ -222,12 +259,12 @@ const SystemCustomizationPage = () => {
                       className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold"
                       style={{ backgroundColor: primaryColor }}
                     >
-                      {companyName ? companyName.charAt(0).toUpperCase() : 'F'}
+                      {companyName ? companyName.charAt(0).toUpperCase() : 'O'}
                     </div>
                   )}
                   <div>
                     <h3 className="text-lg font-bold" style={{ color: primaryColor }}>
-                      {companyName || 'Nome da Farmácia'}
+                      {companyName || 'Nome da Organização'}
                     </h3>
                     <p className="text-sm text-slate-600">Assistente Farmacêutico IA</p>
                   </div>
@@ -251,17 +288,19 @@ const SystemCustomizationPage = () => {
         </div>
 
         {/* Botão Salvar */}
-        <div className="mt-8 flex justify-end">
-          <Button 
-            onClick={handleSave}
-            disabled={isSaving || !companyName.trim()}
-            style={{ backgroundColor: primaryColor }}
-            className="text-white hover:opacity-90"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? 'Salvando...' : 'Salvar Configurações'}
-          </Button>
-        </div>
+        {canEdit && (
+          <div className="mt-8 flex justify-end">
+            <Button 
+              onClick={handleSave}
+              disabled={isSaving || !companyName.trim()}
+              style={{ backgroundColor: primaryColor }}
+              className="text-white hover:opacity-90"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSaving ? 'Salvando...' : 'Salvar Configurações'}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

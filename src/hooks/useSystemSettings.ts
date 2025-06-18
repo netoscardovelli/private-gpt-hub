@@ -5,7 +5,7 @@ import { toast } from '@/hooks/use-toast';
 
 interface SystemSettings {
   id?: string;
-  user_id: string;
+  organization_id: string;
   primary_color: string;
   secondary_color: string;
   company_name: string;
@@ -15,27 +15,27 @@ interface SystemSettings {
 }
 
 export const useSystemSettings = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && profile?.organization_id) {
       loadSettings();
     }
-  }, [user]);
+  }, [user, profile?.organization_id]);
 
   const loadSettings = async () => {
-    if (!user) return;
+    if (!user || !profile?.organization_id) return;
 
     setLoading(true);
     try {
-      console.log('🔧 Carregando configurações para usuário:', user.id);
+      console.log('🔧 Carregando configurações para organização:', profile.organization_id);
       
       const { data, error } = await supabase
         .from('system_settings')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('organization_id', profile.organization_id)
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
@@ -62,11 +62,21 @@ export const useSystemSettings = () => {
     companyName: string,
     logoFile?: File | null
   ) => {
-    if (!user) {
-      console.error('❌ Usuário não autenticado');
+    if (!user || !profile?.organization_id) {
+      console.error('❌ Usuário não autenticado ou sem organização');
       toast({
         title: 'Erro',
-        description: 'Usuário não autenticado.',
+        description: 'Usuário não autenticado ou sem organização selecionada.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    // Verificar se o usuário tem permissão para editar configurações da organização
+    if (!profile.role || !['admin', 'super_admin', 'owner'].includes(profile.role)) {
+      toast({
+        title: 'Erro',
+        description: 'Você não tem permissão para alterar as configurações da organização.',
         variant: 'destructive',
       });
       return false;
@@ -75,7 +85,7 @@ export const useSystemSettings = () => {
     setLoading(true);
     try {
       console.log('💾 Iniciando salvamento das configurações...');
-      console.log('🔧 User ID:', user.id);
+      console.log('🏢 Organization ID:', profile.organization_id);
       console.log('🎨 Cores:', { primaryColor, secondaryColor });
       console.log('🏢 Nome da empresa:', companyName);
       
@@ -85,7 +95,7 @@ export const useSystemSettings = () => {
       if (logoFile) {
         console.log('📁 Fazendo upload do logo...');
         const fileExt = logoFile.name.split('.').pop();
-        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const fileName = `${profile.organization_id}-${Date.now()}.${fileExt}`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('logos')
@@ -110,7 +120,7 @@ export const useSystemSettings = () => {
       }
 
       const settingsData = {
-        user_id: user.id,
+        organization_id: profile.organization_id,
         primary_color: primaryColor,
         secondary_color: secondaryColor,
         company_name: companyName,
@@ -122,7 +132,6 @@ export const useSystemSettings = () => {
       let result;
       if (settings?.id) {
         console.log('🔄 Atualizando configurações existentes...');
-        // Atualizar configurações existentes
         result = await supabase
           .from('system_settings')
           .update(settingsData)
@@ -131,7 +140,6 @@ export const useSystemSettings = () => {
           .single();
       } else {
         console.log('🆕 Criando novas configurações...');
-        // Criar novas configurações
         result = await supabase
           .from('system_settings')
           .insert([settingsData])
