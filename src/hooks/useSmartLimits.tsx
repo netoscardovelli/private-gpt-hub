@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -62,9 +63,23 @@ export const useSmartLimits = (userId: string) => {
           .select()
           .single();
 
-        setUserTier(newTier);
+        if (newTier) {
+          setUserTier({
+            tier_name: newTier.tier_name as 'free' | 'pro' | 'premium' | 'enterprise',
+            daily_limit: newTier.daily_limit,
+            monthly_limit: newTier.monthly_limit,
+            priority_bonus: newTier.priority_bonus,
+            cache_access: newTier.cache_access
+          });
+        }
       } else {
-        setUserTier(tier);
+        setUserTier({
+          tier_name: tier.tier_name as 'free' | 'pro' | 'premium' | 'enterprise',
+          daily_limit: tier.daily_limit,
+          monthly_limit: tier.monthly_limit,
+          priority_bonus: tier.priority_bonus,
+          cache_access: tier.cache_access
+        });
       }
 
       // Buscar estatísticas de uso
@@ -93,9 +108,21 @@ export const useSmartLimits = (userId: string) => {
           .select()
           .single();
 
-        setUsageStats(newStats);
+        if (newStats) {
+          setUsageStats({
+            queries_today: newStats.queries_today,
+            queries_this_month: newStats.queries_this_month,
+            streak_days: newStats.streak_days,
+            avg_daily: newStats.avg_daily
+          });
+        }
       } else {
-        setUsageStats(stats);
+        setUsageStats({
+          queries_today: stats.queries_today,
+          queries_this_month: stats.queries_this_month,
+          streak_days: stats.streak_days,
+          avg_daily: stats.avg_daily
+        });
       }
 
     } catch (error) {
@@ -167,7 +194,12 @@ export const useSmartLimits = (userId: string) => {
         .single();
 
       if (updatedStats) {
-        setUsageStats(updatedStats);
+        setUsageStats({
+          queries_today: updatedStats.queries_today,
+          queries_this_month: updatedStats.queries_this_month,
+          streak_days: updatedStats.streak_days,
+          avg_daily: updatedStats.avg_daily
+        });
       }
 
       // Log da query
@@ -237,7 +269,13 @@ export const useSmartLimits = (userId: string) => {
         .single();
 
       if (updatedTier) {
-        setUserTier(updatedTier);
+        setUserTier({
+          tier_name: updatedTier.tier_name as 'free' | 'pro' | 'premium' | 'enterprise',
+          daily_limit: updatedTier.daily_limit,
+          monthly_limit: updatedTier.monthly_limit,
+          priority_bonus: updatedTier.priority_bonus,
+          cache_access: updatedTier.cache_access
+        });
         
         await monitoring.trackEvent('user_upgrade', {
           fromTier: userTier.tier_name,

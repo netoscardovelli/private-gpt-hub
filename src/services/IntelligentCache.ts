@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { createHash } from 'crypto';
 
@@ -227,9 +226,7 @@ class IntelligentCache {
 
   private async updateHitStats(cacheId: string): Promise<void> {
     try {
-      await supabase.rpc('increment_cache_hits', { cache_id: cacheId });
-    } catch (error) {
-      // Fallback se a função RPC não existir
+      // Usar atualização manual já que a função RPC não existe
       const { data: current } = await supabase
         .from('query_cache')
         .select('hit_count')
@@ -245,6 +242,8 @@ class IntelligentCache {
           })
           .eq('id', cacheId);
       }
+    } catch (error) {
+      console.error('Erro ao atualizar estatísticas do cache:', error);
     }
   }
 
