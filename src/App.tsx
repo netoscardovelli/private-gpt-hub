@@ -12,6 +12,7 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import FormulasImportPage from "./pages/FormulasImportPage";
 import FormulasFavoritesPage from "./pages/FormulasFavoritesPage";
 import ActivesFavoritesPage from "./pages/ActivesFavoritesPage";
+import SystemCustomizationPage from "./pages/SystemCustomizationPage";
 import DoctorsPage from "./pages/DoctorsPage";
 import NotFound from "./pages/NotFound";
 
@@ -39,10 +40,10 @@ const App = () => {
               <Route path="/actives/favorites" element={<ActivesFavoritesPage />} />
               
               {/* Rotas de Configurações - Farmácia */}
+              <Route path="/settings/customization" element={<SystemCustomizationPage />} />
               <Route path="/doctors" element={<DoctorsPage />} />
               
               {/* Rotas placeholder para outras páginas */}
-              <Route path="/settings/customization" element={<NotFound />} />
               <Route path="/reports/formulas" element={<NotFound />} />
               <Route path="/reports/doctors" element={<NotFound />} />
               <Route path="/reports/financial" element={<NotFound />} />
