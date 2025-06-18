@@ -4,127 +4,78 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Building, Plus } from 'lucide-react';
 
 interface Organization {
   id: string;
   name: string;
   slug: string;
-  plan_type: string;
 }
 
 const OrganizationSelector = () => {
   const { user, profile, updateProfile } = useAuth();
-  const { toast } = useToast();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [selectedOrgId, setSelectedOrgId] = useState<string>('');
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [newOrgData, setNewOrgData] = useState({
-    name: '',
-    slug: '',
-    domain: ''
-  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newOrgName, setNewOrgName] = useState('');
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    loadOrganizations();
-    if (profile?.organization_id) {
-      setSelectedOrgId(profile.organization_id);
+    if (user) {
+      fetchOrganizations();
     }
-  }, [profile]);
+  }, [user]);
 
-  const loadOrganizations = async () => {
+  const fetchOrganizations = async () => {
     try {
       const { data, error } = await supabase
         .from('organizations')
-        .select('id, name, slug, plan_type')
+        .select('id, name, slug')
         .order('name');
 
       if (error) throw error;
       setOrganizations(data || []);
     } catch (error) {
-      console.error('Erro ao carregar organizações:', error);
-    }
-  };
-
-  const handleOrganizationChange = async (orgId: string) => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      
-      const { error } = await updateProfile({
-        organization_id: orgId
-      });
-
-      if (!error) {
-        setSelectedOrgId(orgId);
-        toast({
-          title: "Organização selecionada",
-          description: "Você foi associado à nova organização"
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao trocar de organização",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+      console.error('Erro ao buscar organizações:', error);
     }
   };
 
   const createOrganization = async () => {
-    if (!user || !newOrgData.name.trim() || !newOrgData.slug.trim()) {
-      toast({
-        title: "Dados incompletos",
-        description: "Preencha todos os campos obrigatórios",
-        variant: "destructive"
-      });
-      return;
-    }
+    if (!newOrgName.trim()) return;
 
+    setLoading(true);
     try {
-      setLoading(true);
+      const slug = newOrgName.toLowerCase()
+        .replace(/[^a-z0-9 ]/g, '')
+        .replace(/\s+/g, '-');
 
-      // Criar organização
-      const { data: newOrg, error: orgError } = await supabase
+      const { data, error } = await supabase
         .from('organizations')
-        .insert({
-          name: newOrgData.name,
-          slug: newOrgData.slug.toLowerCase(),
-          domain: newOrgData.domain || null,
+        .insert([{
+          name: newOrgName,
+          slug: slug,
           plan_type: 'free'
-        })
+        }])
         .select()
         .single();
 
-      if (orgError) throw orgError;
+      if (error) throw error;
 
-      // Atribuir usuário à nova organização como admin
-      const { error: profileError } = await updateProfile({
-        organization_id: newOrg.id,
-        role: 'admin'
-      });
-
-      if (profileError) throw profileError;
-
-      // Atualizar lista e selecionar nova org
-      await loadOrganizations();
-      setSelectedOrgId(newOrg.id);
-      setShowCreateDialog(false);
-      setNewOrgData({ name: '', slug: '', domain: '' });
+      // Atualizar o perfil do usuário para incluir a nova organização
+      await updateProfile({ organization_id: data.id });
 
       toast({
-        title: "Organização criada",
-        description: "Nova organização foi criada com sucesso"
+        title: "Sucesso",
+        description: "Organização criada com sucesso!"
       });
 
+      setIsDialogOpen(false);
+      setNewOrgName('');
+      fetchOrganizations();
     } catch (error: any) {
       console.error('Erro ao criar organização:', error);
       toast({
@@ -137,98 +88,79 @@ const OrganizationSelector = () => {
     }
   };
 
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
+  const handleOrganizationChange = async (organizationId: string) => {
+    try {
+      await updateProfile({ organization_id: organizationId });
+      toast({
+        title: "Sucesso",
+        description: "Organização alterada com sucesso!"
+      });
+    } catch (error: any) {
+      console.error('Erro ao alterar organização:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao alterar organização",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleNameChange = (name: string) => {
-    setNewOrgData(prev => ({
-      ...prev,
-      name,
-      slug: generateSlug(name)
-    }));
-  };
+  if (!user) return null;
+
+  const currentOrganization = organizations.find(org => org.id === profile?.organization_id);
 
   return (
-    <div className="flex items-center space-x-2">
-      <Building className="w-4 h-4 text-muted-foreground" />
-      
+    <div className="flex items-center gap-2">
       <Select
-        value={selectedOrgId}
+        value={profile?.organization_id || ''}
         onValueChange={handleOrganizationChange}
-        disabled={loading}
       >
-        <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Selecionar organização" />
+        <SelectTrigger className="w-48">
+          <div className="flex items-center gap-2">
+            <Building className="h-4 w-4" />
+            <SelectValue placeholder="Selecionar organização">
+              {currentOrganization?.name || 'Nenhuma organização'}
+            </SelectValue>
+          </div>
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value="">Nenhuma organização</SelectItem>
           {organizations.map((org) => (
             <SelectItem key={org.id} value={org.id}>
-              {org.name} ({org.plan_type})
+              {org.name}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Plus className="w-4 h-4 mr-1" />
-            Nova
+          <Button variant="outline" size="icon">
+            <Plus className="h-4 w-4" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Criar Nova Organização</DialogTitle>
-            <DialogDescription>
-              Crie uma nova organização para sua equipe
-            </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Nome da Organização *</Label>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="org-name">Nome da Organização</Label>
               <Input
-                id="name"
-                value={newOrgData.name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                placeholder="Minha Empresa"
+                id="org-name"
+                value={newOrgName}
+                onChange={(e) => setNewOrgName(e.target.value)}
+                placeholder="Nome da sua organização"
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="slug">Slug (URL) *</Label>
-              <Input
-                id="slug"
-                value={newOrgData.slug}
-                onChange={(e) => setNewOrgData(prev => ({ ...prev, slug: e.target.value }))}
-                placeholder="minha-empresa"
-              />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={createOrganization} disabled={loading || !newOrgName.trim()}>
+                {loading ? 'Criando...' : 'Criar'}
+              </Button>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="domain">Domínio (opcional)</Label>
-              <Input
-                id="domain"
-                value={newOrgData.domain}
-                onChange={(e) => setNewOrgData(prev => ({ ...prev, domain: e.target.value }))}
-                placeholder="minhaempresa.com"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={createOrganization} disabled={loading}>
-              {loading ? 'Criando...' : 'Criar Organização'}
-            </Button>
           </div>
         </DialogContent>
       </Dialog>

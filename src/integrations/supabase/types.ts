@@ -69,6 +69,106 @@ export type Database = {
         }
         Relationships: []
       }
+      api_partners: {
+        Row: {
+          api_key: string
+          contact_person: string | null
+          created_at: string
+          description: string | null
+          email: string
+          id: string
+          last_used_at: string | null
+          name: string
+          organization_id: string | null
+          rate_limit_per_hour: number
+          status: string
+          total_requests: number | null
+          updated_at: string
+        }
+        Insert: {
+          api_key?: string
+          contact_person?: string | null
+          created_at?: string
+          description?: string | null
+          email: string
+          id?: string
+          last_used_at?: string | null
+          name: string
+          organization_id?: string | null
+          rate_limit_per_hour?: number
+          status?: string
+          total_requests?: number | null
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string
+          contact_person?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string
+          id?: string
+          last_used_at?: string | null
+          name?: string
+          organization_id?: string | null
+          rate_limit_per_hour?: number
+          status?: string
+          total_requests?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_partners_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_usage: {
+        Row: {
+          endpoint: string
+          error_message: string | null
+          id: string
+          last_request: string
+          method: string
+          partner_id: string | null
+          requests_count: number
+          response_time_ms: number | null
+          status_code: number | null
+        }
+        Insert: {
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          last_request?: string
+          method: string
+          partner_id?: string | null
+          requests_count?: number
+          response_time_ms?: number | null
+          status_code?: number | null
+        }
+        Update: {
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          last_request?: string
+          method?: string
+          partner_id?: string | null
+          requests_count?: number
+          response_time_ms?: number | null
+          status_code?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "api_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       application_logs: {
         Row: {
           context: Json | null
@@ -104,6 +204,100 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          formula_detected: boolean | null
+          id: string
+          message_type: string
+          response_time_ms: number | null
+          session_id: string | null
+          specialty: string | null
+          tokens_used: number | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          formula_detected?: boolean | null
+          id?: string
+          message_type: string
+          response_time_ms?: number | null
+          session_id?: string | null
+          specialty?: string | null
+          tokens_used?: number | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          formula_detected?: boolean | null
+          id?: string
+          message_type?: string
+          response_time_ms?: number | null
+          session_id?: string | null
+          specialty?: string | null
+          tokens_used?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          created_at: string
+          feedback_rating: number | null
+          id: string
+          message_count: number | null
+          organization_id: string | null
+          session_end: string | null
+          session_start: string
+          specialty: string | null
+          total_tokens_used: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_rating?: number | null
+          id?: string
+          message_count?: number | null
+          organization_id?: string | null
+          session_end?: string | null
+          session_start?: string
+          specialty?: string | null
+          total_tokens_used?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback_rating?: number | null
+          id?: string
+          message_count?: number | null
+          organization_id?: string | null
+          session_end?: string | null
+          session_start?: string
+          specialty?: string | null
+          total_tokens_used?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       doctor_profiles: {
         Row: {
