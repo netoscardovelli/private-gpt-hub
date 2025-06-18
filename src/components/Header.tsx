@@ -14,10 +14,32 @@ import { FlaskConical, LogOut, Settings, Users, Building, MessageSquare, BarChar
 import { useNavigate } from 'react-router-dom';
 import OrganizationSelector from '@/components/multi-tenant/OrganizationSelector';
 import { cn } from '@/lib/utils';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
+import { useState, useEffect } from 'react';
 
 const Header = () => {
   const { user, profile, signOut } = useAuth();
+  const { settings } = useSystemSettings();
   const navigate = useNavigate();
+  const [dynamicSettings, setDynamicSettings] = useState<any>(null);
+
+  // Escutar mudanças nas configurações do sistema
+  useEffect(() => {
+    const handleSettingsChange = (event: CustomEvent) => {
+      setDynamicSettings(event.detail);
+    };
+
+    window.addEventListener('systemSettingsChanged', handleSettingsChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('systemSettingsChanged', handleSettingsChange as EventListener);
+    };
+  }, []);
+
+  // Usar configurações dinâmicas se disponíveis, senão usar as configurações carregadas
+  const currentSettings = dynamicSettings || settings;
+  const companyName = currentSettings?.company_name || 'FORMULA-AI';
+  const logoUrl = currentSettings?.logo_url;
 
   const handleSignOut = async () => {
     await signOut();
@@ -31,11 +53,19 @@ const Header = () => {
       <div className="flex items-center justify-between">
         {/* Logo e Título */}
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 dynamic-primary-bg rounded-lg flex items-center justify-center color-transition">
-            <FlaskConical className="w-5 h-5 text-white" />
-          </div>
+          {logoUrl ? (
+            <img 
+              src={logoUrl} 
+              alt="Logo" 
+              className="w-8 h-8 rounded-lg object-contain"
+            />
+          ) : (
+            <div className="w-8 h-8 dynamic-primary-bg rounded-lg flex items-center justify-center color-transition">
+              <FlaskConical className="w-5 h-5 text-white" />
+            </div>
+          )}
           <div>
-            <h1 className="text-xl font-bold text-white">FORMULA-AI</h1>
+            <h1 className="text-xl font-bold text-white">{companyName}</h1>
             <p className="text-xs text-slate-400">Assistente Farmacêutico IA</p>
           </div>
         </div>

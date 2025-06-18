@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -153,8 +152,8 @@ export const useSystemSettings = () => {
       console.log('✅ Configurações salvas:', result.data);
       setSettings(result.data as SystemSettings);
       
-      // Aplicar as cores ao sistema
-      applyColorsToSystem(primaryColor, secondaryColor);
+      // Aplicar as cores e nome ao sistema
+      applySystemSettings(primaryColor, secondaryColor, companyName, logoUrl);
       
       toast({
         title: 'Sucesso',
@@ -199,8 +198,8 @@ export const useSystemSettings = () => {
     return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
   };
 
-  const applyColorsToSystem = (primaryColor: string, secondaryColor: string) => {
-    console.log('🎨 Aplicando cores ao sistema:', { primaryColor, secondaryColor });
+  const applySystemSettings = (primaryColor: string, secondaryColor: string, companyName: string, logoUrl?: string) => {
+    console.log('🎨 Aplicando configurações ao sistema:', { primaryColor, secondaryColor, companyName, logoUrl });
     
     const root = document.documentElement;
     
@@ -222,14 +221,17 @@ export const useSystemSettings = () => {
     root.style.setProperty('--green-500', primaryColor);
     root.style.setProperty('--green-600', primaryColor);
     
+    // Aplicar nome da empresa globalmente
+    root.style.setProperty('--company-name', `"${companyName}"`);
+    
     // Adicionar classes CSS dinâmicas para sobrescrever estilos específicos
-    const existingStyle = document.getElementById('dynamic-colors');
+    const existingStyle = document.getElementById('dynamic-system-settings');
     if (existingStyle) {
       existingStyle.remove();
     }
     
     const styleElement = document.createElement('style');
-    styleElement.id = 'dynamic-colors';
+    styleElement.id = 'dynamic-system-settings';
     styleElement.innerHTML = `
       /* Sobrescrever cores específicas do sistema */
       .bg-emerald-500, .bg-green-500 {
@@ -271,17 +273,28 @@ export const useSystemSettings = () => {
       .bg-gradient-to-r.from-emerald-500.to-green-600 {
         background: linear-gradient(to right, ${primaryColor}, ${secondaryColor}) !important;
       }
+      
+      /* Nome da empresa - aplicar globalmente */
+      .dynamic-company-name::before {
+        content: "${companyName}";
+      }
     `;
     
     document.head.appendChild(styleElement);
     
-    console.log('✅ Cores aplicadas ao sistema');
+    // Criar evento customizado para notificar mudança nas configurações
+    const event = new CustomEvent('systemSettingsChanged', {
+      detail: { primaryColor, secondaryColor, companyName, logoUrl }
+    });
+    window.dispatchEvent(event);
+    
+    console.log('✅ Configurações aplicadas ao sistema');
   };
 
-  // Aplicar cores quando as configurações são carregadas
+  // Aplicar configurações quando são carregadas
   useEffect(() => {
     if (settings) {
-      applyColorsToSystem(settings.primary_color, settings.secondary_color);
+      applySystemSettings(settings.primary_color, settings.secondary_color, settings.company_name, settings.logo_url);
     }
   }, [settings]);
 
