@@ -14,6 +14,7 @@ import FormulasFavoritesPage from "./pages/FormulasFavoritesPage";
 import ActivesFavoritesPage from "./pages/ActivesFavoritesPage";
 import SystemCustomizationPage from "./pages/SystemCustomizationPage";
 import DoctorsPage from "./pages/DoctorsPage";
+import PharmacyOnboardingPage from "./pages/PharmacyOnboardingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
