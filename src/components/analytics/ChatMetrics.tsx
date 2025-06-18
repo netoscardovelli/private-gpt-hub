@@ -83,7 +83,7 @@ const ChatMetrics = () => {
         date: day.date,
         messages: day.messages,
         sessions: day.sessions.size,
-        avg_tokens: day.totalTokens / day.messages,
+        avg_tokens: day.messages > 0 ? day.totalTokens / day.messages : 0,
         unique_users: day.users.size
       }));
 
@@ -113,7 +113,7 @@ const ChatMetrics = () => {
       const specialtyChartData = Object.entries(specialtyCount || {}).map(([specialty, count]) => ({
         specialty,
         count: count as number,
-        percentage: ((count as number) / total) * 100
+        percentage: total > 0 ? ((count as number) / total) * 100 : 0
       }));
 
       setSpecialtyData(specialtyChartData);
@@ -131,7 +131,11 @@ const ChatMetrics = () => {
         supabase.from('chat_sessions').select('user_id').gte('session_start', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       ]);
 
-      const avgResponseTime = avgResponseResult.data?.reduce((sum, msg) => sum + (msg.response_time_ms || 0), 0) / (avgResponseResult.data?.length || 1);
+      const validResponseTimes = avgResponseResult.data?.filter(msg => msg.response_time_ms != null) || [];
+      const avgResponseTime = validResponseTimes.length > 0 
+        ? validResponseTimes.reduce((sum, msg) => sum + (msg.response_time_ms || 0), 0) / validResponseTimes.length
+        : 0;
+      
       const uniqueUsers = new Set(usersResult.data?.map(session => session.user_id)).size;
 
       setTotalStats({

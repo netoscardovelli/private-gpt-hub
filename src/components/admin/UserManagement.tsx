@@ -12,7 +12,6 @@ import { Users, Shield, Building } from 'lucide-react';
 
 interface User {
   id: string;
-  email: string;
   full_name: string | null;
   role: string;
   organization_id: string | null;
