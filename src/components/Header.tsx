@@ -18,15 +18,15 @@ const Header = () => {
     await signOut();
   };
 
-  const getRoleColor = (role: string) => {
-    const colors = {
+  const getRoleColor = (role: string): "default" | "destructive" | "outline" | "secondary" => {
+    const colors: Record<string, "default" | "destructive" | "outline" | "secondary"> = {
       user: 'secondary',
       moderator: 'default',
       admin: 'destructive',
       super_admin: 'destructive',
       partner: 'outline'
     };
-    return colors[role as keyof typeof colors] || 'secondary';
+    return colors[role] || 'secondary';
   };
 
   return (
