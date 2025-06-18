@@ -45,7 +45,7 @@ export const useSystemSettings = () => {
           variant: 'destructive',
         });
       } else {
-        setSettings(data);
+        setSettings(data as SystemSettings | null);
       }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
@@ -135,7 +135,7 @@ export const useSystemSettings = () => {
         return false;
       }
 
-      setSettings(result.data);
+      setSettings(result.data as SystemSettings);
       toast({
         title: 'Sucesso',
         description: 'Configurações salvas com sucesso!',
