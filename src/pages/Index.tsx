@@ -12,6 +12,8 @@ import FormulaDatabase from "@/components/FormulaDatabase";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
+  console.log('🏠 Index component renderizando...');
+  
   const [showChat, setShowChat] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -26,17 +28,27 @@ const Index = () => {
     usageToday: 2
   };
 
+  console.log('🏠 Estado atual:', {
+    showChat,
+    isAuthenticated,
+    showAuthModal,
+    showSupportChat
+  });
+
   const handleLogin = () => {
+    console.log('🔐 Login executado');
     setIsAuthenticated(true);
     setShowAuthModal(false);
   };
 
   const handleLogout = () => {
+    console.log('🚪 Logout executado');
     setIsAuthenticated(false);
     setShowChat(false);
   };
 
   const handleStartChat = () => {
+    console.log('💬 Iniciar chat clicado, isAuthenticated:', isAuthenticated);
     if (!isAuthenticated) {
       setShowAuthModal(true);
     } else {
@@ -67,10 +79,12 @@ const Index = () => {
   };
 
   const handleSupportClick = () => {
+    console.log('🆘 Support clicado');
     setShowSupportChat(true);
   };
 
   if (showSupportChat) {
+    console.log('🆘 Renderizando SupportChat');
     return (
       <SupportChat 
         user={mockUser}
@@ -78,6 +92,8 @@ const Index = () => {
       />
     );
   }
+
+  console.log('🏠 Renderizando tela principal');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-emerald-50 to-green-100">

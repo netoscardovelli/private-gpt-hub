@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +20,8 @@ interface UsageStats {
 }
 
 export const useSmartLimits = (userId: string) => {
+  console.log('🔧 useSmartLimits hook inicializado para userId:', userId);
+  
   const [userTier, setUserTier] = useState<UserTier | null>(null);
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,15 +30,21 @@ export const useSmartLimits = (userId: string) => {
   // Carregar tier e estatísticas do usuário
   useEffect(() => {
     if (userId) {
+      console.log('🔧 Carregando dados do usuário...');
       loadUserData();
+    } else {
+      console.log('🔧 userId não fornecido, pulando carregamento');
+      setLoading(false);
     }
   }, [userId]);
 
   const loadUserData = async () => {
     try {
+      console.log('🔧 Iniciando loadUserData...');
       setLoading(true);
 
       // Buscar ou criar tier do usuário
+      console.log('🔧 Buscando tier do usuário...');
       const { data: tier, error: tierError } = await supabase
         .from('user_tiers')
         .select('*')
@@ -45,10 +52,12 @@ export const useSmartLimits = (userId: string) => {
         .maybeSingle();
 
       if (tierError && tierError.code !== 'PGRST116') {
+        console.error('❌ Erro ao buscar tier:', tierError);
         throw tierError;
       }
 
       if (!tier) {
+        console.log('🔧 Criando tier padrão para usuário novo...');
         // Criar tier padrão para usuário novo
         const { data: newTier } = await supabase
           .from('user_tiers')
@@ -64,6 +73,7 @@ export const useSmartLimits = (userId: string) => {
           .single();
 
         if (newTier) {
+          console.log('✅ Novo tier criado:', newTier);
           setUserTier({
             tier_name: newTier.tier_name as 'free' | 'pro' | 'premium' | 'enterprise',
             daily_limit: newTier.daily_limit,
@@ -73,6 +83,7 @@ export const useSmartLimits = (userId: string) => {
           });
         }
       } else {
+        console.log('✅ Tier encontrado:', tier);
         setUserTier({
           tier_name: tier.tier_name as 'free' | 'pro' | 'premium' | 'enterprise',
           daily_limit: tier.daily_limit,
@@ -83,6 +94,7 @@ export const useSmartLimits = (userId: string) => {
       }
 
       // Buscar estatísticas de uso
+      console.log('🔧 Buscando estatísticas de uso...');
       const { data: stats, error: statsError } = await supabase
         .from('usage_stats')
         .select('*')
@@ -91,10 +103,12 @@ export const useSmartLimits = (userId: string) => {
         .maybeSingle();
 
       if (statsError && statsError.code !== 'PGRST116') {
+        console.error('❌ Erro ao buscar stats:', statsError);
         throw statsError;
       }
 
       if (!stats) {
+        console.log('🔧 Criando estatísticas para hoje...');
         // Criar estatísticas para hoje
         const { data: newStats } = await supabase
           .from('usage_stats')
@@ -109,6 +123,7 @@ export const useSmartLimits = (userId: string) => {
           .single();
 
         if (newStats) {
+          console.log('✅ Novas stats criadas:', newStats);
           setUsageStats({
             queries_today: newStats.queries_today,
             queries_this_month: newStats.queries_this_month,
@@ -117,6 +132,7 @@ export const useSmartLimits = (userId: string) => {
           });
         }
       } else {
+        console.log('✅ Stats encontradas:', stats);
         setUsageStats({
           queries_today: stats.queries_today,
           queries_this_month: stats.queries_this_month,
@@ -125,8 +141,10 @@ export const useSmartLimits = (userId: string) => {
         });
       }
 
+      console.log('✅ loadUserData concluído com sucesso');
+
     } catch (error) {
-      console.error('Erro ao carregar dados do usuário:', error);
+      console.error('❌ Erro ao carregar dados do usuário:', error);
       toast({
         title: "Erro",
         description: "Falha ao carregar informações do usuário",
