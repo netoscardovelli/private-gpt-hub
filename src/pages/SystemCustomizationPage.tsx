@@ -2,14 +2,14 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import Header from '@/components/Header';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Palette, Upload, Save, Eye, Shield, Building } from 'lucide-react';
+import { Save, Shield, Building } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
+import OrganizationManagement from '@/components/organization/OrganizationManagement';
+import VisualIdentitySettings from '@/components/organization/VisualIdentitySettings';
+import SettingsPreview from '@/components/organization/SettingsPreview';
 
 const SystemCustomizationPage = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -50,24 +50,26 @@ const SystemCustomizationPage = () => {
       <div className="min-h-screen bg-slate-900">
         <Header />
         <div className="container mx-auto p-6">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">Personalização do Sistema</h1>
+            <p className="text-slate-300">Configure a aparência e identidade visual da sua organização</p>
+          </div>
+          
           <Alert>
             <Building className="h-4 w-4" />
             <AlertDescription>
               Você precisa estar vinculado a uma organização para acessar as configurações do sistema.
+              Use a seção abaixo para criar uma nova organização ou selecionar uma existente.
             </AlertDescription>
           </Alert>
+          
+          <div className="mt-6">
+            <OrganizationManagement />
+          </div>
         </div>
       </div>
     );
   }
-
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log('📁 Arquivo selecionado:', file.name);
-      setLogoFile(file);
-    }
-  };
 
   const handleSave = async () => {
     console.log('💾 Iniciando salvamento...');
@@ -80,11 +82,6 @@ const SystemCustomizationPage = () => {
       console.log('❌ Erro no salvamento');
     }
     setIsSaving(false);
-  };
-
-  const previewStyle = {
-    background: `linear-gradient(135deg, ${primaryColor}20, ${secondaryColor}20)`,
-    borderColor: primaryColor 
   };
 
   return (
@@ -106,185 +103,32 @@ const SystemCustomizationPage = () => {
           </Alert>
         )}
         
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Configuração de Cores */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="w-5 h-5" />
-                Esquema de Cores
-              </CardTitle>
-              <CardDescription>
-                Personalize as cores principais do sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="primary-color">Cor Primária</Label>
-                <div className="flex items-center gap-3 mt-2">
-                  <Input
-                    id="primary-color"
-                    type="color"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="w-16 h-10 p-1 border rounded"
-                    disabled={!canEdit}
-                  />
-                  <Input
-                    type="text"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    placeholder="#10b981"
-                    className="flex-1"
-                    disabled={!canEdit}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="secondary-color">Cor Secundária</Label>
-                <div className="flex items-center gap-3 mt-2">
-                  <Input
-                    id="secondary-color"
-                    type="color"
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    className="w-16 h-10 p-1 border rounded"
-                    disabled={!canEdit}
-                  />
-                  <Input
-                    type="text"
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    placeholder="#6366f1"
-                    className="flex-1"
-                    disabled={!canEdit}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="space-y-8">
+          {/* Seção 1: Gerenciamento de Organização */}
+          <OrganizationManagement />
 
-          {/* Upload de Logo */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Upload className="w-5 h-5" />
-                Logotipo da Organização
-              </CardTitle>
-              <CardDescription>
-                Faça upload do logo da sua organização
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="company-name">Nome da Organização</Label>
-                <Input
-                  id="company-name"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Digite o nome da sua organização"
-                  className="mt-2"
-                  disabled={!canEdit}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="logo-upload">Logo (PNG, JPG ou SVG)</Label>
-                <div className="mt-2 border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
-                  {logoFile ? (
-                    <div>
-                      <p className="text-sm text-green-600 mb-2">✓ {logoFile.name}</p>
-                      <p className="text-xs text-slate-500">Arquivo selecionado</p>
-                    </div>
-                  ) : settings?.logo_url ? (
-                    <div>
-                      <img 
-                        src={settings.logo_url} 
-                        alt="Logo atual" 
-                        className="w-16 h-16 mx-auto mb-2 object-contain"
-                      />
-                      <p className="text-xs text-slate-500">Logo atual</p>
-                    </div>
-                  ) : (
-                    <div>
-                      <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-                      <p className="text-sm text-slate-600">Clique para selecionar ou arraste o arquivo</p>
-                    </div>
-                  )}
-                  <Input
-                    id="logo-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                    className="hidden"
-                    disabled={!canEdit}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-3"
-                    onClick={() => document.getElementById('logo-upload')?.click()}
-                    disabled={!canEdit}
-                  >
-                    {logoFile || settings?.logo_url ? 'Alterar Arquivo' : 'Selecionar Arquivo'}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Seção 2: Identidade Visual */}
+          <VisualIdentitySettings
+            primaryColor={primaryColor}
+            setPrimaryColor={setPrimaryColor}
+            secondaryColor={secondaryColor}
+            setSecondaryColor={setSecondaryColor}
+            logoFile={logoFile}
+            setLogoFile={setLogoFile}
+            companyName={companyName}
+            setCompanyName={setCompanyName}
+            canEdit={canEdit}
+            currentLogoUrl={settings?.logo_url}
+          />
 
-          {/* Preview */}
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Preview das Configurações</CardTitle>
-              <CardDescription>
-                Visualize como ficará a aparência do sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div 
-                className="p-6 rounded-lg border-2" 
-                style={previewStyle}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  {(logoFile && URL.createObjectURL(logoFile)) || settings?.logo_url ? (
-                    <img 
-                      src={logoFile ? URL.createObjectURL(logoFile) : settings?.logo_url} 
-                      alt="Logo" 
-                      className="w-12 h-12 rounded-lg object-contain"
-                    />
-                  ) : (
-                    <div 
-                      className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      {companyName ? companyName.charAt(0).toUpperCase() : 'O'}
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="text-lg font-bold" style={{ color: primaryColor }}>
-                      {companyName || 'Nome da Organização'}
-                    </h3>
-                    <p className="text-sm text-slate-600">Assistente Farmacêutico IA</p>
-                  </div>
-                </div>
-                
-                <Button 
-                  style={{ backgroundColor: primaryColor }}
-                  className="text-white mr-2"
-                >
-                  Botão Primário
-                </Button>
-                <Button 
-                  variant="outline"
-                  style={{ borderColor: secondaryColor, color: secondaryColor }}
-                >
-                  Botão Secundário
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Seção 3: Preview */}
+          <SettingsPreview
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
+            companyName={companyName}
+            logoFile={logoFile}
+            currentLogoUrl={settings?.logo_url}
+          />
         </div>
 
         {/* Botão Salvar */}
