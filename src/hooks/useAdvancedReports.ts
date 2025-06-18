@@ -10,6 +10,7 @@ interface ReportFilters {
   doctorId?: string;
   category?: string;
   reportType: string;
+  [key: string]: any;
 }
 
 interface FinancialMetric {
@@ -119,7 +120,16 @@ export const useAdvancedReports = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setDoctorPerformance(data || []);
+      
+      // Transform the data to match our interface
+      const transformedData = data?.map(item => ({
+        ...item,
+        specialties_covered: Array.isArray(item.specialties_covered) 
+          ? item.specialties_covered as string[]
+          : []
+      })) || [];
+
+      setDoctorPerformance(transformedData);
     } catch (error) {
       console.error('Erro ao buscar performance dos médicos:', error);
       toast({
@@ -178,7 +188,7 @@ export const useAdvancedReports = () => {
           user_id: profile.id,
           report_type: filters.reportType,
           report_name: reportName,
-          filters: filters,
+          filters: filters as any,
           status: 'generating'
         })
         .select()
