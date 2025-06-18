@@ -38,6 +38,16 @@ const NavigationMenu = () => {
   return (
     <div className="flex-1 flex justify-center">
       <div className="flex items-center space-x-4">
+        {/* Dashboard */}
+        <Button
+          variant="ghost"
+          className="text-slate-300 hover:text-white color-transition"
+          onClick={() => navigate('/dashboard')}
+        >
+          <BarChart3 className="w-4 h-4 mr-2" />
+          Dashboard
+        </Button>
+
         {/* Chat */}
         <Button
           variant="ghost"

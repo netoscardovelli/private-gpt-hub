@@ -1,5 +1,6 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ChatInterface from "@/components/ChatInterface";
 import Header from "@/components/Header";
 import SupportChat from "@/components/SupportChat";
@@ -9,6 +10,14 @@ import { useAuth } from "@/hooks/useAuth";
 const Index = () => {
   const [showSupportChat, setShowSupportChat] = useState(false);
   const { user, profile, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirecionar para dashboard se usuário tem organização
+  useEffect(() => {
+    if (!loading && user && profile?.organization_id) {
+      navigate('/dashboard');
+    }
+  }, [loading, user, profile, navigate]);
 
   if (loading) {
     return (
@@ -33,6 +42,26 @@ const Index = () => {
           >
             Fazer Login
           </a>
+        </div>
+      </div>
+    );
+  }
+
+  // Se usuário não tem organização, mostrar onboarding
+  if (!profile?.organization_id) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
+        <div className="text-center max-w-2xl mx-auto px-4">
+          <h1 className="text-4xl font-bold mb-4">Bem-vindo ao Formula.AI!</h1>
+          <p className="text-xl mb-8 text-slate-300">
+            Para começar a usar nosso assistente farmacêutico, primeiro você precisa cadastrar sua farmácia.
+          </p>
+          <button 
+            onClick={() => navigate('/pharmacy/onboarding')}
+            className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-lg font-medium transition-colors text-lg"
+          >
+            Cadastrar Minha Farmácia
+          </button>
         </div>
       </div>
     );
