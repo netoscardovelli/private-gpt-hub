@@ -7,16 +7,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Palette, Upload, Save, Eye } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
 
 const SystemCustomizationPage = () => {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { settings, loading: settingsLoading, saveSettings } = useSystemSettings();
   const [primaryColor, setPrimaryColor] = useState('#10b981');
   const [secondaryColor, setSecondaryColor] = useState('#6366f1');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [companyName, setCompanyName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
-  if (loading) {
+  // Carregar configurações existentes quando disponíveis
+  useEffect(() => {
+    if (settings) {
+      setPrimaryColor(settings.primary_color || '#10b981');
+      setSecondaryColor(settings.secondary_color || '#6366f1');
+      setCompanyName(settings.company_name || '');
+    }
+  }, [settings]);
+
+  if (authLoading || settingsLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-900">
         <div className="text-white">Carregando...</div>
@@ -35,14 +47,13 @@ const SystemCustomizationPage = () => {
     }
   };
 
-  const handleSave = () => {
-    // TODO: Implementar salvamento das configurações
-    console.log('Salvando configurações:', {
-      primaryColor,
-      secondaryColor,
-      logoFile,
-      companyName
-    });
+  const handleSave = async () => {
+    setIsSaving(true);
+    const success = await saveSettings(primaryColor, secondaryColor, companyName, logoFile);
+    if (success) {
+      setLogoFile(null); // Limpar o arquivo após salvamento bem-sucedido
+    }
+    setIsSaving(false);
   };
 
   return (
@@ -145,6 +156,15 @@ const SystemCustomizationPage = () => {
                       <p className="text-sm text-green-600 mb-2">✓ {logoFile.name}</p>
                       <p className="text-xs text-slate-500">Arquivo selecionado</p>
                     </div>
+                  ) : settings?.logo_url ? (
+                    <div>
+                      <img 
+                        src={settings.logo_url} 
+                        alt="Logo atual" 
+                        className="w-16 h-16 mx-auto mb-2 object-contain"
+                      />
+                      <p className="text-xs text-slate-500">Logo atual</p>
+                    </div>
                   ) : (
                     <div>
                       <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
@@ -164,7 +184,7 @@ const SystemCustomizationPage = () => {
                     className="mt-3"
                     onClick={() => document.getElementById('logo-upload')?.click()}
                   >
-                    Selecionar Arquivo
+                    {logoFile || settings?.logo_url ? 'Alterar Arquivo' : 'Selecionar Arquivo'}
                   </Button>
                 </div>
               </div>
@@ -188,12 +208,20 @@ const SystemCustomizationPage = () => {
                 }}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <div 
-                    className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold"
-                    style={{ backgroundColor: primaryColor }}
-                  >
-                    {companyName ? companyName.charAt(0).toUpperCase() : 'F'}
-                  </div>
+                  {settings?.logo_url ? (
+                    <img 
+                      src={settings.logo_url} 
+                      alt="Logo" 
+                      className="w-12 h-12 rounded-lg object-contain"
+                    />
+                  ) : (
+                    <div 
+                      className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      {companyName ? companyName.charAt(0).toUpperCase() : 'F'}
+                    </div>
+                  )}
                   <div>
                     <h3 className="text-lg font-bold" style={{ color: primaryColor }}>
                       {companyName || 'Nome da Farmácia'}
@@ -223,10 +251,11 @@ const SystemCustomizationPage = () => {
         <div className="mt-8 flex justify-end">
           <Button 
             onClick={handleSave}
+            disabled={isSaving}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
             <Save className="w-4 h-4 mr-2" />
-            Salvar Configurações
+            {isSaving ? 'Salvando...' : 'Salvar Configurações'}
           </Button>
         </div>
       </div>
