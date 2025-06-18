@@ -70,9 +70,9 @@ export const fetchAPIUsageApi = async (
   return (data || []) as APIUsage[];
 };
 
-// API Cache Management
+// API Cache Management - Using generic query since table might not be in types
 export const fetchAPICacheApi = async (): Promise<APICache[]> => {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('api_cache')
     .select('*')
     .order('created_at', { ascending: false })
@@ -83,15 +83,15 @@ export const fetchAPICacheApi = async (): Promise<APICache[]> => {
 };
 
 export const clearExpiredCacheApi = async (): Promise<void> => {
-  const { error } = await supabase.rpc('cleanup_expired_cache');
+  const { error } = await (supabase as any).rpc('cleanup_expired_cache');
   if (error) throw error;
 };
 
-// Integration Configurations
+// Integration Configurations - Using generic query since table might not be in types
 export const fetchIntegrationConfigsApi = async (
   organizationId: string
 ): Promise<IntegrationConfig[]> => {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('integration_configs')
     .select('*')
     .eq('organization_id', organizationId)
@@ -104,7 +104,7 @@ export const fetchIntegrationConfigsApi = async (
 export const createIntegrationConfigApi = async (
   config: Omit<IntegrationConfig, 'id' | 'created_at' | 'updated_at'>
 ): Promise<IntegrationConfig> => {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('integration_configs')
     .insert(config)
     .select()
@@ -118,7 +118,7 @@ export const updateIntegrationConfigApi = async (
   id: string,
   updates: Partial<IntegrationConfig>
 ): Promise<IntegrationConfig> => {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('integration_configs')
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', id)
