@@ -25,16 +25,18 @@ export const usePharmacyOnboarding = () => {
     if (!slug) return false;
     
     try {
-      const { data, error } = await supabase.rpc('check_organization_slug_availability', {
-        slug_to_check: slug
-      });
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('slug', slug)
+        .maybeSingle();
 
       if (error) {
         console.error('Erro ao verificar slug:', error);
         return false;
       }
 
-      return data; // true se disponível
+      return !data; // true se não existe (disponível)
     } catch (error) {
       console.error('Erro ao verificar disponibilidade do slug:', error);
       return false;
@@ -54,56 +56,63 @@ export const usePharmacyOnboarding = () => {
     setLoading(true);
 
     try {
-      // Usar a função do banco para criar organização
-      const { data: organizationId, error: orgError } = await supabase.rpc('create_organization_with_user', {
-        org_name: pharmacyData.name,
-        org_slug: pharmacyData.slug,
-        org_contact_email: pharmacyData.contactEmail,
-        org_phone: pharmacyData.phone || null,
-        org_address: pharmacyData.address || null,
-        org_description: pharmacyData.description || null,
-        plan_type: planType
-      });
-
-      if (orgError) {
-        console.error('Erro ao criar organização:', orgError);
-        
-        if (orgError.message.includes('Slug already taken')) {
-          toast({
-            title: "Nome indisponível",
-            description: "Este nome de farmácia já está em uso. Tente outro.",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Erro ao criar farmácia",
-            description: "Falha ao criar organização. Tente novamente.",
-            variant: "destructive"
-          });
-        }
-        
+      // Verificar se o slug está disponível
+      const isSlugAvailable = await checkSlugAvailability(pharmacyData.slug);
+      if (!isSlugAvailable) {
+        toast({
+          title: "Nome indisponível",
+          description: "Este nome de farmácia já está em uso. Tente outro.",
+          variant: "destructive"
+        });
         setLoading(false);
         return null;
       }
 
-      // Buscar os dados da organização criada
-      const { data: organization, error: fetchError } = await supabase
+      // Criar a organização
+      const { data: organization, error: orgError } = await supabase
         .from('organizations')
-        .select('*')
-        .eq('id', organizationId)
+        .insert({
+          name: pharmacyData.name,
+          slug: pharmacyData.slug,
+          plan_type: planType,
+          contact_email: pharmacyData.contactEmail,
+          phone: pharmacyData.phone || null,
+          address: pharmacyData.address || null,
+          description: pharmacyData.description || null
+        })
+        .select()
         .single();
 
-      if (fetchError) {
-        console.error('Erro ao buscar organização:', fetchError);
+      if (orgError) {
+        console.error('Erro ao criar organização:', orgError);
+        toast({
+          title: "Erro ao criar farmácia",
+          description: "Falha ao criar organização. Tente novamente.",
+          variant: "destructive"
+        });
         setLoading(false);
         return null;
+      }
+
+      // Atualizar o perfil do usuário para ser owner da organização
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          organization_id: organization.id, 
+          role: 'owner' 
+        })
+        .eq('id', user.id);
+
+      if (profileError) {
+        console.error('Erro ao atualizar perfil:', profileError);
+        // Não falha o processo, apenas loga o erro
       }
 
       // Criar configurações iniciais do sistema
       const { error: settingsError } = await supabase
         .from('system_settings')
         .insert({
-          organization_id: organizationId,
+          organization_id: organization.id,
           company_name: pharmacyData.name,
           primary_color: '#10b981',
           secondary_color: '#6366f1'
