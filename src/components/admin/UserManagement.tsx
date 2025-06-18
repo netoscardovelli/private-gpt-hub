@@ -84,7 +84,9 @@ const UserManagement = () => {
   };
 
   const handleOrganizationChange = async (userId: string, organizationId: string) => {
-    const success = await assignUserToOrganization(userId, organizationId);
+    // Convert "none" back to null for the database
+    const actualOrgId = organizationId === "none" ? null : organizationId;
+    const success = await assignUserToOrganization(userId, actualOrgId);
     if (success) {
       fetchUsers();
     }
@@ -203,14 +205,14 @@ const UserManagement = () => {
                       </Select>
 
                       <Select
-                        value={user.organization_id || ''}
+                        value={user.organization_id || 'none'}
                         onValueChange={(value) => handleOrganizationChange(user.id, value)}
                       >
                         <SelectTrigger className="w-40">
                           <SelectValue placeholder="Organização" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Nenhuma</SelectItem>
+                          <SelectItem value="none">Nenhuma</SelectItem>
                           {organizations.map((org) => (
                             <SelectItem key={org.id} value={org.id}>
                               {org.name}
