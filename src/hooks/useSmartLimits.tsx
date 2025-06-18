@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { monitoring } from '@/services/MonitoringService';
+import { Button } from '@/components/ui/button';
 
 interface UserTier {
   tier_name: 'free' | 'pro' | 'premium' | 'enterprise';
@@ -202,12 +202,13 @@ export const useSmartLimits = (userId: string) => {
         description: tierMessages[limitType],
         variant: "destructive",
         action: (
-          <button 
+          <Button 
+            size="sm"
             onClick={() => window.open('/upgrade', '_blank')}
-            className="bg-emerald-600 text-white px-4 py-2 rounded text-sm"
+            className="bg-emerald-600 hover:bg-emerald-700"
           >
             Fazer Upgrade
-          </button>
+          </Button>
         )
       });
     }
