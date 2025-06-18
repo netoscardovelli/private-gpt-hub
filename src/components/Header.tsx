@@ -27,11 +27,11 @@ const Header = () => {
   const canAccessAdmin = profile?.role && ['admin', 'super_admin'].includes(profile.role);
 
   return (
-    <header className="bg-slate-800 border-b border-slate-700 px-4 py-3">
+    <header className="bg-slate-800 border-b border-slate-700 px-4 py-3 color-transition">
       <div className="flex items-center justify-between">
         {/* Logo e Título */}
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 dynamic-primary-bg rounded-lg flex items-center justify-center color-transition">
             <FlaskConical className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -47,7 +47,7 @@ const Header = () => {
               {/* 1. Chat */}
               <NavigationMenuItem>
                 <NavigationMenuLink 
-                  className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-slate-300 hover:text-white cursor-pointer"
+                  className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-slate-300 hover:text-white cursor-pointer color-transition"
                   onClick={() => navigate('/')}
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
@@ -57,7 +57,7 @@ const Header = () => {
 
               {/* 2. Configurações */}
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-300 hover:text-white">
+                <NavigationMenuTrigger className="text-slate-300 hover:text-white color-transition">
                   <Settings className="w-4 h-4 mr-2" />
                   Configurações
                 </NavigationMenuTrigger>
@@ -68,7 +68,7 @@ const Header = () => {
                       <div className="mb-3 text-sm font-medium text-slate-700">Fórmulas</div>
                       <div className="grid gap-2">
                         <NavigationMenuLink 
-                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer"
+                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
                           onClick={() => navigate('/formulas/import')}
                         >
                           <Import className="w-4 h-4 mr-3 text-blue-500" />
@@ -78,7 +78,7 @@ const Header = () => {
                           </div>
                         </NavigationMenuLink>
                         <NavigationMenuLink 
-                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer"
+                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
                           onClick={() => navigate('/formulas/favorites')}
                         >
                           <Heart className="w-4 h-4 mr-3 text-red-500" />
@@ -88,10 +88,10 @@ const Header = () => {
                           </div>
                         </NavigationMenuLink>
                         <NavigationMenuLink 
-                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer"
+                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
                           onClick={() => navigate('/actives/favorites')}
                         >
-                          <Pill className="w-4 h-4 mr-3 text-green-500" />
+                          <Pill className="w-4 h-4 mr-3 dynamic-primary" />
                           <div>
                             <div className="text-sm font-medium">Ativos Preferenciais</div>
                             <div className="text-xs text-slate-500">Ativos mais utilizados</div>
@@ -105,7 +105,7 @@ const Header = () => {
                       <div className="mb-3 text-sm font-medium text-slate-700">Configuração Farmácia</div>
                       <div className="grid gap-2">
                         <NavigationMenuLink 
-                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer"
+                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
                           onClick={() => navigate('/settings/customization')}
                         >
                           <Palette className="w-4 h-4 mr-3 text-purple-500" />
@@ -115,7 +115,7 @@ const Header = () => {
                           </div>
                         </NavigationMenuLink>
                         <NavigationMenuLink 
-                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer"
+                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
                           onClick={() => navigate('/doctors')}
                         >
                           <UserPlus className="w-4 h-4 mr-3 text-blue-600" />
@@ -133,7 +133,7 @@ const Header = () => {
               {/* 3. Analytics */}
               <NavigationMenuItem>
                 <NavigationMenuLink 
-                  className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-slate-300 hover:text-white cursor-pointer"
+                  className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-slate-300 hover:text-white cursor-pointer color-transition"
                   onClick={() => navigate('/analytics')}
                 >
                   <BarChart3 className="w-4 h-4 mr-2" />
@@ -143,24 +143,24 @@ const Header = () => {
 
               {/* 4. Relatórios */}
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-300 hover:text-white">
+                <NavigationMenuTrigger className="text-slate-300 hover:text-white color-transition">
                   <FileText className="w-4 h-4 mr-2" />
                   Relatórios
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="grid gap-3 p-6 w-[350px]">
                     <NavigationMenuLink 
-                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer"
+                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
                       onClick={() => navigate('/reports/formulas')}
                     >
-                      <FlaskConical className="w-4 h-4 mr-3 text-emerald-500" />
+                      <FlaskConical className="w-4 h-4 mr-3 dynamic-primary" />
                       <div>
                         <div className="text-sm font-medium">Relatórios de Fórmulas</div>
                         <div className="text-xs text-slate-500">Estatísticas de fórmulas</div>
                       </div>
                     </NavigationMenuLink>
                     <NavigationMenuLink 
-                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer"
+                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
                       onClick={() => navigate('/reports/doctors')}
                     >
                       <Users className="w-4 h-4 mr-3 text-blue-500" />
@@ -170,10 +170,10 @@ const Header = () => {
                       </div>
                     </NavigationMenuLink>
                     <NavigationMenuLink 
-                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer"
+                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
                       onClick={() => navigate('/reports/financial')}
                     >
-                      <Building className="w-4 h-4 mr-3 text-green-500" />
+                      <Building className="w-4 h-4 mr-3 dynamic-primary" />
                       <div>
                         <div className="text-sm font-medium">Relatórios Financeiros</div>
                         <div className="text-xs text-slate-500">Custos e receitas</div>
@@ -185,14 +185,14 @@ const Header = () => {
 
               {/* 5. Ajuda */}
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-300 hover:text-white">
+                <NavigationMenuTrigger className="text-slate-300 hover:text-white color-transition">
                   <HelpCircle className="w-4 h-4 mr-2" />
                   Ajuda
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="grid gap-3 p-6 w-[300px]">
                     <NavigationMenuLink 
-                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer"
+                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
                       onClick={() => navigate('/help/documentation')}
                     >
                       <FileText className="w-4 h-4 mr-3 text-blue-500" />
@@ -202,17 +202,17 @@ const Header = () => {
                       </div>
                     </NavigationMenuLink>
                     <NavigationMenuLink 
-                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer"
+                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
                       onClick={() => navigate('/help/support')}
                     >
-                      <MessageSquare className="w-4 h-4 mr-3 text-green-500" />
+                      <MessageSquare className="w-4 h-4 mr-3 dynamic-primary" />
                       <div>
                         <div className="text-sm font-medium">Suporte</div>
                         <div className="text-xs text-slate-500">Fale conosco</div>
                       </div>
                     </NavigationMenuLink>
                     <NavigationMenuLink 
-                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer"
+                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
                       onClick={() => navigate('/help/tutorials')}
                     >
                       <HelpCircle className="w-4 h-4 mr-3 text-purple-500" />
@@ -229,7 +229,7 @@ const Header = () => {
               {canAccessAdmin && (
                 <NavigationMenuItem>
                   <NavigationMenuLink 
-                    className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-slate-300 hover:text-white cursor-pointer"
+                    className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-slate-300 hover:text-white cursor-pointer color-transition"
                     onClick={() => navigate('/admin')}
                   >
                     <Users className="w-4 h-4 mr-2" />
@@ -253,7 +253,7 @@ const Header = () => {
                 {profile?.full_name || 'Usuário'}
               </div>
               <div className="flex items-center space-x-1">
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs color-transition">
                   {profile?.role || 'user'}
                 </Badge>
               </div>
@@ -263,7 +263,7 @@ const Header = () => {
               variant="ghost"
               size="sm"
               onClick={handleSignOut}
-              className="text-slate-400 hover:text-red-400"
+              className="text-slate-400 hover:text-red-400 color-transition"
             >
               <LogOut className="w-4 h-4" />
             </Button>

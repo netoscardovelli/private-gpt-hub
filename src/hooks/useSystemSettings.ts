@@ -174,19 +174,108 @@ export const useSystemSettings = () => {
     }
   };
 
+  const hexToHsl = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0;
+    let s = 0;
+    const l = (max + min) / 2;
+
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+
+    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+  };
+
   const applyColorsToSystem = (primaryColor: string, secondaryColor: string) => {
     console.log('🎨 Aplicando cores ao sistema:', { primaryColor, secondaryColor });
     
-    // Aplicar as cores como CSS custom properties
-    document.documentElement.style.setProperty('--primary-color', primaryColor);
-    document.documentElement.style.setProperty('--secondary-color', secondaryColor);
-    
-    // Também podemos aplicar algumas classes específicas
     const root = document.documentElement;
+    
+    // Converter cores hex para HSL
+    const primaryHsl = hexToHsl(primaryColor);
+    const secondaryHsl = hexToHsl(secondaryColor);
+    
+    // Aplicar as cores principais do sistema usando as variáveis CSS do shadcn/ui
+    root.style.setProperty('--primary', primaryHsl);
+    root.style.setProperty('--primary-foreground', '0 0% 100%');
+    
+    // Cores secundárias
+    root.style.setProperty('--secondary', secondaryHsl);
+    root.style.setProperty('--secondary-foreground', primaryHsl);
+    
+    // Aplicar nos elementos específicos do sistema
     root.style.setProperty('--emerald-500', primaryColor);
     root.style.setProperty('--emerald-600', primaryColor);
     root.style.setProperty('--green-500', primaryColor);
     root.style.setProperty('--green-600', primaryColor);
+    
+    // Adicionar classes CSS dinâmicas para sobrescrever estilos específicos
+    const existingStyle = document.getElementById('dynamic-colors');
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    
+    const styleElement = document.createElement('style');
+    styleElement.id = 'dynamic-colors';
+    styleElement.innerHTML = `
+      /* Sobrescrever cores específicas do sistema */
+      .bg-emerald-500, .bg-green-500 {
+        background-color: ${primaryColor} !important;
+      }
+      
+      .bg-emerald-600, .bg-green-600 {
+        background-color: ${primaryColor} !important;
+      }
+      
+      .text-emerald-500, .text-green-500 {
+        color: ${primaryColor} !important;
+      }
+      
+      .border-emerald-500, .border-green-500 {
+        border-color: ${primaryColor} !important;
+      }
+      
+      /* Header gradient */
+      .bg-slate-800 {
+        background: linear-gradient(135deg, ${primaryColor}20, ${secondaryColor}20) !important;
+      }
+      
+      /* Botões primários */
+      .bg-primary {
+        background-color: ${primaryColor} !important;
+      }
+      
+      .bg-primary\\/90:hover {
+        background-color: ${primaryColor}e6 !important;
+      }
+      
+      /* Navigation menu items */
+      .hover\\:bg-accent:hover {
+        background-color: ${primaryColor}20 !important;
+      }
+      
+      /* Cards e componentes */
+      .bg-gradient-to-r.from-emerald-500.to-green-600 {
+        background: linear-gradient(to right, ${primaryColor}, ${secondaryColor}) !important;
+      }
+    `;
+    
+    document.head.appendChild(styleElement);
+    
+    console.log('✅ Cores aplicadas ao sistema');
   };
 
   // Aplicar cores quando as configurações são carregadas
