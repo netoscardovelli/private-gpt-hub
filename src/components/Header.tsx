@@ -3,14 +3,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu';
-import { FlaskConical, LogOut, Settings, Users, Building, MessageSquare, BarChart3, FileText, HelpCircle, Import, Heart, Pill, Palette, UserPlus } from 'lucide-react';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from '@/components/ui/dropdown-menu';
+import { FlaskConical, LogOut, Settings, Users, Building, MessageSquare, BarChart3, FileText, HelpCircle, Import, Heart, Pill, Palette, UserPlus, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import OrganizationSelector from '@/components/multi-tenant/OrganizationSelector';
 import { cn } from '@/lib/utils';
@@ -72,203 +75,127 @@ const Header = () => {
 
         {/* Menu de Navegação */}
         <div className="flex-1 flex justify-center">
-          <NavigationMenu>
-            <NavigationMenuList className="space-x-2">
-              {/* 1. Chat */}
-              <NavigationMenuItem>
-                <NavigationMenuLink 
-                  className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-slate-300 hover:text-white cursor-pointer color-transition"
-                  onClick={() => navigate('/')}
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Chat
-                </NavigationMenuLink>
-              </NavigationMenuItem>
+          <div className="flex items-center space-x-4">
+            {/* Chat */}
+            <Button
+              variant="ghost"
+              className="text-slate-300 hover:text-white color-transition"
+              onClick={() => navigate('/')}
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Chat
+            </Button>
 
-              {/* 2. Configurações */}
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-300 hover:text-white color-transition">
+            {/* Menu Administração */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="text-slate-300 hover:text-white color-transition"
+                >
                   <Settings className="w-4 h-4 mr-2" />
-                  Configurações
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="grid gap-3 p-6 w-[400px]">
-                    {/* 2.1 Fórmulas */}
-                    <div className="row-span-3">
-                      <div className="mb-3 text-sm font-medium text-slate-700">Fórmulas</div>
-                      <div className="grid gap-2">
-                        <NavigationMenuLink 
-                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
-                          onClick={() => navigate('/formulas/import')}
-                        >
-                          <Import className="w-4 h-4 mr-3 text-blue-500" />
-                          <div>
-                            <div className="text-sm font-medium">Importação de Fórmulas</div>
-                            <div className="text-xs text-slate-500">Importar fórmulas em lote</div>
-                          </div>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink 
-                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
-                          onClick={() => navigate('/formulas/favorites')}
-                        >
-                          <Heart className="w-4 h-4 mr-3 text-red-500" />
-                          <div>
-                            <div className="text-sm font-medium">Fórmulas Preferenciais</div>
-                            <div className="text-xs text-slate-500">Suas fórmulas favoritas</div>
-                          </div>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink 
-                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
-                          onClick={() => navigate('/actives/favorites')}
-                        >
-                          <Pill className="w-4 h-4 mr-3 dynamic-primary" />
-                          <div>
-                            <div className="text-sm font-medium">Ativos Preferenciais</div>
-                            <div className="text-xs text-slate-500">Ativos mais utilizados</div>
-                          </div>
-                        </NavigationMenuLink>
-                      </div>
-                    </div>
-                    
-                    {/* 2.2 Configuração Farmácia */}
-                    <div className="row-span-3">
-                      <div className="mb-3 text-sm font-medium text-slate-700">Configuração Farmácia</div>
-                      <div className="grid gap-2">
-                        <NavigationMenuLink 
-                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
-                          onClick={() => navigate('/settings/customization')}
-                        >
-                          <Palette className="w-4 h-4 mr-3 text-purple-500" />
-                          <div>
-                            <div className="text-sm font-medium">Personalização do Sistema</div>
-                            <div className="text-xs text-slate-500">Cores, logotipo e layout</div>
-                          </div>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink 
-                          className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
-                          onClick={() => navigate('/doctors')}
-                        >
-                          <UserPlus className="w-4 h-4 mr-3 text-blue-600" />
-                          <div>
-                            <div className="text-sm font-medium">Cadastro de Médicos</div>
-                            <div className="text-xs text-slate-500">Gerenciar médicos parceiros</div>
-                          </div>
-                        </NavigationMenuLink>
-                      </div>
-                    </div>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+                  Administração
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80">
+                {/* Fórmulas */}
+                <DropdownMenuLabel>Fórmulas</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => navigate('/formulas/import')}>
+                  <Import className="w-4 h-4 mr-2 text-blue-500" />
+                  Importação de Fórmulas
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/formulas/favorites')}>
+                  <Heart className="w-4 h-4 mr-2 text-red-500" />
+                  Fórmulas Preferenciais
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/actives/favorites')}>
+                  <Pill className="w-4 h-4 mr-2 dynamic-primary" />
+                  Ativos Preferenciais
+                </DropdownMenuItem>
 
-              {/* 3. Analytics */}
-              <NavigationMenuItem>
-                <NavigationMenuLink 
-                  className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-slate-300 hover:text-white cursor-pointer color-transition"
-                  onClick={() => navigate('/analytics')}
-                >
-                  <BarChart3 className="w-4 h-4 mr-2" />
+                <DropdownMenuSeparator />
+
+                {/* Configurações da Farmácia */}
+                <DropdownMenuLabel>Configurações da Farmácia</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => navigate('/settings/customization')}>
+                  <Palette className="w-4 h-4 mr-2 text-purple-500" />
+                  Personalização do Sistema
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/doctors')}>
+                  <UserPlus className="w-4 h-4 mr-2 text-blue-600" />
+                  Cadastro de Médicos
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                {/* Analytics */}
+                <DropdownMenuItem onClick={() => navigate('/analytics')}>
+                  <BarChart3 className="w-4 h-4 mr-2 dynamic-primary" />
                   Analytics
-                </NavigationMenuLink>
-              </NavigationMenuItem>
+                </DropdownMenuItem>
 
-              {/* 4. Relatórios */}
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-300 hover:text-white color-transition">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Relatórios
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="grid gap-3 p-6 w-[350px]">
-                    <NavigationMenuLink 
-                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
-                      onClick={() => navigate('/reports/formulas')}
-                    >
-                      <FlaskConical className="w-4 h-4 mr-3 dynamic-primary" />
-                      <div>
-                        <div className="text-sm font-medium">Relatórios de Fórmulas</div>
-                        <div className="text-xs text-slate-500">Estatísticas de fórmulas</div>
-                      </div>
-                    </NavigationMenuLink>
-                    <NavigationMenuLink 
-                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
-                      onClick={() => navigate('/reports/doctors')}
-                    >
-                      <Users className="w-4 h-4 mr-3 text-blue-500" />
-                      <div>
-                        <div className="text-sm font-medium">Relatórios de Médicos</div>
-                        <div className="text-xs text-slate-500">Atividade dos médicos</div>
-                      </div>
-                    </NavigationMenuLink>
-                    <NavigationMenuLink 
-                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
-                      onClick={() => navigate('/reports/financial')}
-                    >
-                      <Building className="w-4 h-4 mr-3 dynamic-primary" />
-                      <div>
-                        <div className="text-sm font-medium">Relatórios Financeiros</div>
-                        <div className="text-xs text-slate-500">Custos e receitas</div>
-                      </div>
-                    </NavigationMenuLink>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+                <DropdownMenuSeparator />
 
-              {/* 5. Ajuda */}
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-300 hover:text-white color-transition">
-                  <HelpCircle className="w-4 h-4 mr-2" />
-                  Ajuda
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="grid gap-3 p-6 w-[300px]">
-                    <NavigationMenuLink 
-                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
-                      onClick={() => navigate('/help/documentation')}
-                    >
-                      <FileText className="w-4 h-4 mr-3 text-blue-500" />
-                      <div>
-                        <div className="text-sm font-medium">Documentação</div>
-                        <div className="text-xs text-slate-500">Manual completo</div>
-                      </div>
-                    </NavigationMenuLink>
-                    <NavigationMenuLink 
-                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
-                      onClick={() => navigate('/help/support')}
-                    >
-                      <MessageSquare className="w-4 h-4 mr-3 dynamic-primary" />
-                      <div>
-                        <div className="text-sm font-medium">Suporte</div>
-                        <div className="text-xs text-slate-500">Fale conosco</div>
-                      </div>
-                    </NavigationMenuLink>
-                    <NavigationMenuLink 
-                      className="flex items-center p-2 rounded-md hover:bg-slate-100 cursor-pointer color-transition"
-                      onClick={() => navigate('/help/tutorials')}
-                    >
-                      <HelpCircle className="w-4 h-4 mr-3 text-purple-500" />
-                      <div>
-                        <div className="text-sm font-medium">Tutoriais</div>
-                        <div className="text-xs text-slate-500">Aprenda a usar</div>
-                      </div>
-                    </NavigationMenuLink>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+                {/* Relatórios */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Relatórios
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem onClick={() => navigate('/reports/formulas')}>
+                      <FlaskConical className="w-4 h-4 mr-2 dynamic-primary" />
+                      Relatórios de Fórmulas
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/reports/doctors')}>
+                      <Users className="w-4 h-4 mr-2 text-blue-500" />
+                      Relatórios de Médicos
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/reports/financial')}>
+                      <Building className="w-4 h-4 mr-2 dynamic-primary" />
+                      Relatórios Financeiros
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
 
-              {/* Admin (só para admins) */}
-              {canAccessAdmin && (
-                <NavigationMenuItem>
-                  <NavigationMenuLink 
-                    className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 text-slate-300 hover:text-white cursor-pointer color-transition"
-                    onClick={() => navigate('/admin')}
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    Admin
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              )}
-            </NavigationMenuList>
-          </NavigationMenu>
+                <DropdownMenuSeparator />
+
+                {/* Ajuda */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <HelpCircle className="w-4 h-4 mr-2" />
+                    Ajuda
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem onClick={() => navigate('/help/documentation')}>
+                      <FileText className="w-4 h-4 mr-2 text-blue-500" />
+                      Documentação
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/help/support')}>
+                      <MessageSquare className="w-4 h-4 mr-2 dynamic-primary" />
+                      Suporte
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/help/tutorials')}>
+                      <HelpCircle className="w-4 h-4 mr-2 text-purple-500" />
+                      Tutoriais
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                {/* Admin (só para admins) */}
+                {canAccessAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Users className="w-4 h-4 mr-2 text-orange-500" />
+                      Painel Administrativo
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Área de Usuário e Organização */}
