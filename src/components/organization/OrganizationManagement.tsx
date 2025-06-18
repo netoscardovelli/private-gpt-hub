@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { Building, Plus, Users, Calendar } from 'lucide-react';
+import DoctorInvitationManager from '@/components/doctor/DoctorInvitationManager';
 
 interface Organization {
   id: string;
@@ -112,105 +113,112 @@ const OrganizationManagement = () => {
   const currentOrganization = organizations.find(org => org.id === profile?.organization_id);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Building className="w-5 h-5" />
-          Gerenciamento de Organização
-        </CardTitle>
-        <CardDescription>
-          Configure e gerencie suas organizações farmacêuticas
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Organização Atual */}
-        <div className="space-y-4">
-          <Label>Organização Atual</Label>
-          {currentOrganization ? (
-            <div className="p-4 border rounded-lg bg-slate-50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium">{currentOrganization.name}</h3>
-                  <p className="text-sm text-slate-600">
-                    Criada em {new Date(currentOrganization.created_at).toLocaleDateString('pt-BR')}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Users className="w-4 h-4" />
-                  <span>Organização Ativa</span>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building className="w-5 h-5" />
+            Gerenciamento de Organização
+          </CardTitle>
+          <CardDescription>
+            Configure e gerencie suas organizações farmacêuticas
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Organização Atual */}
+          <div className="space-y-4">
+            <Label>Organização Atual</Label>
+            {currentOrganization ? (
+              <div className="p-4 border rounded-lg bg-slate-50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium">{currentOrganization.name}</h3>
+                    <p className="text-sm text-slate-600">
+                      Criada em {new Date(currentOrganization.created_at).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <Users className="w-4 h-4" />
+                    <span>Organização Ativa</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <Alert>
-              <Building className="h-4 w-4" />
-              <AlertDescription>
-                Nenhuma organização selecionada. Crie uma nova ou selecione uma existente.
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
-
-        {/* Seletor de Organização */}
-        {organizations.length > 0 && (
-          <div className="space-y-2">
-            <Label>Trocar Organização</Label>
-            <Select
-              value={profile?.organization_id || 'none'}
-              onValueChange={handleOrganizationChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecionar organização" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Nenhuma organização</SelectItem>
-                {organizations.map((org) => (
-                  <SelectItem key={org.id} value={org.id}>
-                    {org.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            ) : (
+              <Alert>
+                <Building className="h-4 w-4" />
+                <AlertDescription>
+                  Nenhuma organização selecionada. Crie uma nova ou selecione uma existente.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
-        )}
 
-        {/* Criar Nova Organização */}
-        <div className="pt-4 border-t">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Criar Nova Organização
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Criar Nova Organização</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="org-name">Nome da Organização</Label>
-                  <Input
-                    id="org-name"
-                    value={newOrgName}
-                    onChange={(e) => setNewOrgName(e.target.value)}
-                    placeholder="Digite o nome da sua farmácia/organização"
-                  />
+          {/* Seletor de Organização */}
+          {organizations.length > 0 && (
+            <div className="space-y-2">
+              <Label>Trocar Organização</Label>
+              <Select
+                value={profile?.organization_id || 'none'}
+                onValueChange={handleOrganizationChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar organização" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhuma organização</SelectItem>
+                  {organizations.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Criar Nova Organização */}
+          <div className="pt-4 border-t">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Nova Organização
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Criar Nova Organização</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="org-name">Nome da Organização</Label>
+                    <Input
+                      id="org-name"
+                      value={newOrgName}
+                      onChange={(e) => setNewOrgName(e.target.value)}
+                      placeholder="Digite o nome da sua farmácia/organização"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={createOrganization} disabled={loading || !newOrgName.trim()}>
+                      {loading ? 'Criando...' : 'Criar Organização'}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={createOrganization} disabled={loading || !newOrgName.trim()}>
-                    {loading ? 'Criando...' : 'Criar Organização'}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </CardContent>
-    </Card>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Gerenciamento de Convites para Médicos */}
+      {profile?.organization_id && (
+        <DoctorInvitationManager />
+      )}
+    </div>
   );
 };
 

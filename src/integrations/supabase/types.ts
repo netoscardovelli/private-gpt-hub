@@ -44,6 +44,7 @@ export type Database = {
           created_at: string
           feedback: string
           id: string
+          organization_id: string | null
           original_analysis: string
           processed: boolean | null
           rating: number | null
@@ -53,6 +54,7 @@ export type Database = {
           created_at?: string
           feedback: string
           id?: string
+          organization_id?: string | null
           original_analysis: string
           processed?: boolean | null
           rating?: number | null
@@ -62,12 +64,21 @@ export type Database = {
           created_at?: string
           feedback?: string
           id?: string
+          organization_id?: string | null
           original_analysis?: string
           processed?: boolean | null
           rating?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "analysis_feedback_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       api_partners: {
         Row: {
@@ -299,6 +310,60 @@ export type Database = {
           },
         ]
       }
+      doctor_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invitation_token: string
+          invited_by: string
+          organization_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_by: string
+          organization_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_by?: string
+          organization_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doctor_profiles: {
         Row: {
           concentration_preferences: Json | null
@@ -309,6 +374,7 @@ export type Database = {
           formulation_preferences: string | null
           formulation_style: string | null
           id: string
+          organization_id: string | null
           preferred_actives: Json | null
           preferred_protocols: string | null
           recent_patterns: Json | null
@@ -325,6 +391,7 @@ export type Database = {
           formulation_preferences?: string | null
           formulation_style?: string | null
           id?: string
+          organization_id?: string | null
           preferred_actives?: Json | null
           preferred_protocols?: string | null
           recent_patterns?: Json | null
@@ -341,6 +408,7 @@ export type Database = {
           formulation_preferences?: string | null
           formulation_style?: string | null
           id?: string
+          organization_id?: string | null
           preferred_actives?: Json | null
           preferred_protocols?: string | null
           recent_patterns?: Json | null
@@ -348,7 +416,61 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "doctor_profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_favorite_formulas: {
+        Row: {
+          added_by: string
+          created_at: string
+          formula_id: string
+          id: string
+          organization_id: string
+        }
+        Insert: {
+          added_by: string
+          created_at?: string
+          formula_id: string
+          id?: string
+          organization_id: string
+        }
+        Update: {
+          added_by?: string
+          created_at?: string
+          formula_id?: string
+          id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_favorite_formulas_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_favorite_formulas_formula_id_fkey"
+            columns: ["formula_id"]
+            isOneToOne: false
+            referencedRelation: "reference_formulas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_favorite_formulas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       organizations: {
         Row: {
@@ -549,6 +671,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          organization_id: string | null
           pharmaceutical_form: string
           specialty: string | null
           target_dosage_per_day: number | null
@@ -563,6 +686,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          organization_id?: string | null
           pharmaceutical_form: string
           specialty?: string | null
           target_dosage_per_day?: number | null
@@ -577,13 +701,22 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          organization_id?: string | null
           pharmaceutical_form?: string
           specialty?: string | null
           target_dosage_per_day?: number | null
           total_weight_mg?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reference_formulas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -683,6 +816,7 @@ export type Database = {
           date: string
           id: string
           last_query_at: string | null
+          organization_id: string | null
           queries_this_month: number | null
           queries_today: number | null
           streak_days: number | null
@@ -695,6 +829,7 @@ export type Database = {
           date?: string
           id?: string
           last_query_at?: string | null
+          organization_id?: string | null
           queries_this_month?: number | null
           queries_today?: number | null
           streak_days?: number | null
@@ -707,13 +842,22 @@ export type Database = {
           date?: string
           id?: string
           last_query_at?: string | null
+          organization_id?: string | null
           queries_this_month?: number | null
           queries_today?: number | null
           streak_days?: number | null
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "usage_stats_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_sessions: {
         Row: {
