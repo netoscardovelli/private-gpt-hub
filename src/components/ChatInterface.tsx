@@ -63,7 +63,7 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
     getRemainingQueries,
     canUseCache,
     getUsagePercentage
-  } = useSmartLimits(user.id);
+  } = useSmartLimits();
 
   const { handleQuickAction, handleAddActiveToFormula } = useQuickActions({
     messages,
