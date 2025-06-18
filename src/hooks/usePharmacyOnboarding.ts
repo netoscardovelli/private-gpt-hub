@@ -25,18 +25,16 @@ export const usePharmacyOnboarding = () => {
     if (!slug) return false;
     
     try {
-      const { data, error } = await supabase
-        .from('organizations')
-        .select('id')
-        .eq('slug', slug)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('check_organization_slug_availability', {
+        slug_to_check: slug
+      });
 
       if (error) {
         console.error('Erro ao verificar slug:', error);
         return false;
       }
 
-      return !data; // true se não existe (disponível)
+      return data; // true se disponível
     } catch (error) {
       console.error('Erro ao verificar disponibilidade do slug:', error);
       return false;
@@ -56,37 +54,47 @@ export const usePharmacyOnboarding = () => {
     setLoading(true);
 
     try {
-      // Verificar disponibilidade do slug
-      const isSlugAvailable = await checkSlugAvailability(pharmacyData.slug);
-      if (!isSlugAvailable) {
-        toast({
-          title: "Nome indisponível",
-          description: "Este nome de farmácia já está em uso. Tente outro.",
-          variant: "destructive"
-        });
+      // Usar a função do banco para criar organização
+      const { data: organizationId, error: orgError } = await supabase.rpc('create_organization_with_user', {
+        org_name: pharmacyData.name,
+        org_slug: pharmacyData.slug,
+        org_contact_email: pharmacyData.contactEmail,
+        org_phone: pharmacyData.phone || null,
+        org_address: pharmacyData.address || null,
+        org_description: pharmacyData.description || null,
+        plan_type: planType
+      });
+
+      if (orgError) {
+        console.error('Erro ao criar organização:', orgError);
+        
+        if (orgError.message.includes('Slug already taken')) {
+          toast({
+            title: "Nome indisponível",
+            description: "Este nome de farmácia já está em uso. Tente outro.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Erro ao criar farmácia",
+            description: "Falha ao criar organização. Tente novamente.",
+            variant: "destructive"
+          });
+        }
+        
         setLoading(false);
         return null;
       }
 
-      // Criar organização
-      const { data: organization, error: orgError } = await supabase
+      // Buscar os dados da organização criada
+      const { data: organization, error: fetchError } = await supabase
         .from('organizations')
-        .insert({
-          name: pharmacyData.name,
-          slug: pharmacyData.slug,
-          domain: pharmacyData.domain || null,
-          plan_type: planType
-        })
-        .select()
+        .select('*')
+        .eq('id', organizationId)
         .single();
 
-      if (orgError) {
-        console.error('Erro ao criar organização:', orgError);
-        toast({
-          title: "Erro ao criar farmácia",
-          description: "Falha ao criar organização. Tente novamente.",
-          variant: "destructive"
-        });
+      if (fetchError) {
+        console.error('Erro ao buscar organização:', fetchError);
         setLoading(false);
         return null;
       }
@@ -95,7 +103,7 @@ export const usePharmacyOnboarding = () => {
       const { error: settingsError } = await supabase
         .from('system_settings')
         .insert({
-          organization_id: organization.id,
+          organization_id: organizationId,
           company_name: pharmacyData.name,
           primary_color: '#10b981',
           secondary_color: '#6366f1'
@@ -104,18 +112,6 @@ export const usePharmacyOnboarding = () => {
       if (settingsError) {
         console.error('Erro ao criar configurações iniciais:', settingsError);
         // Não falha o processo, apenas loga o erro
-      }
-
-      // Atualizar perfil do usuário para ser owner da organização
-      const profileUpdateResult = await updateProfile({
-        organization_id: organization.id,
-        role: 'owner',
-        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário'
-      });
-
-      if (profileUpdateResult.error) {
-        console.error('Erro ao atualizar perfil:', profileUpdateResult.error);
-        // Continua mesmo com erro no perfil
       }
 
       toast({
@@ -139,17 +135,16 @@ export const usePharmacyOnboarding = () => {
   };
 
   const completeOnboarding = async (pharmacyData: PharmacyData, selectedPlan: string) => {
-    const planType = selectedPlan.toLowerCase() === 'gratuito' ? 'free' : 'pro';
+    const planType = selectedPlan === 'profissional' ? 'pro' : 'free';
     const organization = await createPharmacy(pharmacyData, planType);
 
     if (organization) {
       if (planType === 'pro') {
-        // Para planos pagos, redirecionar para integração com Stripe
+        // Para planos pagos, por enquanto apenas mostra mensagem
         toast({
-          title: "Redirecionando para pagamento",
-          description: "Você será redirecionado para finalizar o pagamento.",
+          title: "Plano Profissional Selecionado",
+          description: "Sua farmácia foi criada! Integração de pagamento será implementada em breve.",
         });
-        // Aqui você integraria com o Stripe
         setTimeout(() => {
           navigate('/');
         }, 2000);

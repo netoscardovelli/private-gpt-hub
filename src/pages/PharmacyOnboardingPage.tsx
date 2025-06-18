@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import OnboardingSteps from '@/components/onboarding/OnboardingSteps';
-import { Building, Check, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Building, Check, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const PharmacyOnboardingPage = () => {
@@ -70,7 +70,31 @@ const PharmacyOnboardingPage = () => {
     }
   ];
 
-  const handleSlugChange = async (value: string) => {
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim()
+      .substring(0, 50);
+  };
+
+  const handleNameChange = (value: string) => {
+    const newData = { ...pharmacyData, name: value };
+    
+    // Auto-gerar slug se ainda não foi modificado manualmente
+    if (!pharmacyData.slug || pharmacyData.slug === generateSlug(pharmacyData.name)) {
+      newData.slug = generateSlug(value);
+      handleSlugChange(newData.slug, false);
+    }
+    
+    setPharmacyData(newData);
+  };
+
+  const handleSlugChange = async (value: string, manual: boolean = true) => {
     const slug = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
     setPharmacyData(prev => ({ ...prev, slug }));
     
@@ -90,16 +114,67 @@ const PharmacyOnboardingPage = () => {
     }
   };
 
+  const validateStep1 = () => {
+    if (!pharmacyData.name.trim()) {
+      toast({
+        title: "Nome obrigatório",
+        description: "Por favor, informe o nome da farmácia.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (!pharmacyData.slug.trim()) {
+      toast({
+        title: "Nome no sistema obrigatório",
+        description: "Por favor, defina um nome para o sistema.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (pharmacyData.slug.length < 3) {
+      toast({
+        title: "Nome muito curto",
+        description: "O nome no sistema deve ter pelo menos 3 caracteres.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (!pharmacyData.contactEmail.trim()) {
+      toast({
+        title: "Email obrigatório",
+        description: "Por favor, informe um email de contato.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (slugAvailable === false) {
+      toast({
+        title: "Nome indisponível",
+        description: "Este nome já está em uso. Escolha outro.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (slugAvailable === null && pharmacyData.slug.length >= 3) {
+      toast({
+        title: "Verificando disponibilidade",
+        description: "Aguarde a verificação do nome ser concluída.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleNext = () => {
     if (currentStep === 1) {
-      if (!pharmacyData.name || !pharmacyData.slug || !pharmacyData.contactEmail || slugAvailable === false) {
-        toast({
-          title: "Campos obrigatórios",
-          description: "Preencha todos os campos obrigatórios e verifique se o nome da farmácia está disponível.",
-          variant: "destructive"
-        });
-        return;
-      }
+      if (!validateStep1()) return;
     }
     
     if (currentStep === 2) {
@@ -167,7 +242,7 @@ const PharmacyOnboardingPage = () => {
                     <Input
                       id="name"
                       value={pharmacyData.name}
-                      onChange={(e) => setPharmacyData(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) => handleNameChange(e.target.value)}
                       placeholder="Ex: Farmácia São João"
                       className="bg-slate-700 border-slate-600 text-white"
                     />
@@ -192,7 +267,7 @@ const PharmacyOnboardingPage = () => {
                         <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
                       )}
                       {slugAvailable === false && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-red-500 rounded-full"></div>
+                        <AlertCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-red-500" />
                       )}
                     </div>
                     {slugAvailable === false && (
@@ -391,6 +466,7 @@ const PharmacyOnboardingPage = () => {
               <Button
                 onClick={handleNext}
                 className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                disabled={currentStep === 1 && checkingSlug}
               >
                 Próximo
                 <ArrowRight className="w-4 h-4 ml-2" />
