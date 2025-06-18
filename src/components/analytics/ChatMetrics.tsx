@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -102,18 +101,18 @@ const ChatMetrics = () => {
 
       if (error) throw error;
 
-      const specialtyCount = data?.reduce((acc: any, message) => {
+      const specialtyCount: Record<string, number> = data?.reduce((acc: Record<string, number>, message) => {
         const specialty = message.specialty || 'Não especificado';
         acc[specialty] = (acc[specialty] || 0) + 1;
         return acc;
-      }, {});
+      }, {}) || {};
 
-      const total = Object.values(specialtyCount || {}).reduce((sum: number, count: any) => sum + count, 0);
+      const total = Object.values(specialtyCount).reduce((sum: number, count: number) => sum + count, 0);
 
-      const specialtyChartData = Object.entries(specialtyCount || {}).map(([specialty, count]) => ({
+      const specialtyChartData = Object.entries(specialtyCount).map(([specialty, count]) => ({
         specialty,
-        count: count as number,
-        percentage: total > 0 ? ((count as number) / total) * 100 : 0
+        count,
+        percentage: total > 0 ? (count / total) * 100 : 0
       }));
 
       setSpecialtyData(specialtyChartData);
