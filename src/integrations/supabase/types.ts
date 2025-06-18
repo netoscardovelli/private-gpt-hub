@@ -216,6 +216,45 @@ export type Database = {
         }
         Relationships: []
       }
+      automated_alerts: {
+        Row: {
+          alert_type: string
+          condition_rules: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          last_triggered: string | null
+          organization_id: string
+          trigger_count: number
+          updated_at: string
+        }
+        Insert: {
+          alert_type: string
+          condition_rules: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          last_triggered?: string | null
+          organization_id: string
+          trigger_count?: number
+          updated_at?: string
+        }
+        Update: {
+          alert_type?: string
+          condition_rules?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          last_triggered?: string | null
+          organization_id?: string
+          trigger_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -588,6 +627,137 @@ export type Database = {
           report_type?: string
           status?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      notification_logs: {
+        Row: {
+          channel: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          notification_id: string | null
+          sent_at: string
+          status: string
+        }
+        Insert: {
+          channel: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          notification_id?: string | null
+          sent_at?: string
+          status: string
+        }
+        Update: {
+          channel?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          notification_id?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_logs_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_settings: {
+        Row: {
+          created_at: string
+          email_notifications: boolean
+          frequency: string
+          id: string
+          incompatibility_alerts: boolean
+          organization_id: string | null
+          performance_alerts: boolean
+          push_notifications: boolean
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          system_updates: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_notifications?: boolean
+          frequency?: string
+          id?: string
+          incompatibility_alerts?: boolean
+          organization_id?: string | null
+          performance_alerts?: boolean
+          push_notifications?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          system_updates?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_notifications?: boolean
+          frequency?: string
+          id?: string
+          incompatibility_alerts?: boolean
+          organization_id?: string | null
+          performance_alerts?: boolean
+          push_notifications?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          system_updates?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          message: string
+          metadata: Json | null
+          organization_id: string
+          priority: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          organization_id: string
+          priority?: string
+          read_at?: string | null
+          title: string
+          type?: string
+          user_id?: string | null
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          organization_id?: string
+          priority?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1109,6 +1279,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_notifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_old_logs: {
         Args: Record<PropertyKey, never>
         Returns: undefined

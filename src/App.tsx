@@ -18,6 +18,7 @@ import FormulasFavoritesPage from "./pages/FormulasFavoritesPage";
 import FormulasImportPage from "./pages/FormulasImportPage";
 import PharmacyOnboardingPage from "./pages/PharmacyOnboardingPage";
 import SystemCustomizationPage from "./pages/SystemCustomizationPage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/formulas-import" element={<FormulasImportPage />} />
             <Route path="/pharmacy-onboarding" element={<PharmacyOnboardingPage />} />
             <Route path="/system-customization" element={<SystemCustomizationPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
