@@ -15,8 +15,10 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  const startTime = performance.now();
+
   try {
-    console.log('Processando requisição...');
+    console.log('🚀 Processando requisição de chat-ai...');
     
     const { 
       message, 
@@ -30,12 +32,10 @@ serve(async (req) => {
 
     // Se é feedback, processar aprendizado
     if (feedback && originalAnalysis && userId) {
-      console.log('Processando feedback para aprendizado...');
+      console.log('📚 Processando feedback para aprendizado...');
       
-      // Salvar feedback
       await saveFeedback(userId, originalAnalysis, feedback, rating || 5);
       
-      // Processar com OpenAI para extrair padrões
       const learningPrompt = buildLearningPrompt(userId, feedback, originalAnalysis);
       
       const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -61,9 +61,9 @@ serve(async (req) => {
         try {
           const parsedLearning = JSON.parse(learningData);
           await updateDoctorLearning(userId, parsedLearning);
-          console.log('Aprendizado processado e salvo');
+          console.log('✅ Aprendizado processado e salvo');
         } catch (e) {
-          console.log('Erro ao parsear dados de aprendizado:', e);
+          console.log('❌ Erro ao parsear dados de aprendizado:', e);
         }
       }
 
@@ -77,13 +77,13 @@ serve(async (req) => {
       throw new Error('Mensagem é obrigatória');
     }
 
-    console.log('Preparando mensagens com especialidade:', specialty);
+    console.log('🔧 Preparando mensagens com especialidade:', specialty);
 
     // Buscar perfil do médico se userId fornecido
     let doctorProfile = null;
     if (userId) {
       doctorProfile = await getDoctorProfile(userId);
-      console.log('Perfil do médico carregado:', doctorProfile?.specialty || 'Sem perfil');
+      console.log('👨‍⚕️ Perfil do médico carregado:', doctorProfile?.specialty || 'Sem perfil');
     }
 
     // Construir prompt do sistema com contexto de referência
@@ -100,14 +100,12 @@ serve(async (req) => {
       }
     ];
 
-    console.log('Enviando para OpenAI...');
+    console.log('🤖 Enviando para OpenAI...');
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
       throw new Error('OPENAI_API_KEY não configurada');
     }
-
-    console.log('Chamando OpenAI API com modelo avançado...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -125,28 +123,34 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Erro da OpenAI API:', response.status, errorText);
+      console.error('❌ Erro da OpenAI API:', response.status, errorText);
       throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Resposta da OpenAI recebida com modelo avançado');
+    console.log('✅ Resposta da OpenAI recebida');
 
     const aiResponse = data.choices[0]?.message?.content || 'Desculpe, não foi possível gerar uma resposta.';
+    const tokensUsed = data.usage?.total_tokens || 0;
 
-    // NOVO: Processar aprendizado automático baseado na interação
+    // Processar aprendizado automático baseado na interação
     if (userId) {
       console.log('🧠 Iniciando aprendizado automático...');
       await processAutoLearning(userId, message, aiResponse, specialty);
     }
 
-    console.log('Análise médica avançada concluída');
+    const endTime = performance.now();
+    const processingTime = endTime - startTime;
+
+    console.log(`⚡ Análise concluída em ${processingTime.toFixed(2)}ms`);
 
     return new Response(
       JSON.stringify({ 
         response: aiResponse,
         model: 'gpt-4o',
-        hasReferenceContext: true
+        hasReferenceContext: true,
+        tokens: tokensUsed,
+        processingTime: processingTime
       }),
       { 
         headers: { 
@@ -157,11 +161,16 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Erro na função:', error);
+    const endTime = performance.now();
+    const processingTime = endTime - startTime;
+    
+    console.error('❌ Erro na função:', error);
+    
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Erro interno do servidor',
-        details: error.toString()
+        details: error.toString(),
+        processingTime: processingTime
       }),
       { 
         status: 500, 

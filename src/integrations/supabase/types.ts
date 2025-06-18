@@ -69,6 +69,42 @@ export type Database = {
         }
         Relationships: []
       }
+      application_logs: {
+        Row: {
+          context: Json | null
+          created_at: string | null
+          event: string
+          id: string
+          level: string
+          metadata: Json | null
+          session_id: string
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string | null
+          event: string
+          id?: string
+          level: string
+          metadata?: Json | null
+          session_id: string
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string | null
+          event?: string
+          id?: string
+          level?: string
+          metadata?: Json | null
+          session_id?: string
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       doctor_profiles: {
         Row: {
           concentration_preferences: Json | null
@@ -117,6 +153,78 @@ export type Database = {
           specialty?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      performance_metrics: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          tags: Json | null
+          timestamp: string
+          unit: string
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          tags?: Json | null
+          timestamp?: string
+          unit: string
+          value: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          tags?: Json | null
+          timestamp?: string
+          unit?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      query_cache: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          hit_count: number | null
+          id: string
+          last_hit: string | null
+          metadata: Json | null
+          quality_score: number | null
+          query_hash: string
+          query_normalized: string
+          response: string
+          specialty: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          hit_count?: number | null
+          id?: string
+          last_hit?: string | null
+          metadata?: Json | null
+          quality_score?: number | null
+          query_hash: string
+          query_normalized: string
+          response: string
+          specialty: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          hit_count?: number | null
+          id?: string
+          last_hit?: string | null
+          metadata?: Json | null
+          quality_score?: number | null
+          query_hash?: string
+          query_normalized?: string
+          response?: string
+          specialty?: string
         }
         Relationships: []
       }
@@ -206,12 +314,123 @@ export type Database = {
         }
         Relationships: []
       }
+      usage_stats: {
+        Row: {
+          avg_daily: number | null
+          created_at: string | null
+          date: string
+          id: string
+          last_query_at: string | null
+          queries_this_month: number | null
+          queries_today: number | null
+          streak_days: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avg_daily?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          last_query_at?: string | null
+          queries_this_month?: number | null
+          queries_today?: number | null
+          streak_days?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avg_daily?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          last_query_at?: string | null
+          queries_this_month?: number | null
+          queries_today?: number | null
+          streak_days?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          id: string
+          ip_address: unknown | null
+          last_activity: string | null
+          metadata: Json | null
+          session_id: string
+          started_at: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          ip_address?: unknown | null
+          last_activity?: string | null
+          metadata?: Json | null
+          session_id: string
+          started_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          ip_address?: unknown | null
+          last_activity?: string | null
+          metadata?: Json | null
+          session_id?: string
+          started_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_tiers: {
+        Row: {
+          cache_access: boolean | null
+          created_at: string | null
+          daily_limit: number
+          id: string
+          monthly_limit: number
+          priority_bonus: number | null
+          tier_name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cache_access?: boolean | null
+          created_at?: string | null
+          daily_limit?: number
+          id?: string
+          monthly_limit?: number
+          priority_bonus?: number | null
+          tier_name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cache_access?: boolean | null
+          created_at?: string | null
+          daily_limit?: number
+          id?: string
+          monthly_limit?: number
+          priority_bonus?: number | null
+          tier_name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_old_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
