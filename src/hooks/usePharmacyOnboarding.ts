@@ -1,9 +1,9 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { runOrganizationsMigration } from '@/utils/migrationRunner';
 
 interface PharmacyData {
   name: string;
@@ -56,19 +56,6 @@ export const usePharmacyOnboarding = () => {
     setLoading(true);
 
     try {
-      // Executar migração das políticas RLS primeiro
-      console.log('🔧 Aplicando correções de segurança...');
-      const migrationSuccess = await runOrganizationsMigration();
-      if (!migrationSuccess) {
-        toast({
-          title: "Erro de configuração",
-          description: "Falha ao aplicar configurações de segurança",
-          variant: "destructive"
-        });
-        setLoading(false);
-        return null;
-      }
-
       // Verificar se o slug está disponível
       const isSlugAvailable = await checkSlugAvailability(pharmacyData.slug);
       if (!isSlugAvailable) {
