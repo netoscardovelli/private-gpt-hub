@@ -1,175 +1,161 @@
 
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { User, Bot, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
+import { Copy, Check, Bot, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import QuickActionButtons from './QuickActionButtons';
-import FormulaSuggestionButtons from './FormulaSuggestionButtons';
-import ActiveSuggestions from './ActiveSuggestions';
-import QuickActiveAdder from './QuickActiveAdder';
-import { detectFormulaAnalysis } from './FormulaDetection';
-
-interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant';
-  timestamp: Date;
-}
 
 interface MessageBubbleProps {
-  message: Message;
-  index: number;
-  onQuickAction: (action: string) => void;
-  onAddActiveToFormula: (actives: any[]) => void;
-  userId: string;
+  message: string;
+  isUser: boolean;
+  timestamp?: string;
 }
 
-const MessageBubble = ({ 
-  message, 
-  index, 
-  onQuickAction, 
-  onAddActiveToFormula,
-  userId 
-}: MessageBubbleProps) => {
+const MessageBubble = ({ message, isUser, timestamp }: MessageBubbleProps) => {
   const [copied, setCopied] = useState(false);
-  const [showQuickActiveAdder, setShowQuickActiveAdder] = useState(false);
   const { toast } = useToast();
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(message.content);
+      await navigator.clipboard.writeText(message);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
       toast({
-        title: "Copiado!",
-        description: "Mensagem copiada para a área de transferência",
+        title: "Texto copiado!",
+        description: "O conteúdo foi copiado para a área de transferência.",
       });
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       toast({
         title: "Erro ao copiar",
-        description: "Não foi possível copiar a mensagem",
-        variant: "destructive"
+        description: "Não foi possível copiar o texto.",
+        variant: "destructive",
       });
     }
   };
 
-  const handleAddActiveFromAdder = (actives: any[]) => {
-    onAddActiveToFormula(actives);
-    setShowQuickActiveAdder(false);
+  // Função para extrair e copiar apenas a fórmula
+  const copyFormulaOnly = async () => {
+    const formulaMatch = message.match(/\*\*Fórmula:?\*\*(.*?)(?=\*\*|$)/s);
+    if (formulaMatch) {
+      const formula = formulaMatch[1].trim();
+      try {
+        await navigator.clipboard.writeText(formula);
+        toast({
+          title: "Fórmula copiada!",
+          description: "A fórmula foi copiada sem as explicações.",
+        });
+      } catch (err) {
+        toast({
+          title: "Erro ao copiar fórmula",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
-  const hasQuickActions = message.content.includes('<quick-action>');
-  const isFormulaAnalysis = detectFormulaAnalysis(message);
-  
-  // Conteúdo limpo sem quick actions para exibição
-  const cleanContent = message.content.replace(/<quick-action>.*?<\/quick-action>/g, '');
+  // Função para extrair e copiar apenas os ativos
+  const copyActivesOnly = async () => {
+    const activesMatch = message.match(/\*\*Ativos:?\*\*(.*?)(?=\*\*|$)/s);
+    if (activesMatch) {
+      const actives = activesMatch[1].trim();
+      try {
+        await navigator.clipboard.writeText(actives);
+        toast({
+          title: "Ativos copiados!",
+          description: "A lista de ativos foi copiada.",
+        });
+      } catch (err) {
+        toast({
+          title: "Erro ao copiar ativos",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
-  console.log('💬 MessageBubble renderizado:', {
-    messageId: message.id,
-    role: message.role,
-    hasQuickActions,
-    isFormulaAnalysis,
-    showFormulaSuggestionButtons: message.role === 'assistant' && isFormulaAnalysis
-  });
-
-  // Se está mostrando o QuickActiveAdder, renderizar apenas ele
-  if (showQuickActiveAdder) {
-    return (
-      <div className="flex justify-start">
-        <div className="max-w-[85%]">
-          <QuickActiveAdder
-            onAddActive={handleAddActiveFromAdder}
-            currentFormula={message.content}
-            specialty="geral"
-          />
-          <div className="mt-2">
-            <Button
-              onClick={() => setShowQuickActiveAdder(false)}
-              variant="ghost"
-              size="sm"
-              className="text-emerald-600 hover:text-emerald-800"
-            >
-              ← Voltar
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const hasFormula = message.includes('**Fórmula') || message.includes('**Formula');
+  const hasActives = message.includes('**Ativos') || message.includes('**Ativo');
 
   return (
-    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-      <Card className={`max-w-[85%] p-4 ${
-        message.role === 'user' 
-          ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-none' 
-          : 'bg-white border-emerald-200 text-emerald-900 shadow-sm'
-      }`}>
-        <div className="flex items-start space-x-3">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-            message.role === 'user' 
-              ? 'bg-white/20' 
-              : 'bg-gradient-to-r from-emerald-500 to-emerald-600'
-          }`}>
-            {message.role === 'user' ? (
-              <User className="w-4 h-4" />
-            ) : (
-              <Bot className="w-4 h-4 text-white" />
-            )}
-          </div>
-          <div className="flex-1">
-            <div className="whitespace-pre-wrap">
-              {cleanContent}
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
+      <div className={`max-w-3xl ${isUser ? 'order-2' : 'order-1'}`}>
+        <div
+          className={`rounded-2xl px-4 py-3 ${
+            isUser
+              ? 'bg-emerald-500 text-white ml-auto'
+              : 'bg-slate-800 text-white border border-slate-700'
+          }`}
+        >
+          <div className="flex items-start gap-2 mb-2">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+              isUser ? 'bg-white/20' : 'bg-emerald-500'
+            }`}>
+              {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
             </div>
-            
-            {/* Quick Action Buttons */}
-            {message.role === 'assistant' && hasQuickActions && (
-              <QuickActionButtons 
-                content={message.content}
-                onQuickAction={onQuickAction}
-              />
-            )}
-
-            {/* Active Suggestions - Sugestões inteligentes baseadas em evidência */}
-            {message.role === 'assistant' && isFormulaAnalysis && (
-              <ActiveSuggestions
-                onAddActiveToFormula={onAddActiveToFormula}
-                messageContent={message.content}
-                userId={userId}
-              />
-            )}
-
-            {/* Formula Suggestion Buttons - Com botão "Ativos Esquecidos" */}
-            {message.role === 'assistant' && isFormulaAnalysis && (
-              <FormulaSuggestionButtons 
-                onQuickAction={onQuickAction}
-                onAddActiveToFormula={onAddActiveToFormula}
-                onShowQuickActiveAdder={() => setShowQuickActiveAdder(true)}
-              />
-            )}
-
-            <div className="flex items-center justify-between mt-3">
-              <span className={`text-xs ${message.role === 'user' ? 'opacity-70' : 'text-emerald-500'}`}>
-                {message.timestamp.toLocaleTimeString()}
-              </span>
-              <div className="flex items-center space-x-2">
-                <Button
-                  onClick={copyToClipboard}
-                  size="sm"
-                  variant="ghost"
-                  className={`text-xs hover:opacity-100 ${message.role === 'user' ? 'opacity-70 text-white hover:text-white' : 'text-emerald-500 hover:text-emerald-700'}`}
-                >
-                  {copied ? (
-                    <Check className="w-3 h-3" />
-                  ) : (
-                    <Copy className="w-3 h-3" />
-                  )}
-                </Button>
+            <div className="flex-1">
+              <div className="text-sm opacity-70 mb-1">
+                {isUser ? 'Você' : 'Formula.AI'}
               </div>
             </div>
           </div>
+          
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">
+            {message}
+          </div>
+          
+          {timestamp && (
+            <div className="text-xs opacity-50 mt-2">
+              {timestamp}
+            </div>
+          )}
+          
+          {!isUser && (
+            <div className="flex gap-2 mt-3 pt-2 border-t border-white/10">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={copyToClipboard}
+                className="h-8 px-3 text-xs hover:bg-white/10"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-3 h-3 mr-1" />
+                    Copiado!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3 mr-1" />
+                    Copiar Tudo
+                  </>
+                )}
+              </Button>
+              
+              {hasFormula && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={copyFormulaOnly}
+                  className="h-8 px-3 text-xs hover:bg-white/10"
+                >
+                  <Copy className="w-3 h-3 mr-1" />
+                  Fórmula
+                </Button>
+              )}
+              
+              {hasActives && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={copyActivesOnly}
+                  className="h-8 px-3 text-xs hover:bg-white/10"
+                >
+                  <Copy className="w-3 h-3 mr-1" />
+                  Ativos
+                </Button>
+              )}
+            </div>
+          )}
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
