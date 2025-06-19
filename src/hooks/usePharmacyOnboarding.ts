@@ -68,7 +68,8 @@ export const usePharmacyOnboarding = () => {
         return null;
       }
 
-      console.log('Criando organização com dados:', {
+      console.log('🚀 Iniciando criação da organização...');
+      console.log('📝 Dados da organização:', {
         name: pharmacyData.name,
         slug: pharmacyData.slug,
         plan_type: planType,
@@ -78,7 +79,7 @@ export const usePharmacyOnboarding = () => {
         description: pharmacyData.description || null
       });
 
-      // Criar a organização
+      // Criar a organização com mais logs para debug
       const { data: organization, error: orgError } = await supabase
         .from('organizations')
         .insert({
@@ -94,19 +95,27 @@ export const usePharmacyOnboarding = () => {
         .single();
 
       if (orgError) {
-        console.error('Erro ao criar organização:', orgError);
+        console.error('❌ Erro detalhado ao criar organização:', {
+          error: orgError,
+          code: orgError.code,
+          message: orgError.message,
+          details: orgError.details,
+          hint: orgError.hint
+        });
+        
         toast({
           title: "Erro ao criar farmácia",
-          description: `Falha ao criar organização: ${orgError.message}`,
+          description: `Falha ao criar organização: ${orgError.message}. Código: ${orgError.code}`,
           variant: "destructive"
         });
         setLoading(false);
         return null;
       }
 
-      console.log('Organização criada com sucesso:', organization);
+      console.log('✅ Organização criada com sucesso:', organization);
 
       // Atualizar o perfil do usuário para ser owner da organização
+      console.log('📝 Atualizando perfil do usuário...');
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
@@ -116,7 +125,7 @@ export const usePharmacyOnboarding = () => {
         .eq('id', user.id);
 
       if (profileError) {
-        console.error('Erro ao atualizar perfil:', profileError);
+        console.error('❌ Erro ao atualizar perfil:', profileError);
         toast({
           title: "Erro ao atualizar perfil",
           description: `Falha ao atualizar perfil: ${profileError.message}`,
@@ -126,7 +135,7 @@ export const usePharmacyOnboarding = () => {
         return null;
       }
 
-      console.log('Perfil atualizado com sucesso');
+      console.log('✅ Perfil atualizado com sucesso');
 
       // Forçar atualização do perfil no contexto
       await updateProfile({ 
@@ -135,6 +144,7 @@ export const usePharmacyOnboarding = () => {
       });
 
       // Criar configurações iniciais do sistema
+      console.log('⚙️ Criando configurações do sistema...');
       const { error: settingsError } = await supabase
         .from('system_settings')
         .insert({
@@ -145,8 +155,10 @@ export const usePharmacyOnboarding = () => {
         });
 
       if (settingsError) {
-        console.error('Erro ao criar configurações iniciais:', settingsError);
+        console.error('⚠️ Erro ao criar configurações iniciais:', settingsError);
         // Não falha o processo, apenas loga o erro
+      } else {
+        console.log('✅ Configurações do sistema criadas');
       }
 
       toast({
@@ -158,7 +170,7 @@ export const usePharmacyOnboarding = () => {
       return organization;
 
     } catch (error) {
-      console.error('Erro no processo de criação:', error);
+      console.error('💥 Erro inesperado no processo de criação:', error);
       toast({
         title: "Erro inesperado",
         description: "Falha no processo de cadastro. Tente novamente.",
