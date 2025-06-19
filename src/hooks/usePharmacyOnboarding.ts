@@ -108,6 +108,12 @@ export const usePharmacyOnboarding = () => {
         // Não falha o processo, apenas loga o erro
       }
 
+      // Forçar atualização do perfil no contexto
+      await updateProfile({ 
+        organization_id: organization.id, 
+        role: 'owner' 
+      });
+
       // Criar configurações iniciais do sistema
       const { error: settingsError } = await supabase
         .from('system_settings')
@@ -148,19 +154,24 @@ export const usePharmacyOnboarding = () => {
     const organization = await createPharmacy(pharmacyData, planType);
 
     if (organization) {
-      if (planType === 'pro') {
-        // Para planos pagos, por enquanto apenas mostra mensagem
-        toast({
-          title: "Plano Profissional Selecionado",
-          description: "Sua farmácia foi criada! Integração de pagamento será implementada em breve.",
-        });
-        setTimeout(() => {
-          navigate('/');
-        }, 2000);
-      } else {
-        // Para plano gratuito, redirecionar direto para o dashboard
+      toast({
+        title: "Redirecionando...",
+        description: "Aguarde enquanto carregamos seu dashboard.",
+      });
+
+      // Pequeno delay para garantir que o contexto seja atualizado
+      setTimeout(() => {
+        if (planType === 'pro') {
+          toast({
+            title: "Plano Profissional Selecionado",
+            description: "Sua farmácia foi criada! Integração de pagamento será implementada em breve.",
+          });
+        }
+        
+        // Redirecionar para a página inicial que irá detectar a organização e redirecionar para o dashboard
         navigate('/');
-      }
+      }, 1000);
+      
       return true;
     }
 

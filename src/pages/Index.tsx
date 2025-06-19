@@ -57,7 +57,7 @@ const Index = () => {
             Para começar a usar nosso assistente farmacêutico, primeiro você precisa cadastrar sua farmácia.
           </p>
           <button 
-            onClick={() => navigate('/pharmacy/onboarding')}
+            onClick={() => navigate('/pharmacy-onboarding')}
             className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-lg font-medium transition-colors text-lg"
           >
             Cadastrar Minha Farmácia
