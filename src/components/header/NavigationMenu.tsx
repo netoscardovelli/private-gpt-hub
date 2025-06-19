@@ -26,6 +26,7 @@ const NavigationMenu = () => {
     { to: '/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/reports', icon: FileText, label: 'Relatórios' },
     { to: '/doctors', icon: Users, label: 'Médicos' },
+    { to: '/prescriptions', icon: FileText, label: 'Prescrições' },
     { to: '/actives-favorites', icon: Heart, label: 'Ativos Favoritos' },
     { to: '/formulas-favorites', icon: Heart, label: 'Fórmulas Favoritas' },
     { to: '/formulas-import', icon: Upload, label: 'Importar Fórmulas' },

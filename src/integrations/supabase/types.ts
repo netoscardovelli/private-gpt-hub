@@ -349,6 +349,104 @@ export type Database = {
           },
         ]
       }
+      digital_signatures: {
+        Row: {
+          certificate_info: Json
+          created_at: string
+          id: string
+          is_valid: boolean | null
+          prescription_id: string
+          signature_data: string
+          signature_type: string
+          signer_id: string
+          timestamp_data: Json | null
+        }
+        Insert: {
+          certificate_info: Json
+          created_at?: string
+          id?: string
+          is_valid?: boolean | null
+          prescription_id: string
+          signature_data: string
+          signature_type?: string
+          signer_id: string
+          timestamp_data?: Json | null
+        }
+        Update: {
+          certificate_info?: Json
+          created_at?: string
+          id?: string
+          is_valid?: boolean | null
+          prescription_id?: string
+          signature_data?: string
+          signature_type?: string
+          signer_id?: string
+          timestamp_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_signatures_prescription_id_fkey"
+            columns: ["prescription_id"]
+            isOneToOne: false
+            referencedRelation: "prescriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dispensation_logs: {
+        Row: {
+          created_at: string
+          dispensation_date: string
+          dispensed_quantity: number
+          id: string
+          notes: string | null
+          patient_signature: Json | null
+          pharmacist_id: string
+          pharmacy_id: string
+          prescription_id: string
+          prescription_item_id: string
+        }
+        Insert: {
+          created_at?: string
+          dispensation_date?: string
+          dispensed_quantity: number
+          id?: string
+          notes?: string | null
+          patient_signature?: Json | null
+          pharmacist_id: string
+          pharmacy_id: string
+          prescription_id: string
+          prescription_item_id: string
+        }
+        Update: {
+          created_at?: string
+          dispensation_date?: string
+          dispensed_quantity?: number
+          id?: string
+          notes?: string | null
+          patient_signature?: Json | null
+          pharmacist_id?: string
+          pharmacy_id?: string
+          prescription_id?: string
+          prescription_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispensation_logs_prescription_id_fkey"
+            columns: ["prescription_id"]
+            isOneToOne: false
+            referencedRelation: "prescriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispensation_logs_prescription_item_id_fkey"
+            columns: ["prescription_item_id"]
+            isOneToOne: false
+            referencedRelation: "prescription_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doctor_invitations: {
         Row: {
           accepted_at: string | null
@@ -876,6 +974,167 @@ export type Database = {
         }
         Relationships: []
       }
+      prescription_items: {
+        Row: {
+          active_ingredients: Json
+          anvisa_code: string | null
+          concentration: string
+          controlled_substance: boolean | null
+          created_at: string
+          dosage_instructions: string
+          duration_days: number | null
+          id: string
+          medication_name: string
+          pharmaceutical_form: string
+          prescription_id: string
+          quantity: number
+        }
+        Insert: {
+          active_ingredients: Json
+          anvisa_code?: string | null
+          concentration: string
+          controlled_substance?: boolean | null
+          created_at?: string
+          dosage_instructions: string
+          duration_days?: number | null
+          id?: string
+          medication_name: string
+          pharmaceutical_form: string
+          prescription_id: string
+          quantity: number
+        }
+        Update: {
+          active_ingredients?: Json
+          anvisa_code?: string | null
+          concentration?: string
+          controlled_substance?: boolean | null
+          created_at?: string
+          dosage_instructions?: string
+          duration_days?: number | null
+          id?: string
+          medication_name?: string
+          pharmaceutical_form?: string
+          prescription_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescription_items_prescription_id_fkey"
+            columns: ["prescription_id"]
+            isOneToOne: false
+            referencedRelation: "prescriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prescription_templates: {
+        Row: {
+          created_at: string
+          created_by: string
+          doctor_id: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          organization_id: string
+          specialty: string | null
+          template_data: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          doctor_id?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          organization_id: string
+          specialty?: string | null
+          template_data: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          doctor_id?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          organization_id?: string
+          specialty?: string | null
+          template_data?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      prescriptions: {
+        Row: {
+          clinical_indication: string | null
+          controlled_medication: boolean | null
+          created_at: string
+          digital_signature: Json | null
+          doctor_id: string
+          id: string
+          organization_id: string
+          patient_address: Json
+          patient_birth_date: string
+          patient_cpf: string
+          patient_name: string
+          pharmacy_id: string | null
+          prescription_date: string
+          prescription_number: string
+          qr_code: string | null
+          sngpc_reported: boolean | null
+          special_instructions: string | null
+          status: string
+          updated_at: string
+          validity_date: string
+        }
+        Insert: {
+          clinical_indication?: string | null
+          controlled_medication?: boolean | null
+          created_at?: string
+          digital_signature?: Json | null
+          doctor_id: string
+          id?: string
+          organization_id: string
+          patient_address: Json
+          patient_birth_date: string
+          patient_cpf: string
+          patient_name: string
+          pharmacy_id?: string | null
+          prescription_date?: string
+          prescription_number: string
+          qr_code?: string | null
+          sngpc_reported?: boolean | null
+          special_instructions?: string | null
+          status?: string
+          updated_at?: string
+          validity_date: string
+        }
+        Update: {
+          clinical_indication?: string | null
+          controlled_medication?: boolean | null
+          created_at?: string
+          digital_signature?: Json | null
+          doctor_id?: string
+          id?: string
+          organization_id?: string
+          patient_address?: Json
+          patient_birth_date?: string
+          patient_cpf?: string
+          patient_name?: string
+          pharmacy_id?: string | null
+          prescription_date?: string
+          prescription_number?: string
+          qr_code?: string | null
+          sngpc_reported?: boolean | null
+          special_instructions?: string | null
+          status?: string
+          updated_at?: string
+          validity_date?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1286,6 +1545,14 @@ export type Database = {
       cleanup_old_logs: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_prescription_number: {
+        Args: { org_id: string }
+        Returns: string
+      }
+      validate_cpf: {
+        Args: { cpf: string }
+        Returns: boolean
       }
     }
     Enums: {

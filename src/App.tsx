@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,7 @@ import PharmacyOnboardingPage from "./pages/PharmacyOnboardingPage";
 import SystemCustomizationPage from "./pages/SystemCustomizationPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import APIManagementPage from "./pages/APIManagementPage";
+import PrescriptionsPage from "./pages/PrescriptionsPage";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +45,7 @@ const App = () => (
             <Route path="/system-customization" element={<SystemCustomizationPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/api-management" element={<APIManagementPage />} />
+            <Route path="/prescriptions" element={<PrescriptionsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
