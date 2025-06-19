@@ -907,11 +907,15 @@ export type Database = {
       }
       organizations: {
         Row: {
+          address: string | null
+          contact_email: string | null
           created_at: string | null
+          description: string | null
           domain: string | null
           id: string
           logo_url: string | null
           name: string
+          phone: string | null
           plan_type: string | null
           slug: string
           stripe_customer_id: string | null
@@ -919,11 +923,15 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
+          contact_email?: string | null
           created_at?: string | null
+          description?: string | null
           domain?: string | null
           id?: string
           logo_url?: string | null
           name: string
+          phone?: string | null
           plan_type?: string | null
           slug: string
           stripe_customer_id?: string | null
@@ -931,11 +939,15 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
+          contact_email?: string | null
           created_at?: string | null
+          description?: string | null
           domain?: string | null
           id?: string
           logo_url?: string | null
           name?: string
+          phone?: string | null
           plan_type?: string | null
           slug?: string
           stripe_customer_id?: string | null
