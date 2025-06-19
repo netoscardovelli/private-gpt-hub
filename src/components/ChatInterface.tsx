@@ -251,7 +251,30 @@ Por favor, faça uma análise completa desta fórmula incluindo compatibilidade,
     setShowRegisteredFormulas(false);
 
     try {
-      // ... keep existing code (formula analysis logic)
+      const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      const { data, error } = await supabase.functions.invoke('chat-ai', {
+        body: {
+          message,
+          conversationHistory,
+          customActives,
+          userId: user.id,
+          specialty: selectedSpecialty
+        }
+      });
+
+      if (error || data?.error || !data?.response) {
+        throw new Error(data?.details || error?.message || 'Erro desconhecido');
+      }
+
+      addMessage({
+        content: data.response,
+        role: 'assistant'
+      });
     } catch (error: any) {
       monitoring.trackError(error, {
         context: 'registered_formula_analysis',
@@ -378,11 +401,9 @@ Por favor, faça uma análise detalhada desta fórmula incluindo mecanismo de a�
         {messages.map((message, index) => (
           <MessageBubble
             key={message.id}
-            message={message}
-            index={index}
-            onQuickAction={handleQuickAction}
-            onAddActiveToFormula={handleAddActiveToFormula}
-            userId={user.id}
+            message={message.content}
+            isUser={message.role === 'user'}
+            timestamp={message.timestamp.toLocaleString()}
           />
         ))}
 
