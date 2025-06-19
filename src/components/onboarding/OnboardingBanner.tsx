@@ -47,7 +47,7 @@ const OnboardingBanner = () => {
             </ul>
           </div>
           <Button 
-            onClick={() => navigate('/pharmacy/onboarding')}
+            onClick={() => navigate('/pharmacy-onboarding')}
             className="bg-emerald-500 hover:bg-emerald-600 text-white whitespace-nowrap"
           >
             Cadastrar Farmácia
