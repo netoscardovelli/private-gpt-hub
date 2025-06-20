@@ -36,10 +36,10 @@ export const useDoctorInvitations = () => {
 
       console.log('🔍 Buscando convites para organização:', profile.organization_id);
 
-      // Primeiro buscar apenas os convites, sem JOIN
+      // Buscar apenas os convites básicos primeiro
       const { data: invitationsData, error: invitationsError } = await supabase
         .from('doctor_invitations')
-        .select('*')
+        .select('id, email, status, invitation_token, expires_at, created_at, invited_by, organization_id')
         .eq('organization_id', profile.organization_id)
         .order('created_at', { ascending: false });
 
@@ -54,24 +54,36 @@ export const useDoctorInvitations = () => {
         return [];
       }
 
-      // Buscar os nomes dos usuários que fizeram os convites
-      const inviterIds = [...new Set(invitationsData.map(inv => inv.invited_by))];
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('id', inviterIds);
-
-      // Combinar os dados
-      const invitationsWithNames = invitationsData.map(invitation => ({
-        ...invitation,
-        invited_by_name: profilesData?.find(p => p.id === invitation.invited_by)?.full_name || 'Usuário não encontrado'
-      }));
+      // Para cada convite, tentar buscar o nome do usuário que convidou
+      const invitationsWithNames = await Promise.all(
+        invitationsData.map(async (invitation) => {
+          try {
+            const { data: inviterProfile } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', invitation.invited_by)
+              .single();
+            
+            return {
+              ...invitation,
+              invited_by_name: inviterProfile?.full_name || 'Usuário não encontrado'
+            };
+          } catch (error) {
+            console.warn('⚠️ Não foi possível buscar nome do usuário:', invitation.invited_by);
+            return {
+              ...invitation,
+              invited_by_name: 'Usuário não encontrado'
+            };
+          }
+        })
+      );
 
       return invitationsWithNames as DoctorInvitation[];
     },
     enabled: !!profile?.organization_id && ['admin', 'super_admin', 'owner'].includes(profile?.role || ''),
     retry: 1,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    staleTime: 30000 // 30 segundos para evitar muitas requisições
   });
 
   const inviteDoctor = useMutation({
