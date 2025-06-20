@@ -38,6 +38,13 @@ const DoctorRegisterPage = () => {
   
   const { registerDoctor, isRegistering } = useDoctorRegistration();
 
+  // Função para tentar validação novamente
+  const handleRetry = () => {
+    console.log('🔄 Tentando validação novamente...');
+    setHasValidated(false); // Permitir nova validação
+    retryValidation();
+  };
+
   // Validação única do token
   useEffect(() => {
     console.log('🚀 DoctorRegisterPage carregada');
@@ -246,13 +253,6 @@ const DoctorRegisterPage = () => {
       </div>
     );
   }
-
-  // Função para tentar validação novamente
-  const handleRetry = () => {
-    console.log('🔄 Tentando validação novamente...');
-    setHasValidated(false); // Permitir nova validação
-    retryValidation();
-  };
 
   // Formulário de registro
   return (
