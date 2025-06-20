@@ -1,8 +1,8 @@
 
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Calendar, MoreHorizontal } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Calendar, MoreHorizontal, Trash2 } from 'lucide-react';
 import { DoctorInvitation } from '@/types/doctorInvitations';
 import StatusBadge from './StatusBadge';
 
@@ -10,9 +10,10 @@ interface InvitationRowProps {
   invitation: DoctorInvitation;
   onCancel: (id: string) => void;
   onResend: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-const InvitationRow = ({ invitation, onCancel, onResend }: InvitationRowProps) => {
+const InvitationRow = ({ invitation, onCancel, onResend, onDelete }: InvitationRowProps) => {
   return (
     <TableRow>
       <TableCell className="font-medium">{invitation.email}</TableCell>
@@ -52,6 +53,14 @@ const InvitationRow = ({ invitation, onCancel, onResend }: InvitationRowProps) =
                 Renovar Convite
               </DropdownMenuItem>
             )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={() => onDelete(invitation.id)}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Excluir Convite
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>

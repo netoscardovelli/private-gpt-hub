@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Users } from 'lucide-react';
 import { DoctorInvitation } from '@/types/doctorInvitations';
@@ -9,9 +8,10 @@ interface InvitationTableProps {
   isLoading: boolean;
   onCancel: (id: string) => void;
   onResend: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-const InvitationTable = ({ invitations, isLoading, onCancel, onResend }: InvitationTableProps) => {
+const InvitationTable = ({ invitations, isLoading, onCancel, onResend, onDelete }: InvitationTableProps) => {
   if (isLoading) {
     return (
       <div className="text-center py-8">
@@ -51,6 +51,7 @@ const InvitationTable = ({ invitations, isLoading, onCancel, onResend }: Invitat
             invitation={invitation}
             onCancel={onCancel}
             onResend={onResend}
+            onDelete={onDelete}
           />
         ))}
       </TableBody>

@@ -1,8 +1,7 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
-import { createDoctorInvitation, cancelDoctorInvitation, resendDoctorInvitation } from '@/services/doctorInvitations';
+import { createDoctorInvitation, cancelDoctorInvitation, resendDoctorInvitation, deleteDoctorInvitation } from '@/services/doctorInvitations';
 
 export const useDoctorInvitationMutations = () => {
   const { profile } = useAuth();
@@ -91,12 +90,32 @@ export const useDoctorInvitationMutations = () => {
     }
   });
 
+  const deleteInvitation = useMutation({
+    mutationFn: deleteDoctorInvitation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['doctor-invitations'] });
+      toast({
+        title: "Convite excluído",
+        description: "O convite foi excluído permanentemente."
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao excluir convite",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   return {
     inviteDoctor: inviteDoctor.mutate,
     cancelInvitation: cancelInvitation.mutate,
     resendInvitation: resendInvitation.mutate,
+    deleteInvitation: deleteInvitation.mutate,
     isInviting: inviteDoctor.isPending,
     isCancelling: cancelInvitation.isPending,
-    isResending: resendInvitation.isPending
+    isResending: resendInvitation.isPending,
+    isDeleting: deleteInvitation.isPending
   };
 };

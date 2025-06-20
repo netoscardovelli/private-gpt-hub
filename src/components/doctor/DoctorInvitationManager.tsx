@@ -16,6 +16,7 @@ const DoctorInvitationManager = () => {
     inviteDoctor, 
     cancelInvitation, 
     resendInvitation,
+    deleteInvitation,
     isInviting 
   } = useDoctorInvitations();
 
@@ -59,6 +60,7 @@ const DoctorInvitationManager = () => {
             isLoading={isLoading}
             onCancel={cancelInvitation}
             onResend={resendInvitation}
+            onDelete={deleteInvitation}
           />
         </CardContent>
       </Card>
