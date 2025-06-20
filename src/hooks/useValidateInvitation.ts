@@ -26,7 +26,7 @@ export const useValidateInvitation = (): ValidationResponse => {
         .from('doctor_invitations')
         .select(`
           *,
-          organization:organizations(name, slug)
+          organization:organizations(id, name, slug)
         `)
         .eq('invitation_token', token)
         .single();
@@ -54,7 +54,27 @@ export const useValidateInvitation = (): ValidationResponse => {
       }
 
       console.log('✅ Convite válido encontrado:', data);
-      setInvitation(data);
+      
+      // Transformar os dados para o tipo correto
+      const transformedInvitation: DoctorInvitation = {
+        id: data.id,
+        email: data.email,
+        status: data.status as 'pending' | 'accepted' | 'expired' | 'cancelled',
+        invitation_token: data.invitation_token,
+        expires_at: data.expires_at,
+        created_at: data.created_at,
+        accepted_at: data.accepted_at,
+        invited_by: data.invited_by,
+        organization_id: data.organization_id,
+        updated_at: data.updated_at,
+        organization: data.organization ? {
+          id: data.organization.id || data.organization_id,
+          name: data.organization.name,
+          slug: data.organization.slug
+        } : undefined
+      };
+      
+      setInvitation(transformedInvitation);
     } catch (err: any) {
       console.error('❌ Erro na validação:', err);
       setError(err.message);
