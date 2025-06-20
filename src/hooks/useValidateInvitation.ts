@@ -22,7 +22,7 @@ export const useValidateInvitation = (): ValidationResponse => {
     try {
       console.log('🔍 Validando convite com token:', token);
       
-      // Usar query mais simples que funcione com as políticas RLS
+      // Query simplificada para buscar o convite pelo token
       const { data, error: queryError } = await supabase
         .from('doctor_invitations')
         .select(`
@@ -30,19 +30,29 @@ export const useValidateInvitation = (): ValidationResponse => {
           organization:organizations(id, name, slug)
         `)
         .eq('invitation_token', token)
-        .eq('status', 'pending')
         .maybeSingle();
 
       if (queryError) {
         console.error('❌ Erro ao buscar convite:', queryError);
-        throw new Error('Erro ao validar convite');
+        throw new Error('Erro ao validar convite: ' + queryError.message);
       }
 
       if (!data) {
-        throw new Error('Convite não encontrado ou já foi usado');
+        throw new Error('Convite não encontrado');
       }
 
-      // Verificar se o convite expirou
+      // Verificar se o convite ainda está pendente
+      if (data.status !== 'pending') {
+        if (data.status === 'accepted') {
+          throw new Error('Este convite já foi aceito');
+        } else if (data.status === 'expired') {
+          throw new Error('Este convite expirou');
+        } else if (data.status === 'cancelled') {
+          throw new Error('Este convite foi cancelado');
+        }
+      }
+
+      // Verificar se o convite expirou (pela data)
       const now = new Date();
       const expiresAt = new Date(data.expires_at);
       
@@ -73,7 +83,7 @@ export const useValidateInvitation = (): ValidationResponse => {
       setInvitation(transformedInvitation);
     } catch (err: any) {
       console.error('❌ Erro na validação:', err);
-      setError(err.message);
+      setError(err.message || 'Erro desconhecido ao validar convite');
     } finally {
       setIsLoading(false);
     }
