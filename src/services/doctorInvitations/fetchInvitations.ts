@@ -24,6 +24,7 @@ export const fetchDoctorInvitations = async (organizationId: string): Promise<Do
 
   return (data || []).map(invitation => ({
     ...invitation,
+    status: invitation.status as 'pending' | 'accepted' | 'expired' | 'cancelled',
     invited_by_name: invitation.invited_by_profile?.full_name || 'Administrador',
     organization: invitation.organization ? {
       id: invitation.organization.id || invitation.organization_id,
