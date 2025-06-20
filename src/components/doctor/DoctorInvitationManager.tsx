@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useDoctorInvitations } from '@/hooks/useDoctorInvitations';
 import { useAuth } from '@/hooks/useAuth';
-import { UserPlus, Mail, Calendar, MoreHorizontal } from 'lucide-react';
+import { UserPlus, Mail, Calendar, MoreHorizontal, AlertCircle, Users } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const DoctorInvitationManager = () => {
@@ -17,6 +18,7 @@ const DoctorInvitationManager = () => {
   const { 
     invitations, 
     isLoading, 
+    error,
     inviteDoctor, 
     cancelInvitation, 
     resendInvitation,
@@ -45,14 +47,57 @@ const DoctorInvitationManager = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  // Debug info
+  console.log('🔍 DoctorInvitationManager - Profile:', {
+    organizationId: profile?.organization_id,
+    role: profile?.role,
+    hasPermission: profile?.organization_id && ['admin', 'super_admin', 'owner'].includes(profile?.role || '')
+  });
+
   // Verificar se o usuário tem permissão para gerenciar convites
-  if (!profile?.organization_id || !['admin', 'super_admin', 'owner'].includes(profile?.role || '')) {
+  if (!profile?.organization_id) {
     return (
       <Card>
         <CardContent className="pt-6">
-          <p className="text-center text-slate-500">
-            Você não tem permissão para gerenciar convites de médicos.
-          </p>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Você precisa estar associado a uma organização para gerenciar convites de médicos.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!['admin', 'super_admin', 'owner'].includes(profile?.role || '')) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Você não tem permissão para gerenciar convites de médicos. 
+              Role atual: <strong>{profile?.role || 'não definido'}</strong>. 
+              Roles necessários: admin, super_admin ou owner.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    console.error('❌ Erro no componente:', error);
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Erro ao carregar convites: {error.message}
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     );
@@ -177,7 +222,7 @@ const DoctorInvitationManager = () => {
           </Table>
         ) : (
           <div className="text-center py-8">
-            <UserPlus className="w-12 h-12 mx-auto text-slate-400 mb-4" />
+            <Users className="w-12 h-12 mx-auto text-slate-400 mb-4" />
             <h3 className="text-lg font-medium mb-2">Nenhum convite enviado</h3>
             <p className="text-slate-600 mb-4">
               Comece convidando médicos para usar o sistema da sua farmácia
