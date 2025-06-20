@@ -19,11 +19,12 @@ export const useDoctorInvitationsQuery = () => {
         return [];
       }
 
+      console.log('🔍 Buscando convites para organização:', profile.organization_id);
       return fetchDoctorInvitations(profile.organization_id);
     },
     enabled: !!profile?.organization_id && ['admin', 'super_admin', 'owner'].includes(profile?.role || ''),
-    retry: 1,
+    retry: 2,
     refetchOnWindowFocus: false,
-    staleTime: 30000 // 30 segundos para evitar muitas requisições
+    staleTime: 30000
   });
 };
