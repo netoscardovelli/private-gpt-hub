@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +14,7 @@ const AcceptInvitationPage = () => {
   const { invitation, isLoading, error, validateInvitation, retry } = useValidateInvitation();
   const [isRetrying, setIsRetrying] = useState(false);
   const [debugInfo, setDebugInfo] = useState('');
+  const [hasValidated, setHasValidated] = useState(false); // Controle para evitar loop
 
   // Debug: Log do token para verificação
   useEffect(() => {
@@ -29,17 +31,19 @@ const AcceptInvitationPage = () => {
 
   // Validar token apenas uma vez quando a página carrega
   useEffect(() => {
-    if (token && !invitation && !isLoading && !error) {
-      console.log('🚀 Iniciando validação do token:', token);
+    if (token && !hasValidated && !invitation && !isLoading && !error) {
+      console.log('🚀 Iniciando validação do token (primeira vez):', token);
+      setHasValidated(true); // Marca como validado ANTES de chamar a função
       validateInvitation(token);
     }
-  }, [token]); // Apenas token como dependência
+  }, [token, hasValidated, invitation, isLoading, error, validateInvitation]);
 
   // Função para tentar novamente com loading
   const handleRetry = async () => {
     if (!token) return;
     
     setIsRetrying(true);
+    setHasValidated(false); // Reset para permitir nova tentativa
     try {
       await retry();
     } catch (err) {
