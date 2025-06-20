@@ -18,6 +18,12 @@ interface EmailRequest {
 
 serve(async (req) => {
   console.log('🚀 Edge Function iniciada - send-doctor-invitation');
+  console.log('📋 Variáveis de ambiente disponíveis:', {
+    hasResendKey: !!Deno.env.get('RESEND_API_KEY'),
+    hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
+    hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+    resendDomain: Deno.env.get('RESEND_DOMAIN') || 'NÃO CONFIGURADO'
+  });
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -63,7 +69,15 @@ serve(async (req) => {
     const baseUrl = Deno.env.get('SITE_URL') || 'https://app.farmaciamagistral.com';
     const registerUrl = `${baseUrl}/doctors/accept-invitation?token=${invitation.invitation_token}`;
 
-    // Template do email
+    // Configurar domínio do Resend
+    const resendDomain = Deno.env.get('RESEND_DOMAIN') || 'onboarding.resend.dev';
+    console.log('📬 Configuração do email:', {
+      domain: resendDomain,
+      from: `${orgName} <noreply@${resendDomain}>`,
+      to: email
+    });
+
+    // Template do email simplificado para teste
     const emailHtml = `
     <!DOCTYPE html>
     <html>
@@ -72,19 +86,12 @@ serve(async (req) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Convite para Parceria - ${orgName}</title>
         <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f8fafc; }
-            .container { max-width: 600px; margin: 0 auto; background-color: white; }
-            .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center; }
-            .header h1 { color: white; margin: 0; font-size: 28px; font-weight: 600; }
-            .content { padding: 40px 30px; }
-            .greeting { font-size: 18px; color: #1f2937; margin-bottom: 20px; }
-            .message { color: #4b5563; line-height: 1.6; margin-bottom: 30px; }
-            .cta-button { display: inline-block; background: #10b981; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
-            .cta-button:hover { background: #059669; }
-            .details { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
-            .details h3 { margin: 0 0 10px 0; color: #1f2937; }
-            .footer { background: #f3f4f6; padding: 30px; text-align: center; color: #6b7280; font-size: 14px; }
-            .divider { height: 1px; background: #e5e7eb; margin: 30px 0; }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+            .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 8px; }
+            .header { background: #10b981; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { padding: 20px; }
+            .button { display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 10px 0; }
+            .footer { margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px; }
         </style>
     </head>
     <body>
@@ -94,91 +101,72 @@ serve(async (req) => {
             </div>
             
             <div class="content">
-                <div class="greeting">
-                    Olá, Doutor(a)! 👋
-                </div>
+                <p>Olá!</p>
                 
-                <div class="message">
-                    <p>Você foi convidado(a) por <strong>${invitedByName}</strong> para se juntar à <strong>${orgName}</strong> como médico parceiro em nossa plataforma de prescrições magistrais.</p>
-                    
-                    <p>Nossa parceria oferece:</p>
-                    <ul>
-                        <li>🔬 Sistema inteligente de formulações</li>
-                        <li>📋 Prescrições digitais seguras</li>
-                        <li>🤖 Assistente AI especializado</li>
-                        <li>📊 Relatórios detalhados</li>
-                        <li>🔒 Segurança e conformidade total</li>
-                    </ul>
-                </div>
-
-                <div style="text-align: center;">
-                    <a href="${registerUrl}" class="cta-button">
-                        ✨ Aceitar Convite e Cadastrar
+                <p>Você foi convidado(a) por <strong>${invitedByName}</strong> para se juntar à <strong>${orgName}</strong> como médico parceiro.</p>
+                
+                <p style="text-align: center;">
+                    <a href="${registerUrl}" class="button">
+                        ✨ Aceitar Convite
                     </a>
-                </div>
+                </p>
 
-                <div class="details">
-                    <h3>📋 Detalhes do Convite</h3>
-                    <p><strong>Farmácia:</strong> ${orgName}</p>
-                    <p><strong>Convidado por:</strong> ${invitedByName}</p>
-                    <p><strong>Válido até:</strong> ${new Date(expiresAt).toLocaleDateString('pt-BR', { 
-                        day: '2-digit', 
-                        month: 'long', 
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })}</p>
-                </div>
+                <p><strong>Detalhes:</strong></p>
+                <ul>
+                    <li><strong>Farmácia:</strong> ${orgName}</li>
+                    <li><strong>Convidado por:</strong> ${invitedByName}</li>
+                    <li><strong>Válido até:</strong> ${new Date(expiresAt).toLocaleDateString('pt-BR')}</li>
+                </ul>
 
-                <div class="divider"></div>
-
-                <div style="color: #6b7280; font-size: 14px;">
-                    <p><strong>📞 Precisa de ajuda?</strong></p>
-                    <p>Entre em contato com nossa equipe de suporte ou diretamente com ${invitedByName} da ${orgName}.</p>
-                    <p><em>Este convite é pessoal e intransferível. Válido por 7 dias.</em></p>
-                </div>
+                <p><small>Este convite é pessoal e intransferível.</small></p>
             </div>
 
             <div class="footer">
                 <p>© 2024 Sistema de Prescrições Magistrais</p>
-                <p>Enviado com segurança e carinho 💚</p>
             </div>
         </div>
     </body>
     </html>
     `;
 
+    // Payload do email
+    const emailPayload = {
+      from: `${orgName} <noreply@${resendDomain}>`,
+      to: [email],
+      subject: `🤝 Convite para parceria - ${orgName}`,
+      html: emailHtml,
+      text: `
+Olá!
+
+Você foi convidado(a) por ${invitedByName} para se juntar à ${orgName} como médico parceiro.
+
+Para aceitar o convite, acesse: ${registerUrl}
+
+Este convite é válido até ${new Date(expiresAt).toLocaleDateString('pt-BR')}.
+
+Atenciosamente,
+Equipe ${orgName}
+      `.trim()
+    };
+
+    console.log('📤 Enviando email com payload:', JSON.stringify(emailPayload, null, 2));
+
     // Enviar email via Resend
-    const resendDomain = Deno.env.get('RESEND_DOMAIN') || 'onboarding.resend.dev';
     const emailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${resendApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        from: `${orgName} <noreply@${resendDomain}>`,
-        to: [email],
-        subject: `🤝 Convite para parceria - ${orgName}`,
-        html: emailHtml,
-        text: `
-Olá!
-
-Você foi convidado(a) por ${invitedByName} para se juntar à ${orgName} como médico parceiro.
-
-Para aceitar o convite e se cadastrar, acesse: ${registerUrl}
-
-Este convite é válido até ${new Date(expiresAt).toLocaleDateString('pt-BR')}.
-
-Atenciosamente,
-Equipe ${orgName}
-        `.trim()
-      }),
+      body: JSON.stringify(emailPayload),
     });
 
+    console.log('📊 Resposta do Resend - Status:', emailResponse.status);
+    
     if (!emailResponse.ok) {
       const errorData = await emailResponse.text();
       console.error('❌ Erro do Resend:', errorData);
+      console.error('📋 Headers da resposta:', Object.fromEntries(emailResponse.headers.entries()));
       throw new Error(`Resend API Error: ${emailResponse.status} - ${errorData}`);
     }
 
@@ -199,6 +187,7 @@ Equipe ${orgName}
 
   } catch (error: any) {
     console.error('❌ Erro no envio do email:', error);
+    console.error('📋 Stack trace:', error.stack);
     return new Response(
       JSON.stringify({ 
         error: 'Erro interno do servidor',
