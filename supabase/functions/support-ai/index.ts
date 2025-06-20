@@ -3,7 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': Deno.env.get('FRONTEND_URL') ?? '',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -25,7 +25,6 @@ const handleApiError = (error: any) => {
 };
 
 const callSupportAI = async (messages: any[], apiKey: string) => {
-  console.log('Fazendo requisição para Support AI API...');
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -41,7 +40,6 @@ const callSupportAI = async (messages: any[], apiKey: string) => {
     }),
   });
 
-  console.log('Resposta da Support AI - Status:', response.status);
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -63,7 +61,6 @@ const callSupportAI = async (messages: any[], apiKey: string) => {
   }
 
   const data = await response.json();
-  console.log('Resposta recebida da Support AI com sucesso');
 
   return data;
 };
@@ -141,8 +138,6 @@ serve(async (req) => {
       throw new Error('Chave da API de Suporte não configurada');
     }
 
-    console.log('Iniciando chamada para Support AI...');
-    console.log('Plano do usuário:', userPlan);
 
     // Preparar mensagens para o contexto de suporte
     const systemMessage = {

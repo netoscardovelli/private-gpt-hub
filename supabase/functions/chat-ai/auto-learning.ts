@@ -1,14 +1,13 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 
-const supabaseUrl = 'https://graumqipaeijtrnldhpq.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyYXVtcWlwYWVpanRybmxkaHBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4NDkzMzUsImV4cCI6MjA2NTQyNTMzNX0.pan6g_v-RKsu98BXjdlvDXWZsb3QnfMLyjLM1S5k_x8';
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
 export const processAutoLearning = async (userId: string, userMessage: string, aiResponse: string, specialty: string) => {
   try {
-    console.log('🧠 Processando aprendizado automático para:', userId);
     
     // Analisar padrões automáticos na mensagem do usuário
     const patterns = await analyzeUserPatterns(userMessage, specialty);
@@ -22,7 +21,7 @@ export const processAutoLearning = async (userId: string, userMessage: string, a
     // Atualizar perfil automaticamente baseado nos padrões
     await updateProfileAutomatically(userId, patterns, responsePatterns, specialty);
     
-    console.log('✅ Aprendizado automático processado com sucesso');
+    // auto learning processed
     return true;
   } catch (error) {
     console.error('❌ Erro no aprendizado automático:', error);
@@ -213,7 +212,6 @@ const updateProfileAutomatically = async (userId: string, userPatterns: any, res
       return false;
     }
 
-    console.log('✅ Perfil atualizado automaticamente');
     return true;
   } catch (error) {
     console.error('Erro geral na atualização automática:', error);

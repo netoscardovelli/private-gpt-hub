@@ -6,7 +6,7 @@ import { buildReferenceContext } from './formula-reference.ts';
 import { processAutoLearning } from './auto-learning.ts';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': Deno.env.get('FRONTEND_URL') ?? '',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -18,7 +18,6 @@ serve(async (req) => {
   const startTime = performance.now();
 
   try {
-    console.log('🚀 Processando requisição de chat-ai...');
     
     const { 
       message, 
@@ -32,7 +31,6 @@ serve(async (req) => {
 
     // Se é feedback, processar aprendizado
     if (feedback && originalAnalysis && userId) {
-      console.log('📚 Processando feedback para aprendizado...');
       
       await saveFeedback(userId, originalAnalysis, feedback, rating || 5);
       
@@ -61,9 +59,9 @@ serve(async (req) => {
         try {
           const parsedLearning = JSON.parse(learningData);
           await updateDoctorLearning(userId, parsedLearning);
-          console.log('✅ Aprendizado processado e salvo');
+          // learning processed
         } catch (e) {
-          console.log('❌ Erro ao parsear dados de aprendizado:', e);
+          console.error('Erro ao parsear dados de aprendizado:', e);
         }
       }
 
@@ -77,13 +75,11 @@ serve(async (req) => {
       throw new Error('Mensagem é obrigatória');
     }
 
-    console.log('🔧 Preparando mensagens com especialidade:', specialty);
 
     // Buscar perfil do médico se userId fornecido
     let doctorProfile = null;
     if (userId) {
       doctorProfile = await getDoctorProfile(userId);
-      console.log('👨‍⚕️ Perfil do médico carregado:', doctorProfile?.specialty || 'Sem perfil');
     }
 
     // Construir prompt do sistema com contexto de referência
@@ -100,7 +96,6 @@ serve(async (req) => {
       }
     ];
 
-    console.log('🤖 Enviando para OpenAI...');
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
@@ -128,21 +123,18 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('✅ Resposta da OpenAI recebida');
 
     const aiResponse = data.choices[0]?.message?.content || 'Desculpe, não foi possível gerar uma resposta.';
     const tokensUsed = data.usage?.total_tokens || 0;
 
     // Processar aprendizado automático baseado na interação
     if (userId) {
-      console.log('🧠 Iniciando aprendizado automático...');
       await processAutoLearning(userId, message, aiResponse, specialty);
     }
 
     const endTime = performance.now();
     const processingTime = endTime - startTime;
 
-    console.log(`⚡ Análise concluída em ${processingTime.toFixed(2)}ms`);
 
     return new Response(
       JSON.stringify({ 

@@ -123,7 +123,6 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
 
       // Tentar buscar no cache se o usuário tem acesso
       if (canUseCache()) {
-        console.log('🔍 Verificando cache...');
         cacheEntry = await intelligentCache.findSimilarQuery(currentInput, selectedSpecialty);
         
         if (cacheEntry) {
@@ -136,13 +135,11 @@ const ChatInterface = ({ user }: ChatInterfaceProps) => {
             hitCount: cacheEntry.hit_count
           });
 
-          console.log('✅ Resposta obtida do cache');
         }
       }
 
       // Se não encontrou no cache, buscar da IA
       if (!fromCache) {
-        console.log('🤖 Buscando resposta da IA...');
         
         const customActives = JSON.parse(localStorage.getItem('customActives') || '[]');
         const conversationHistory = messages.map(msg => ({

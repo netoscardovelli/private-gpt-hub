@@ -4,7 +4,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': Deno.env.get('FRONTEND_URL') ?? '',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
@@ -300,7 +300,6 @@ Se você não solicitou este convite, pode ignorar este email com segurança.
 
 // Função principal
 serve(async (req) => {
-  console.log('🚀 Edge Function iniciada - send-doctor-invitation');
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -385,7 +384,6 @@ serve(async (req) => {
       );
     }
 
-    console.log('📧 Enviando convite para:', { email, organizationName, invitedByName });
 
     // Criar Supabase client
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -418,8 +416,6 @@ serve(async (req) => {
     const orgName = invitation.organization?.name || organizationName;
     const registerUrl = `${BASE_URL}/doctors/accept-invitation?token=${invitation.invitation_token}`;
 
-    console.log('🔗 URL do convite gerada:', registerUrl);
-    console.log('🏢 Organização:', orgName);
 
     // Configurar domínio do Resend
     const resendDomain = Deno.env.get('RESEND_DOMAIN') || DEFAULT_RESEND_DOMAIN;
@@ -442,10 +438,6 @@ serve(async (req) => {
       }
     };
 
-    console.log('📤 Enviando email...');
-    console.log('📨 From:', emailPayload.from);
-    console.log('📨 To:', emailPayload.to);
-    console.log('📨 Subject:', emailPayload.subject);
 
     // Enviar email via Resend com timeout
     const controller = new AbortController();
@@ -463,7 +455,6 @@ serve(async (req) => {
 
     clearTimeout(timeoutId);
 
-    console.log('📊 Resposta do Resend - Status:', emailResponse.status);
 
     if (!emailResponse.ok) {
       const errorText = await emailResponse.text();
@@ -490,7 +481,6 @@ serve(async (req) => {
     }
 
     const emailData = await emailResponse.json();
-    console.log('✅ Email enviado com sucesso:', emailData);
 
     // Opcional: Atualizar status do convite no banco
     try {
