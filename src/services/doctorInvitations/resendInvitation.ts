@@ -14,8 +14,7 @@ export const resendDoctorInvitation = async (invitationId: string) => {
     .eq('id', invitationId)
     .select(`
       *,
-      organization:organizations(name, slug),
-      inviter:profiles!invited_by(full_name)
+      organization:organizations(name, slug)
     `)
     .single();
 
@@ -30,11 +29,15 @@ export const resendDoctorInvitation = async (invitationId: string) => {
   try {
     console.log('📤 Reenviando email...');
     
+    // Usar nome dinâmico da farmácia
+    const organizationName = data.organization?.name || 'Farmácia';
+    const invitedByName = `Equipe da ${organizationName}`;
+    
     const emailPayload = {
       invitationId: data.id,
       email: data.email,
-      organizationName: data.organization?.name || 'Farmácia',
-      invitedByName: data.inviter?.full_name || 'Administrador',
+      organizationName: organizationName,
+      invitedByName: invitedByName,
       expiresAt: data.expires_at
     };
 

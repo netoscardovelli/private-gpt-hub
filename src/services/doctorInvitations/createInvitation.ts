@@ -30,8 +30,7 @@ export const createDoctorInvitation = async (email: string, organizationId: stri
     .insert(insertData)
     .select(`
       *,
-      organization:organizations(name, slug),
-      inviter:profiles!invited_by(full_name)
+      organization:organizations(name, slug)
     `)
     .single();
 
@@ -46,11 +45,15 @@ export const createDoctorInvitation = async (email: string, organizationId: stri
   try {
     console.log('📤 Disparando envio de email...');
     
+    // Usar nome dinâmico da farmácia
+    const organizationName = data.organization?.name || 'Farmácia';
+    const invitedByName = `Equipe da ${organizationName}`;
+    
     const emailPayload = {
       invitationId: data.id,
       email: data.email,
-      organizationName: data.organization?.name || 'Farmácia',
-      invitedByName: data.inviter?.full_name || 'Administrador',
+      organizationName: organizationName,
+      invitedByName: invitedByName,
       expiresAt: data.expires_at
     };
 
