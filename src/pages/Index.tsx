@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import SupportChat from "@/components/SupportChat";
 import OnboardingBanner from "@/components/onboarding/OnboardingBanner";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [showSupportChat, setShowSupportChat] = useState(false);
@@ -33,35 +34,112 @@ const Index = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center max-w-md mx-auto px-4">
           <h1 className="text-4xl font-bold mb-4">Formula.AI</h1>
-          <p className="text-xl mb-8">Faça login para acessar o sistema</p>
-          <a 
-            href="/auth" 
-            className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-          >
-            Fazer Login
-          </a>
+          <p className="text-xl mb-8 text-slate-300">
+            Assistente farmacêutico inteligente para sua farmácia
+          </p>
+          
+          <div className="space-y-4">
+            <Button 
+              onClick={() => navigate('/auth')}
+              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 text-lg"
+            >
+              Fazer Login
+            </Button>
+            
+            <div className="text-slate-400 text-sm">
+              <p>Primeiro acesso?</p>
+              <Button 
+                variant="link" 
+                onClick={() => navigate('/auth')}
+                className="text-emerald-400 hover:text-emerald-300 p-0 h-auto font-normal"
+              >
+                Criar conta gratuita
+              </Button>
+            </div>
+          </div>
+          
+          <div className="mt-8 text-xs text-slate-500">
+            <p>• Fórmulas personalizadas</p>
+            <p>• Suporte 24/7</p>
+            <p>• Relatórios detalhados</p>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Se usuário não tem organização, mostrar onboarding
+  // Se usuário não tem organização, mostrar opções
   if (!profile?.organization_id) {
     return (
       <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
         <div className="text-center max-w-2xl mx-auto px-4">
           <h1 className="text-4xl font-bold mb-4">Bem-vindo ao Formula.AI!</h1>
           <p className="text-xl mb-8 text-slate-300">
-            Para começar a usar nosso assistente farmacêutico, primeiro você precisa cadastrar sua farmácia.
+            Olá, <span className="text-emerald-400">{profile?.full_name || 'Usuário'}</span>!
           </p>
-          <button 
-            onClick={() => navigate('/pharmacy-onboarding')}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-lg font-medium transition-colors text-lg"
-          >
-            Cadastrar Minha Farmácia
-          </button>
+          
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Como você quer continuar?</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Opção 1: Cadastrar Nova Farmácia */}
+              <div className="bg-slate-700 border border-slate-600 rounded-lg p-6 hover:border-emerald-500 transition-colors">
+                <h3 className="text-lg font-medium mb-3 text-emerald-400">Cadastrar Minha Farmácia</h3>
+                <p className="text-slate-300 text-sm mb-4">
+                  Configure sua farmácia e convide médicos para usar o sistema
+                </p>
+                <ul className="text-xs text-slate-400 space-y-1 mb-4">
+                  <li>• Gestão completa de fórmulas</li>
+                  <li>• Convites para médicos</li>
+                  <li>• Relatórios exclusivos</li>
+                  <li>• Branding personalizado</li>
+                </ul>
+                <Button 
+                  onClick={() => navigate('/pharmacy-onboarding')}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                >
+                  Cadastrar Farmácia
+                </Button>
+              </div>
+
+              {/* Opção 2: Acessar como Usuário Individual */}
+              <div className="bg-slate-700 border border-slate-600 rounded-lg p-6 hover:border-blue-500 transition-colors">
+                <h3 className="text-lg font-medium mb-3 text-blue-400">Usar como Médico/Individual</h3>
+                <p className="text-slate-300 text-sm mb-4">
+                  Acesse diretamente o assistente para consultas básicas
+                </p>
+                <ul className="text-xs text-slate-400 space-y-1 mb-4">
+                  <li>• Consultas de fórmulas</li>
+                  <li>• Suporte básico</li>
+                  <li>• Limite de 50 consultas/dia</li>
+                  <li>• Sem funcionalidades B2B</li>
+                </ul>
+                <Button 
+                  onClick={() => {
+                    // Usar o sistema mesmo sem organização
+                    window.location.reload();
+                  }}
+                  variant="outline"
+                  className="w-full border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white"
+                >
+                  Continuar sem Farmácia
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-slate-400 text-sm">
+            <p>Já tem uma farmácia cadastrada?</p>
+            <Button 
+              variant="link" 
+              onClick={() => navigate('/auth')}
+              className="text-emerald-400 hover:text-emerald-300 p-0 h-auto font-normal"
+            >
+              Fazer login com conta da farmácia
+            </Button>
+          </div>
         </div>
       </div>
     );
