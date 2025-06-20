@@ -3,12 +3,15 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface RegistrationData {
-  token: string;
   fullName: string;
   email: string;
   password: string;
+  confirmPassword: string;
   crm: string;
   specialty: string;
+  invitationToken: string;
+  invitationId: string;
+  organizationId: string;
 }
 
 interface RegistrationResponse {
@@ -29,7 +32,7 @@ export const useDoctorRegistration = (): RegistrationResponse => {
       const { data: invitation, error: inviteError } = await supabase
         .from('doctor_invitations')
         .select('*, organization:organizations(id, name)')
-        .eq('invitation_token', data.token)
+        .eq('invitation_token', data.invitationToken)
         .eq('status', 'pending')
         .maybeSingle();
 

@@ -8,16 +8,19 @@ interface ValidationResponse {
   isLoading: boolean;
   error: string | null;
   validateInvitation: (token: string) => Promise<void>;
+  retry: () => Promise<void>;
 }
 
 export const useValidateInvitation = (): ValidationResponse => {
   const [invitation, setInvitation] = useState<DoctorInvitation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastToken, setLastToken] = useState<string | null>(null);
 
   const validateInvitation = async (token: string) => {
     setIsLoading(true);
     setError(null);
+    setLastToken(token);
     
     try {
       console.log('🔍 Validando convite com token:', token);
@@ -84,10 +87,17 @@ export const useValidateInvitation = (): ValidationResponse => {
     }
   };
 
+  const retry = async () => {
+    if (lastToken) {
+      await validateInvitation(lastToken);
+    }
+  };
+
   return {
     invitation,
     isLoading,
     error,
-    validateInvitation
+    validateInvitation,
+    retry
   };
 };
