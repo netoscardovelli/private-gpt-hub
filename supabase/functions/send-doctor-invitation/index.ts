@@ -22,7 +22,8 @@ serve(async (req) => {
     hasResendKey: !!Deno.env.get('RESEND_API_KEY'),
     hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
     hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
-    resendDomain: Deno.env.get('RESEND_DOMAIN') || 'NÃO CONFIGURADO'
+    resendDomain: Deno.env.get('RESEND_DOMAIN') || 'NÃO CONFIGURADO',
+    siteUrl: Deno.env.get('SITE_URL') || 'NÃO CONFIGURADO'
   });
 
   // Handle CORS preflight requests
@@ -66,8 +67,12 @@ serve(async (req) => {
     }
 
     const orgName = invitation.organization?.name || organizationName;
-    const baseUrl = Deno.env.get('SITE_URL') || 'https://app.farmaciamagistral.com';
+    
+    // Usar a URL da variável de ambiente ou o Lovable preview URL como fallback
+    const baseUrl = Deno.env.get('SITE_URL') || 'https://preview--private-gpt-hub.lovable.app';
     const registerUrl = `${baseUrl}/doctors/accept-invitation?token=${invitation.invitation_token}`;
+    
+    console.log('🔗 URL do convite:', registerUrl);
 
     // Configurar domínio do Resend
     const resendDomain = Deno.env.get('RESEND_DOMAIN') || 'onboarding.resend.dev';
@@ -77,7 +82,7 @@ serve(async (req) => {
       to: email
     });
 
-    // Template do email simplificado para teste
+    // Template do email
     const emailHtml = `
     <!DOCTYPE html>
     <html>
@@ -145,7 +150,7 @@ Para aceitar o convite, acesse: ${registerUrl}
 Este convite é válido até ${new Date(expiresAt).toLocaleDateString('pt-BR')}.
 
 Atenciosamente,
-Equipe ${orgName}
+${invitedByName}
       `.trim()
     };
 
