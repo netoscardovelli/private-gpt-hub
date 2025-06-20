@@ -71,3 +71,17 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Automatic code review with OpenAI
+
+This repository includes a workflow that posts pull request diffs to the OpenAI API.
+The action can be customized using environment variables declared in
+`.github/workflows/ai-code-review.yml`:
+
+- `CODE_FILE_EXTENSIONS` – pattern of file extensions to review (default:
+  `js|ts|jsx|tsx|py|java|cpp|c|go|rs|php`).
+- `DIFF_MAX_LENGTH` – maximum number of characters from the diff to send to the model.
+- `OPENAI_MODEL` – ID of the ChatGPT model used for the review.
+
+Adjust these values if you need to review additional languages or tweak the
+model behaviour.

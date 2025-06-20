@@ -10,6 +10,10 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    env:
+      CODE_FILE_EXTENSIONS: 'js|ts|jsx|tsx|py|java|cpp|c|go|rs|php'
+      DIFF_MAX_LENGTH: '8000'
+      OPENAI_MODEL: 'gpt-4o-mini'
     
     steps:
       - name: 📥 Checkout do código
@@ -24,7 +28,7 @@ jobs:
           git diff --name-only origin/${{ github.base_ref }}...HEAD > changed_files.txt
           
           # Filtrar apenas arquivos de código
-          grep -E '\.(js|ts|jsx|tsx|py|java|cpp|c|go|rs|php)$' changed_files.txt > code_files.txt || true
+          grep -E "\\.($CODE_FILE_EXTENSIONS)$" changed_files.txt > code_files.txt || true
           
           # Obter o diff dos arquivos de código
           if [ -s code_files.txt ]; then
@@ -43,14 +47,14 @@ jobs:
           fi
           
           # Preparar o diff para a API (limitando tamanho)
-          DIFF_CONTENT=$(head -c 8000 code_diff.txt)
+          DIFF_CONTENT=$(head -c $DIFF_MAX_LENGTH code_diff.txt)
           
           # Fazer chamada para OpenAI
           RESPONSE=$(curl -s -X POST https://api.openai.com/v1/chat/completions \
             -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "model": "gpt-4o-mini",
+              "model": "$OPENAI_MODEL",
               "messages": [
                 {
                   "role": "system", 
@@ -75,7 +79,7 @@ jobs:
           echo "$AI_COMMENT" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
           echo "---" >> $GITHUB_OUTPUT
-          echo "*Revisão automática gerada por OpenAI GPT-4o-mini*" >> $GITHUB_OUTPUT
+          echo "*Revisão automática gerada por OpenAI $OPENAI_MODEL*" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: 💬 Comentar no Pull Request
