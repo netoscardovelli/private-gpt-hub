@@ -20,25 +20,16 @@ export const useDoctorInvitations = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Debug logs para verificar permissões
-  console.log('🔍 Debug - useDoctorInvitations:', {
-    profileId: profile?.id,
-    organizationId: profile?.organization_id,
-    role: profile?.role
-  });
-
   const { data: invitations, isLoading, error } = useQuery({
     queryKey: ['doctor-invitations', profile?.organization_id],
     queryFn: async () => {
-      console.log('🔍 Buscando convites...');
-      
       if (!profile?.organization_id) {
-        console.log('❌ Usuário não tem organização');
+        console.log('⚠️ Usuário não tem organização');
         return [];
       }
       
       if (!['admin', 'super_admin', 'owner'].includes(profile?.role || '')) {
-        console.log('❌ Usuário não tem permissão:', profile?.role);
+        console.log('⚠️ Usuário não tem permissão:', profile?.role);
         return [];
       }
 
@@ -51,37 +42,26 @@ export const useDoctorInvitations = () => {
         .eq('organization_id', profile.organization_id)
         .order('created_at', { ascending: false });
 
-      console.log('🔍 Resultado da busca:', { data, error });
-
       if (error) {
         console.error('❌ Erro ao buscar convites:', error);
-        throw error;
+        throw new Error(`Erro ao carregar convites: ${error.message}`);
       }
       
       return data || [];
     },
-    enabled: !!profile?.organization_id && ['admin', 'super_admin', 'owner'].includes(profile?.role || '')
+    enabled: !!profile?.organization_id && ['admin', 'super_admin', 'owner'].includes(profile?.role || ''),
+    retry: 1,
+    refetchOnWindowFocus: false
   });
 
   const inviteDoctor = useMutation({
     mutationFn: async (email: string) => {
-      console.log('🔍 Tentando convidar médico:', {
-        email,
-        profileId: profile?.id,
-        organizationId: profile?.organization_id,
-        role: profile?.role
-      });
-
       if (!profile?.organization_id || !profile?.id) {
-        const error = new Error('Usuário não está associado a uma organização ou não está autenticado');
-        console.error('❌', error.message);
-        throw error;
+        throw new Error('Usuário não está associado a uma organização ou não está autenticado');
       }
 
       if (!['admin', 'super_admin', 'owner'].includes(profile?.role || '')) {
-        const error = new Error(`Usuário não tem permissão para convidar médicos. Role atual: ${profile?.role}`);
-        console.error('❌', error.message);
-        throw error;
+        throw new Error(`Usuário não tem permissão para convidar médicos. Role atual: ${profile?.role}`);
       }
 
       // Verificar se já existe convite pendente para este email
@@ -94,9 +74,7 @@ export const useDoctorInvitations = () => {
         .maybeSingle();
 
       if (existingInvite) {
-        const error = new Error('Já existe um convite pendente para este email');
-        console.error('❌', error.message);
-        throw error;
+        throw new Error('Já existe um convite pendente para este email');
       }
 
       const insertData = {
@@ -105,30 +83,20 @@ export const useDoctorInvitations = () => {
         invited_by: profile.id
       };
 
-      console.log('🔍 Dados para inserção:', insertData);
-
       const { data, error } = await supabase
         .from('doctor_invitations')
         .insert(insertData)
         .select()
         .single();
 
-      console.log('🔍 Resultado da inserção:', { data, error });
-
       if (error) {
-        console.error('❌ Erro detalhado na inserção:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        throw error;
+        console.error('❌ Erro ao criar convite:', error);
+        throw new Error(error.message || 'Erro ao criar convite');
       }
       
       return data;
     },
     onSuccess: (data) => {
-      console.log('✅ Convite criado com sucesso:', data);
       queryClient.invalidateQueries({ queryKey: ['doctor-invitations'] });
       toast({
         title: "Convite enviado!",
@@ -150,6 +118,8 @@ export const useDoctorInvitations = () => {
         errorMessage = "Este email já foi convidado para esta organização.";
       } else if (error.code === '42501') {
         errorMessage = "Permissão negada. Verifique se você tem role de administrador.";
+      } else if (error.message) {
+        errorMessage = error.message;
       }
 
       toast({
@@ -162,20 +132,14 @@ export const useDoctorInvitations = () => {
 
   const cancelInvitation = useMutation({
     mutationFn: async (invitationId: string) => {
-      console.log('🔍 Cancelando convite:', invitationId);
-      
       const { error } = await supabase
         .from('doctor_invitations')
         .update({ status: 'cancelled' })
         .eq('id', invitationId);
 
-      if (error) {
-        console.error('❌ Erro ao cancelar convite:', error);
-        throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
-      console.log('✅ Convite cancelado com sucesso');
       queryClient.invalidateQueries({ queryKey: ['doctor-invitations'] });
       toast({
         title: "Convite cancelado",
@@ -183,7 +147,6 @@ export const useDoctorInvitations = () => {
       });
     },
     onError: (error: any) => {
-      console.error('❌ Erro ao cancelar convite:', error);
       toast({
         title: "Erro ao cancelar convite",
         description: error.message,
@@ -194,8 +157,6 @@ export const useDoctorInvitations = () => {
 
   const resendInvitation = useMutation({
     mutationFn: async (invitationId: string) => {
-      console.log('🔍 Reenviando convite:', invitationId);
-      
       const { error } = await supabase
         .from('doctor_invitations')
         .update({ 
@@ -204,13 +165,9 @@ export const useDoctorInvitations = () => {
         })
         .eq('id', invitationId);
 
-      if (error) {
-        console.error('❌ Erro ao reenviar convite:', error);
-        throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
-      console.log('✅ Convite reenviado com sucesso');
       queryClient.invalidateQueries({ queryKey: ['doctor-invitations'] });
       toast({
         title: "Convite reenviado!",
@@ -218,7 +175,6 @@ export const useDoctorInvitations = () => {
       });
     },
     onError: (error: any) => {
-      console.error('❌ Erro ao reenviar convite:', error);
       toast({
         title: "Erro ao reenviar convite",
         description: error.message,
@@ -226,11 +182,6 @@ export const useDoctorInvitations = () => {
       });
     }
   });
-
-  // Log de erro de carregamento
-  if (error) {
-    console.error('❌ Erro ao carregar convites:', error);
-  }
 
   return {
     invitations,

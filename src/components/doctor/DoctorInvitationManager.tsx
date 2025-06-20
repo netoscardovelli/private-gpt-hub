@@ -47,13 +47,6 @@ const DoctorInvitationManager = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  // Debug info
-  console.log('🔍 DoctorInvitationManager - Profile:', {
-    organizationId: profile?.organization_id,
-    role: profile?.role,
-    hasPermission: profile?.organization_id && ['admin', 'super_admin', 'owner'].includes(profile?.role || '')
-  });
-
   // Verificar se o usuário tem permissão para gerenciar convites
   if (!profile?.organization_id) {
     return (
@@ -88,14 +81,13 @@ const DoctorInvitationManager = () => {
   }
 
   if (error) {
-    console.error('❌ Erro no componente:', error);
     return (
       <Card>
         <CardContent className="pt-6">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Erro ao carregar convites: {error.message}
+              {error.message}
             </AlertDescription>
           </Alert>
         </CardContent>
