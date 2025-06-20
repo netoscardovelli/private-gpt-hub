@@ -2,7 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
-import { createDoctorInvitation, cancelDoctorInvitation, resendDoctorInvitation } from '@/services/doctorInvitationsService';
+import { createDoctorInvitation, cancelDoctorInvitation, resendDoctorInvitation } from '@/services/doctorInvitations';
 
 export const useDoctorInvitationMutations = () => {
   const { profile } = useAuth();

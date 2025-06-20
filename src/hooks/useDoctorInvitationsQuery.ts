@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
-import { fetchDoctorInvitations } from '@/services/doctorInvitationsService';
+import { fetchDoctorInvitations } from '@/services/doctorInvitations';
 
 export const useDoctorInvitationsQuery = () => {
   const { profile } = useAuth();
