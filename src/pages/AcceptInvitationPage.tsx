@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,7 +35,7 @@ const AcceptInvitationPage = () => {
       setHasValidated(true); // Marca como validado ANTES de chamar a função
       validateInvitation(token);
     }
-  }, [token, hasValidated, invitation, isLoading, error, validateInvitation]);
+  }, [token, hasValidated, invitation, isLoading, error]); // Removido validateInvitation das dependências
 
   // Função para tentar novamente com loading
   const handleRetry = async () => {

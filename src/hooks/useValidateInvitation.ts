@@ -91,7 +91,7 @@ export const useValidateInvitation = (): ValidationResponse => {
     if (lastToken) {
       await validateInvitation(lastToken);
     }
-  }, [lastToken, validateInvitation]);
+  }, [lastToken, validateInvitation]); // Corrigido: mantém apenas as dependências necessárias
 
   return {
     invitation,
