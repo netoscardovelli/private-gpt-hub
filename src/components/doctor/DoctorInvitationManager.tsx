@@ -163,6 +163,7 @@ const DoctorInvitationManager = () => {
               <TableRow>
                 <TableHead>Email</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Convidado por</TableHead>
                 <TableHead>Enviado em</TableHead>
                 <TableHead>Expira em</TableHead>
                 <TableHead>Ações</TableHead>
@@ -173,6 +174,7 @@ const DoctorInvitationManager = () => {
                 <TableRow key={invitation.id}>
                   <TableCell className="font-medium">{invitation.email}</TableCell>
                   <TableCell>{getStatusBadge(invitation.status)}</TableCell>
+                  <TableCell>{invitation.invited_by_name}</TableCell>
                   <TableCell>
                     {new Date(invitation.created_at).toLocaleDateString('pt-BR')}
                   </TableCell>

@@ -13,6 +13,7 @@ interface DoctorInvitation {
   expires_at: string;
   created_at: string;
   invited_by: string;
+  invited_by_name?: string;
 }
 
 export const useDoctorInvitations = () => {
@@ -33,21 +34,40 @@ export const useDoctorInvitations = () => {
         return [];
       }
 
-      const { data, error } = await supabase
+      console.log('🔍 Buscando convites para organização:', profile.organization_id);
+
+      // Primeiro buscar apenas os convites, sem JOIN
+      const { data: invitationsData, error: invitationsError } = await supabase
         .from('doctor_invitations')
-        .select(`
-          *,
-          profiles!invited_by(full_name)
-        `)
+        .select('*')
         .eq('organization_id', profile.organization_id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('❌ Erro ao buscar convites:', error);
-        throw new Error(`Erro ao carregar convites: ${error.message}`);
+      if (invitationsError) {
+        console.error('❌ Erro ao buscar convites:', invitationsError);
+        throw new Error(`Erro ao carregar convites: ${invitationsError.message}`);
       }
-      
-      return data || [];
+
+      console.log('✅ Convites encontrados:', invitationsData?.length || 0);
+
+      if (!invitationsData || invitationsData.length === 0) {
+        return [];
+      }
+
+      // Buscar os nomes dos usuários que fizeram os convites
+      const inviterIds = [...new Set(invitationsData.map(inv => inv.invited_by))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', inviterIds);
+
+      // Combinar os dados
+      const invitationsWithNames = invitationsData.map(invitation => ({
+        ...invitation,
+        invited_by_name: profilesData?.find(p => p.id === invitation.invited_by)?.full_name || 'Usuário não encontrado'
+      }));
+
+      return invitationsWithNames as DoctorInvitation[];
     },
     enabled: !!profile?.organization_id && ['admin', 'super_admin', 'owner'].includes(profile?.role || ''),
     retry: 1,
@@ -61,8 +81,10 @@ export const useDoctorInvitations = () => {
       }
 
       if (!['admin', 'super_admin', 'owner'].includes(profile?.role || '')) {
-        throw new Error(`Usuário não tem permissão para convidar médicos. Role atual: ${profile?.role}`);
+        throw new Error(`Você não tem permissão para convidar médicos. Role atual: ${profile?.role}`);
       }
+
+      console.log('📧 Enviando convite para:', email);
 
       // Verificar se já existe convite pendente para este email
       const { data: existingInvite } = await supabase
@@ -83,6 +105,8 @@ export const useDoctorInvitations = () => {
         invited_by: profile.id
       };
 
+      console.log('📝 Dados do convite:', insertData);
+
       const { data, error } = await supabase
         .from('doctor_invitations')
         .insert(insertData)
@@ -94,6 +118,7 @@ export const useDoctorInvitations = () => {
         throw new Error(error.message || 'Erro ao criar convite');
       }
       
+      console.log('✅ Convite criado com sucesso:', data);
       return data;
     },
     onSuccess: (data) => {
