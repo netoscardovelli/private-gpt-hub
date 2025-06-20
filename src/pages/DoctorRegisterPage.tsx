@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +26,7 @@ const DoctorRegisterPage = () => {
     specialty: ''
   });
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [hasValidated, setHasValidated] = useState(false);
 
   const { 
     invitation, 
@@ -38,7 +38,7 @@ const DoctorRegisterPage = () => {
   
   const { registerDoctor, isRegistering } = useDoctorRegistration();
 
-  // Validação do token ao carregar a página
+  // Validação única do token
   useEffect(() => {
     console.log('🚀 DoctorRegisterPage carregada');
     console.log('🔗 Token da URL:', token);
@@ -54,8 +54,13 @@ const DoctorRegisterPage = () => {
       return;
     }
 
-    validateInvitation(token);
-  }, [token, validateInvitation, navigate, toast]);
+    // Validar apenas uma vez
+    if (!hasValidated) {
+      console.log('🔍 Validando convite pela primeira vez...');
+      validateInvitation(token);
+      setHasValidated(true);
+    }
+  }, [token, navigate, toast]);
 
   // Pré-preencher email quando convite for carregado
   useEffect(() => {
@@ -222,7 +227,7 @@ const DoctorRegisterPage = () => {
             
             <div className="space-y-2">
               <Button 
-                onClick={retryValidation}
+                onClick={handleRetry}
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 Tentar Novamente
@@ -241,6 +246,13 @@ const DoctorRegisterPage = () => {
       </div>
     );
   }
+
+  // Função para tentar validação novamente
+  const handleRetry = () => {
+    console.log('🔄 Tentando validação novamente...');
+    setHasValidated(false); // Permitir nova validação
+    retryValidation();
+  };
 
   // Formulário de registro
   return (
