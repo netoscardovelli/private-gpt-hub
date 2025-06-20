@@ -68,11 +68,12 @@ serve(async (req) => {
 
     const orgName = invitation.organization?.name || organizationName;
     
-    // Usar a URL da variável de ambiente ou o Lovable preview URL como fallback
-    const baseUrl = Deno.env.get('SITE_URL') || 'https://preview--private-gpt-hub.lovable.app';
+    // Usar www.formula-ai.app como domínio principal
+    const baseUrl = Deno.env.get('SITE_URL') || 'https://www.formula-ai.app';
     const registerUrl = `${baseUrl}/doctors/accept-invitation?token=${invitation.invitation_token}`;
     
-    console.log('🔗 URL do convite:', registerUrl);
+    console.log('🔗 URL do convite gerada:', registerUrl);
+    console.log('🏢 Organização:', orgName);
 
     // Configurar domínio do Resend
     const resendDomain = Deno.env.get('RESEND_DOMAIN') || 'onboarding.resend.dev';
@@ -127,7 +128,7 @@ serve(async (req) => {
             </div>
 
             <div class="footer">
-                <p>© 2024 Sistema de Prescrições Magistrais</p>
+                <p>© 2024 Formula AI - Sistema de Prescrições Magistrais</p>
             </div>
         </div>
     </body>
@@ -154,7 +155,7 @@ ${invitedByName}
       `.trim()
     };
 
-    console.log('📤 Enviando email com payload:', JSON.stringify(emailPayload, null, 2));
+    console.log('📤 Enviando email...');
 
     // Enviar email via Resend
     const emailResponse = await fetch('https://api.resend.com/emails', {
@@ -171,7 +172,6 @@ ${invitedByName}
     if (!emailResponse.ok) {
       const errorData = await emailResponse.text();
       console.error('❌ Erro do Resend:', errorData);
-      console.error('📋 Headers da resposta:', Object.fromEntries(emailResponse.headers.entries()));
       throw new Error(`Resend API Error: ${emailResponse.status} - ${errorData}`);
     }
 
@@ -182,7 +182,8 @@ ${invitedByName}
       JSON.stringify({ 
         success: true, 
         emailId: emailData.id,
-        message: 'Convite enviado com sucesso!' 
+        message: 'Convite enviado com sucesso!',
+        invitationUrl: registerUrl
       }),
       {
         status: 200,
@@ -192,7 +193,6 @@ ${invitedByName}
 
   } catch (error: any) {
     console.error('❌ Erro no envio do email:', error);
-    console.error('📋 Stack trace:', error.stack);
     return new Response(
       JSON.stringify({ 
         error: 'Erro interno do servidor',
