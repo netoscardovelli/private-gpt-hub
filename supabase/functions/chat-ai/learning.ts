@@ -1,14 +1,13 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 
-const supabaseUrl = 'https://graumqipaeijtrnldhpq.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyYXVtcWlwYWVpanRybmxkaHBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4NDkzMzUsImV4cCI6MjA2NTQyNTMzNX0.pan6g_v-RKsu98BXjdlvDXWZsb3QnfMLyjLM1S5k_x8';
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
 export const getDoctorProfile = async (userId: string) => {
   try {
-    console.log('Buscando perfil do médico:', userId);
     
     const { data: profile, error } = await supabaseClient
       .from('doctor_profiles')
@@ -23,7 +22,6 @@ export const getDoctorProfile = async (userId: string) => {
 
     // Se não existe perfil, criar um básico
     if (!profile) {
-      console.log('Criando perfil básico para o médico');
       const { data: newProfile, error: createError } = await supabaseClient
         .from('doctor_profiles')
         .insert({
@@ -52,7 +50,6 @@ export const getDoctorProfile = async (userId: string) => {
 
 export const updateDoctorLearning = async (userId: string, learningData: any) => {
   try {
-    console.log('Atualizando aprendizado do médico:', userId, learningData);
     
     const { data, error } = await supabaseClient
       .from('doctor_profiles')
@@ -71,7 +68,6 @@ export const updateDoctorLearning = async (userId: string, learningData: any) =>
       return false;
     }
 
-    console.log('Aprendizado atualizado com sucesso');
     return true;
   } catch (error) {
     console.error('Erro geral ao atualizar aprendizado:', error);
@@ -81,7 +77,6 @@ export const updateDoctorLearning = async (userId: string, learningData: any) =>
 
 export const saveFeedback = async (userId: string, originalAnalysis: string, feedback: string, rating: number) => {
   try {
-    console.log('Salvando feedback:', userId);
     
     const { data, error } = await supabaseClient
       .from('analysis_feedback')
@@ -98,7 +93,6 @@ export const saveFeedback = async (userId: string, originalAnalysis: string, fee
       return false;
     }
 
-    console.log('Feedback salvo com sucesso');
     return true;
   } catch (error) {
     console.error('Erro geral ao salvar feedback:', error);
