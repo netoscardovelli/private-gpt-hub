@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DoctorInvitation } from '@/types/doctorInvitations';
 
@@ -17,7 +17,7 @@ export const useValidateInvitation = (): ValidationResponse => {
   const [error, setError] = useState<string | null>(null);
   const [lastToken, setLastToken] = useState<string | null>(null);
 
-  const validateInvitation = async (token: string) => {
+  const validateInvitation = useCallback(async (token: string) => {
     setIsLoading(true);
     setError(null);
     setLastToken(token);
@@ -85,13 +85,13 @@ export const useValidateInvitation = (): ValidationResponse => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // Dependências vazias - função estável
 
-  const retry = async () => {
+  const retry = useCallback(async () => {
     if (lastToken) {
       await validateInvitation(lastToken);
     }
-  };
+  }, [lastToken, validateInvitation]);
 
   return {
     invitation,

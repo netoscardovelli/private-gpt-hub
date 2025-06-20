@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,11 +27,13 @@ const AcceptInvitationPage = () => {
     }
   }, [token]);
 
+  // Validar token apenas uma vez quando a página carrega
   useEffect(() => {
-    if (token) {
+    if (token && !invitation && !isLoading && !error) {
+      console.log('🚀 Iniciando validação do token:', token);
       validateInvitation(token);
     }
-  }, [token, validateInvitation]);
+  }, [token]); // Apenas token como dependência
 
   // Função para tentar novamente com loading
   const handleRetry = async () => {
