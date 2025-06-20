@@ -1550,6 +1550,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_doctor_invitations: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       cleanup_expired_notifications: {
         Args: Record<PropertyKey, never>
         Returns: undefined
