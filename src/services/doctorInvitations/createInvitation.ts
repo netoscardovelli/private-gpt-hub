@@ -28,7 +28,11 @@ export const createDoctorInvitation = async (email: string, organizationId: stri
   const { data, error } = await supabase
     .from('doctor_invitations')
     .insert(insertData)
-    .select()
+    .select(`
+      *,
+      organization:organizations(name, slug),
+      inviter:profiles!invited_by(full_name)
+    `)
     .single();
 
   if (error) {
@@ -37,5 +41,37 @@ export const createDoctorInvitation = async (email: string, organizationId: stri
   }
   
   console.log('✅ Convite criado com sucesso:', data);
+
+  // Enviar email automaticamente
+  try {
+    console.log('📤 Disparando envio de email...');
+    
+    const emailPayload = {
+      invitationId: data.id,
+      email: data.email,
+      organizationName: data.organization?.name || 'Farmácia',
+      invitedByName: data.inviter?.full_name || 'Administrador',
+      expiresAt: data.expires_at
+    };
+
+    console.log('📨 Payload do email:', emailPayload);
+
+    const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-doctor-invitation', {
+      body: emailPayload
+    });
+
+    if (emailError) {
+      console.error('⚠️ Erro ao enviar email (convite foi salvo):', emailError);
+      // Não vamos falhar a operação inteira se o email falhar
+      // O convite foi criado com sucesso, só o email que falhou
+    } else {
+      console.log('✅ Email enviado com sucesso:', emailResult);
+    }
+
+  } catch (emailError) {
+    console.error('⚠️ Erro ao disparar envio de email (convite foi salvo):', emailError);
+    // Mesmo comportamento: não falhar a operação principal
+  }
+
   return data;
 };
