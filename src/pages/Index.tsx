@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatInterface from "@/components/ChatInterface";
@@ -40,22 +39,40 @@ const Index = () => {
             Assistente farmacêutico inteligente para sua farmácia
           </p>
           
-          <div className="space-y-4">
-            <Button 
-              onClick={() => navigate('/auth')}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 text-lg"
-            >
-              Fazer Login
-            </Button>
-            
-            <div className="text-slate-400 text-sm">
-              <p>Primeiro acesso?</p>
+          <div className="space-y-6">
+            {/* Login para usuários existentes */}
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+              <h3 className="text-lg font-medium mb-3 text-emerald-400">Já tenho uma farmácia cadastrada</h3>
+              <p className="text-slate-300 text-sm mb-4">
+                Acesse diretamente o sistema da sua farmácia
+              </p>
               <Button 
-                variant="link" 
                 onClick={() => navigate('/auth')}
-                className="text-emerald-400 hover:text-emerald-300 p-0 h-auto font-normal"
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 text-lg"
               >
-                Criar conta gratuita
+                Fazer Login
+              </Button>
+            </div>
+
+            {/* Divisor */}
+            <div className="flex items-center">
+              <div className="flex-1 border-t border-slate-700"></div>
+              <span className="px-3 text-slate-500 text-sm">ou</span>
+              <div className="flex-1 border-t border-slate-700"></div>
+            </div>
+
+            {/* Cadastro para novos usuários */}
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+              <h3 className="text-lg font-medium mb-3 text-blue-400">Primeira vez aqui</h3>
+              <p className="text-slate-300 text-sm mb-4">
+                Crie sua conta e configure sua farmácia
+              </p>
+              <Button 
+                variant="outline"
+                onClick={() => navigate('/auth')}
+                className="w-full border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white py-3 text-lg"
+              >
+                Criar Conta Gratuita
               </Button>
             </div>
           </div>
@@ -70,23 +87,23 @@ const Index = () => {
     );
   }
 
-  // Se usuário não tem organização, mostrar opções
+  // Se usuário não tem organização, mostrar opções apenas na primeira vez
   if (!profile?.organization_id) {
     return (
       <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
         <div className="text-center max-w-2xl mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-4">Bem-vindo ao Formula.AI!</h1>
+          <h1 className="text-4xl font-bold mb-4">Configuração Inicial</h1>
           <p className="text-xl mb-8 text-slate-300">
-            Olá, <span className="text-emerald-400">{profile?.full_name || 'Usuário'}</span>!
+            Olá, <span className="text-emerald-400">{profile?.full_name || 'Usuário'}</span>! Vamos configurar sua conta.
           </p>
           
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Como você quer continuar?</h2>
+            <h2 className="text-2xl font-semibold mb-6">Como você quer usar o Formula.AI?</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Opção 1: Cadastrar Nova Farmácia */}
               <div className="bg-slate-700 border border-slate-600 rounded-lg p-6 hover:border-emerald-500 transition-colors">
-                <h3 className="text-lg font-medium mb-3 text-emerald-400">Cadastrar Minha Farmácia</h3>
+                <h3 className="text-lg font-medium mb-3 text-emerald-400">Sou Proprietário de Farmácia</h3>
                 <p className="text-slate-300 text-sm mb-4">
                   Configure sua farmácia e convide médicos para usar o sistema
                 </p>
@@ -100,15 +117,15 @@ const Index = () => {
                   onClick={() => navigate('/pharmacy-onboarding')}
                   className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
                 >
-                  Cadastrar Farmácia
+                  Cadastrar Minha Farmácia
                 </Button>
               </div>
 
               {/* Opção 2: Acessar como Usuário Individual */}
               <div className="bg-slate-700 border border-slate-600 rounded-lg p-6 hover:border-blue-500 transition-colors">
-                <h3 className="text-lg font-medium mb-3 text-blue-400">Usar como Médico/Individual</h3>
+                <h3 className="text-lg font-medium mb-3 text-blue-400">Sou Médico/Profissional</h3>
                 <p className="text-slate-300 text-sm mb-4">
-                  Acesse diretamente o assistente para consultas básicas
+                  Use o assistente para consultas e fórmulas básicas
                 </p>
                 <ul className="text-xs text-slate-400 space-y-1 mb-4">
                   <li>• Consultas de fórmulas</li>
@@ -124,21 +141,14 @@ const Index = () => {
                   variant="outline"
                   className="w-full border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white"
                 >
-                  Continuar sem Farmácia
+                  Continuar como Médico
                 </Button>
               </div>
             </div>
           </div>
 
           <div className="text-slate-400 text-sm">
-            <p>Já tem uma farmácia cadastrada?</p>
-            <Button 
-              variant="link" 
-              onClick={() => navigate('/auth')}
-              className="text-emerald-400 hover:text-emerald-300 p-0 h-auto font-normal"
-            >
-              Fazer login com conta da farmácia
-            </Button>
+            <p>Esta configuração aparece apenas uma vez. Você pode alterá-la depois nas configurações.</p>
           </div>
         </div>
       </div>
@@ -149,7 +159,7 @@ const Index = () => {
   const userData = {
     id: user.id,
     name: profile?.full_name || user.email?.split('@')[0] || 'Usuário',
-    plan: 'free', // Por enquanto fixo, depois vem da subscription
+    plan: 'free',
     dailyLimit: 50,
     usageToday: 0
   };
