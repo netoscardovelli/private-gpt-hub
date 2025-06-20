@@ -3,10 +3,6 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 
-const resendApiKey = Deno.env.get('RESEND_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -28,10 +24,12 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Verificar se a RESEND_API_KEY está configurada
+  const resendApiKey = Deno.env.get('RESEND_API_KEY');
   if (!resendApiKey) {
     console.error('❌ RESEND_API_KEY não configurada');
     return new Response(
-      JSON.stringify({ error: 'RESEND_API_KEY não configurada' }),
+      JSON.stringify({ error: 'RESEND_API_KEY não configurada no servidor' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -42,6 +40,8 @@ serve(async (req) => {
     console.log('📧 Enviando convite para:', { email, organizationName, invitedByName });
 
     // Criar Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Buscar dados completos do convite
@@ -60,7 +60,8 @@ serve(async (req) => {
     }
 
     const orgName = invitation.organization?.name || organizationName;
-    const registerUrl = `${Deno.env.get('SUPABASE_URL')}/auth/v1/signup?token=${invitation.invitation_token}&redirect_to=${encodeURIComponent('https://app.farmaciamagistral.com/doctors/accept-invitation')}`;
+    const baseUrl = Deno.env.get('SITE_URL') || 'https://app.farmaciamagistral.com';
+    const registerUrl = `${baseUrl}/doctors/accept-invitation?token=${invitation.invitation_token}`;
 
     // Template do email
     const emailHtml = `
@@ -148,6 +149,7 @@ serve(async (req) => {
     `;
 
     // Enviar email via Resend
+    const resendDomain = Deno.env.get('RESEND_DOMAIN') || 'onboarding.resend.dev';
     const emailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -155,7 +157,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: `${orgName} <noreply@${Deno.env.get('RESEND_DOMAIN') || 'onboarding.dev'}>`,
+        from: `${orgName} <noreply@${resendDomain}>`,
         to: [email],
         subject: `🤝 Convite para parceria - ${orgName}`,
         html: emailHtml,
