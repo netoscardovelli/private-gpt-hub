@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +21,8 @@ import SystemCustomizationPage from "./pages/SystemCustomizationPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import APIManagementPage from "./pages/APIManagementPage";
 import PrescriptionsPage from "./pages/PrescriptionsPage";
+import AcceptInvitationPage from "./pages/AcceptInvitationPage";
+import DoctorRegisterPage from "./pages/DoctorRegisterPage";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +41,8 @@ const App = () => (
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/doctors" element={<DoctorsPage />} />
+            <Route path="/doctors/accept-invitation" element={<AcceptInvitationPage />} />
+            <Route path="/doctors/register" element={<DoctorRegisterPage />} />
             <Route path="/actives-favorites" element={<ActivesFavoritesPage />} />
             <Route path="/formulas-favorites" element={<FormulasFavoritesPage />} />
             <Route path="/formulas-import" element={<FormulasImportPage />} />
