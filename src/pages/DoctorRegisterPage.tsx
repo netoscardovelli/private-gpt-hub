@@ -45,7 +45,7 @@ const DoctorRegisterPage = () => {
     retryValidation();
   };
 
-  // Validação única do token
+  // ✅ CORREÇÃO DEFINITIVA: Validação única do token - dependência APENAS no token
   useEffect(() => {
     console.log('🚀 DoctorRegisterPage carregada');
     console.log('🔗 Token da URL:', token);
@@ -61,13 +61,13 @@ const DoctorRegisterPage = () => {
       return;
     }
 
-    // Validar apenas uma vez
+    // Validar apenas uma vez quando o token mudar
     if (!hasValidated) {
       console.log('🔍 Validando convite pela primeira vez...');
       validateInvitation(token);
       setHasValidated(true);
     }
-  }, [token, navigate, toast]);
+  }, [token]); // ✅ APENAS token como dependência - remove navigate, toast, validateInvitation, hasValidated
 
   // Pré-preencher email quando convite for carregado
   useEffect(() => {
