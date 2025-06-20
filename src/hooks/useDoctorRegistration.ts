@@ -25,24 +25,39 @@ export const useDoctorRegistration = (): RegistrationResponse => {
     try {
       console.log('👨‍⚕️ Iniciando registro do médico:', data.email);
       
-      // 1. Primeiro, validar se o convite ainda é válido
+      // 1. Validar convite novamente antes de criar usuário
       const { data: invitation, error: inviteError } = await supabase
         .from('doctor_invitations')
         .select('*, organization:organizations(id, name)')
         .eq('invitation_token', data.token)
         .eq('status', 'pending')
-        .single();
+        .maybeSingle();
 
-      if (inviteError || !invitation) {
-        throw new Error('Convite inválido ou expirado');
+      if (inviteError) {
+        console.error('❌ Erro ao validar convite:', inviteError);
+        throw new Error('Erro ao validar convite. Tente novamente.');
       }
 
-      // 2. Verificar se o email do convite confere
+      if (!invitation) {
+        throw new Error('Convite inválido, expirado ou já foi usado.');
+      }
+
+      // 2. Verificar se o email confere
       if (invitation.email !== data.email) {
-        throw new Error('Email não confere com o convite');
+        throw new Error('Email não confere com o convite enviado.');
       }
 
-      // 3. Criar usuário no Supabase Auth
+      // 3. Verificar se convite não expirou
+      const now = new Date();
+      const expiresAt = new Date(invitation.expires_at);
+      
+      if (now > expiresAt) {
+        throw new Error('Este convite expirou. Solicite um novo convite.');
+      }
+
+      console.log('✅ Convite válido, criando usuário...');
+
+      // 4. Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -59,16 +74,23 @@ export const useDoctorRegistration = (): RegistrationResponse => {
 
       if (authError) {
         console.error('❌ Erro ao criar usuário:', authError);
-        throw new Error(authError.message);
+        
+        if (authError.message.includes('User already registered')) {
+          throw new Error('Este email já está cadastrado. Tente fazer login.');
+        } else if (authError.message.includes('Password')) {
+          throw new Error('A senha deve ter pelo menos 6 caracteres.');
+        } else {
+          throw new Error(authError.message || 'Erro ao criar conta');
+        }
       }
 
       if (!authData.user) {
-        throw new Error('Erro ao criar usuário');
+        throw new Error('Erro ao criar usuário. Tente novamente.');
       }
 
       console.log('✅ Usuário criado:', authData.user.id);
 
-      // 4. Atualizar convite para aceito
+      // 5. Marcar convite como aceito
       const { error: updateError } = await supabase
         .from('doctor_invitations')
         .update({
@@ -78,11 +100,11 @@ export const useDoctorRegistration = (): RegistrationResponse => {
         .eq('id', invitation.id);
 
       if (updateError) {
-        console.error('❌ Erro ao atualizar convite:', updateError);
+        console.error('⚠️ Erro ao atualizar convite:', updateError);
         // Não falhar aqui, pois o usuário já foi criado
       }
 
-      // 5. Criar perfil do médico (se necessário)
+      // 6. Criar perfil do médico
       const { error: profileError } = await supabase
         .from('doctor_profiles')
         .insert({
@@ -95,10 +117,11 @@ export const useDoctorRegistration = (): RegistrationResponse => {
 
       if (profileError) {
         console.error('⚠️ Erro ao criar perfil do médico:', profileError);
-        // Não falhar aqui, pois o usuário já foi criado
+        // Não falhar aqui, o usuário já foi criado
       }
 
-      console.log('✅ Registro do médico concluído com sucesso');
+      console.log('✅ Registro concluído com sucesso!');
+      
     } catch (error: any) {
       console.error('❌ Erro no registro:', error);
       throw error;

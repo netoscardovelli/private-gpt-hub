@@ -22,7 +22,7 @@ export const useValidateInvitation = (): ValidationResponse => {
     try {
       console.log('🔍 Validando convite com token:', token);
       
-      // Query com acesso público usando o token
+      // Buscar convite sem autenticação - agora funciona com RLS público
       const { data, error: queryError } = await supabase
         .from('doctor_invitations')
         .select(`
@@ -30,41 +30,31 @@ export const useValidateInvitation = (): ValidationResponse => {
           organization:organizations(id, name, slug)
         `)
         .eq('invitation_token', token)
+        .eq('status', 'pending')
         .maybeSingle();
-
-      console.log('📊 Resposta da query:', { data, error: queryError });
 
       if (queryError) {
         console.error('❌ Erro ao buscar convite:', queryError);
-        throw new Error('Erro no banco de dados: ' + queryError.message);
+        throw new Error('Erro ao validar convite. Tente novamente.');
       }
 
       if (!data) {
-        throw new Error('Convite não encontrado. Verifique se o link está correto.');
+        console.log('❌ Convite não encontrado ou não está pendente');
+        throw new Error('Convite não encontrado, já foi usado ou expirou.');
       }
 
-      console.log('📋 Dados do convite encontrado:', data);
+      console.log('📋 Convite encontrado:', data);
 
-      // Verificar se o convite ainda está pendente
-      if (data.status !== 'pending') {
-        if (data.status === 'accepted') {
-          throw new Error('Este convite já foi aceito anteriormente.');
-        } else if (data.status === 'expired') {
-          throw new Error('Este convite expirou.');
-        } else if (data.status === 'cancelled') {
-          throw new Error('Este convite foi cancelado.');
-        }
-      }
-
-      // Verificar se o convite expirou pela data
+      // Verificar se o convite expirou
       const now = new Date();
       const expiresAt = new Date(data.expires_at);
       
       if (now > expiresAt) {
-        throw new Error('Este convite expirou em ' + expiresAt.toLocaleDateString('pt-BR'));
+        console.log('⏰ Convite expirado:', { now, expiresAt });
+        throw new Error(`Este convite expirou em ${expiresAt.toLocaleDateString('pt-BR')}.`);
       }
 
-      console.log('✅ Convite válido encontrado');
+      console.log('✅ Convite válido');
       
       const transformedInvitation: DoctorInvitation = {
         id: data.id,
@@ -78,7 +68,7 @@ export const useValidateInvitation = (): ValidationResponse => {
         organization_id: data.organization_id,
         updated_at: data.updated_at,
         organization: data.organization ? {
-          id: data.organization.id || data.organization_id,
+          id: data.organization.id,
           name: data.organization.name,
           slug: data.organization.slug
         } : undefined
@@ -86,8 +76,9 @@ export const useValidateInvitation = (): ValidationResponse => {
       
       setInvitation(transformedInvitation);
     } catch (err: any) {
-      console.error('❌ Erro na validação completa:', err);
+      console.error('❌ Erro na validação:', err);
       setError(err.message || 'Erro desconhecido ao validar convite');
+      setInvitation(null);
     } finally {
       setIsLoading(false);
     }
