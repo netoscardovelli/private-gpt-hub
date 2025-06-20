@@ -22,7 +22,7 @@ export const useValidateInvitation = (): ValidationResponse => {
     try {
       console.log('🔍 Validando convite com token:', token);
       
-      // Query simplificada para buscar o convite pelo token
+      // Query com acesso público usando o token
       const { data, error: queryError } = await supabase
         .from('doctor_invitations')
         .select(`
@@ -32,35 +32,39 @@ export const useValidateInvitation = (): ValidationResponse => {
         .eq('invitation_token', token)
         .maybeSingle();
 
+      console.log('📊 Resposta da query:', { data, error: queryError });
+
       if (queryError) {
         console.error('❌ Erro ao buscar convite:', queryError);
-        throw new Error('Erro ao validar convite: ' + queryError.message);
+        throw new Error('Erro no banco de dados: ' + queryError.message);
       }
 
       if (!data) {
-        throw new Error('Convite não encontrado');
+        throw new Error('Convite não encontrado. Verifique se o link está correto.');
       }
+
+      console.log('📋 Dados do convite encontrado:', data);
 
       // Verificar se o convite ainda está pendente
       if (data.status !== 'pending') {
         if (data.status === 'accepted') {
-          throw new Error('Este convite já foi aceito');
+          throw new Error('Este convite já foi aceito anteriormente.');
         } else if (data.status === 'expired') {
-          throw new Error('Este convite expirou');
+          throw new Error('Este convite expirou.');
         } else if (data.status === 'cancelled') {
-          throw new Error('Este convite foi cancelado');
+          throw new Error('Este convite foi cancelado.');
         }
       }
 
-      // Verificar se o convite expirou (pela data)
+      // Verificar se o convite expirou pela data
       const now = new Date();
       const expiresAt = new Date(data.expires_at);
       
       if (now > expiresAt) {
-        throw new Error('Este convite expirou');
+        throw new Error('Este convite expirou em ' + expiresAt.toLocaleDateString('pt-BR'));
       }
 
-      console.log('✅ Convite válido encontrado:', data);
+      console.log('✅ Convite válido encontrado');
       
       const transformedInvitation: DoctorInvitation = {
         id: data.id,
@@ -82,7 +86,7 @@ export const useValidateInvitation = (): ValidationResponse => {
       
       setInvitation(transformedInvitation);
     } catch (err: any) {
-      console.error('❌ Erro na validação:', err);
+      console.error('❌ Erro na validação completa:', err);
       setError(err.message || 'Erro desconhecido ao validar convite');
     } finally {
       setIsLoading(false);
