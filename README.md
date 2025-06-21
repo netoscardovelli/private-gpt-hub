@@ -1,73 +1,230 @@
-# Welcome to your Lovable project
 
-## Project info
+# 🧪 Fórmula AI - Sistema Inteligente para Farmácias de Manipulação
 
-**URL**: https://lovable.dev/projects/f68f81bd-13b7-48f7-93c0-0c6bc66eb90e
+Uma plataforma avançada de inteligência artificial para farmácias de manipulação, oferecendo análise inteligente de fórmulas, sugestões de otimização e gestão completa de prescrições.
 
-## How can I edit this code?
+## ✨ Principais Funcionalidades
 
-There are several ways of editing your application.
+- 🤖 **Análise Inteligente de Fórmulas** - IA especializada em farmacologia
+- 📊 **Dashboard Completo** - Métricas e relatórios avançados
+- 👥 **Gestão Multi-tenant** - Suporte para múltiplas organizações
+- 🔐 **Sistema de Autenticação** - Controle de acesso baseado em roles
+- 📱 **Interface Responsiva** - Funciona em todos os dispositivos
+- ⚡ **Performance Otimizada** - Cache inteligente e monitoramento
+- 📈 **Monitoramento em Tempo Real** - Sistema completo de observabilidade
 
-**Use Lovable**
+## 🏗️ Arquitetura
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f68f81bd-13b7-48f7-93c0-0c6bc66eb90e) and start prompting.
+### Frontend
+- **React 18** com TypeScript
+- **Tailwind CSS** para estilização
+- **Shadcn/UI** para componentes
+- **React Router** para navegação
+- **React Query** para gerenciamento de estado
 
-Changes made via Lovable will be committed automatically to this repo.
+### Backend
+- **Supabase** como BaaS (Backend as a Service)
+- **PostgreSQL** como banco de dados
+- **Edge Functions** para processamento
+- **Row Level Security (RLS)** para segurança
 
-**Use your preferred IDE**
+### Monitoramento & Observabilidade
+- **Sistema de Métricas** - Coleta automática de performance
+- **Alertas Inteligentes** - Notificações proativas
+- **Dashboard de Saúde** - Visibilidade completa do sistema
+- **Logging Estruturado** - Logs centralizados e pesquisáveis
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🚀 Configuração do Ambiente
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Pré-requisitos
+- Node.js 18+
+- npm ou yarn
+- Conta no Supabase
+- Chave da API OpenAI
 
-Follow these steps:
+### Instalação
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. **Clone o repositório**
+```bash
+git clone <repository-url>
+cd formula-ai
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. **Instale as dependências**
+```bash
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3. **Configure as variáveis de ambiente**
+```bash
+# Copie o arquivo de exemplo
+cp .env.example .env.local
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Configure as variáveis necessárias
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_ENABLE_DEBUG_LOGS=false
+```
+
+4. **Configure as variáveis do Supabase**
+No dashboard do Supabase, adicione as seguintes variáveis de ambiente:
+- `OPENAI_API_KEY` - Sua chave da API OpenAI
+- `RESEND_API_KEY` - Chave para envio de emails (opcional)
+
+5. **Execute as migrações**
+```bash
+npx supabase db push
+```
+
+6. **Inicie o servidor de desenvolvimento**
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🧪 Testes
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Executar todos os testes
+```bash
+npm run test
+```
 
-**Use GitHub Codespaces**
+### Executar testes em modo watch
+```bash
+npm run test:watch
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Verificar cobertura
+```bash
+npm run test:coverage
+```
 
-## What technologies are used for this project?
+### Lint e formatação
+```bash
+npm run lint
+npm run format
+```
 
-This project is built with:
+## 📊 Monitoramento
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+O sistema inclui um sistema completo de monitoramento e observabilidade:
 
-## How can I deploy this project?
+### Métricas Coletadas
+- **Performance**: Tempo de resposta, throughput, taxa de erro
+- **Recursos**: Uso de memória, CPU, rede
+- **Negócio**: Número de consultas, usuários ativos, fórmulas processadas
+- **Erros**: Rastreamento de exceções e falhas
 
-Simply open [Lovable](https://lovable.dev/projects/f68f81bd-13b7-48f7-93c0-0c6bc66eb90e) and click on Share -> Publish.
+### Dashboard de Monitoramento
+Acesse `/monitoring` (apenas para administradores) para visualizar:
+- Status geral do sistema
+- Métricas de performance em tempo real
+- Alertas ativos e histórico
+- Saúde dos serviços (DB, IA, Storage)
 
-## Can I connect a custom domain to my Lovable project?
+### Alertas Automáticos
+O sistema monitora automaticamente:
+- Taxa de erro > 5%
+- Tempo de resposta > 5 segundos
+- Uso de memória > 80%
+- Falhas de serviços críticos
 
-Yes, you can!
+## 🔧 Scripts Disponíveis
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- `npm run dev` - Servidor de desenvolvimento
+- `npm run build` - Build de produção
+- `npm run preview` - Preview do build
+- `npm run test` - Executar testes
+- `npm run lint` - Verificar código
+- `npm run format` - Formatar código
+- `npm run type-check` - Verificar tipos TypeScript
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── components/          # Componentes React
+│   ├── ui/             # Componentes base (shadcn/ui)
+│   ├── chat/           # Componentes do chat
+│   ├── dashboard/      # Componentes do dashboard
+│   ├── monitoring/     # Componentes de monitoramento
+│   └── ...
+├── hooks/              # Custom hooks
+├── pages/              # Páginas da aplicação
+├── services/           # Serviços e APIs
+│   ├── MonitoringService.ts    # Serviço de monitoramento
+│   ├── MetricsCollector.ts     # Coletor de métricas
+│   └── AlertingService.ts      # Sistema de alertas
+├── utils/              # Utilitários
+│   ├── logger.ts       # Sistema de logging
+│   └── corsConfig.ts   # Configurações CORS
+├── config/             # Configurações
+│   └── security.ts     # Configurações de segurança
+└── types/              # Definições de tipos
+```
+
+## 🔒 Segurança
+
+### Medidas Implementadas
+- **Autenticação JWT** via Supabase Auth
+- **Row Level Security (RLS)** no banco de dados
+- **Sanitização de entrada** para prevenir XSS
+- **Rate limiting** nas APIs
+- **CORS configurado** adequadamente
+- **Logs de auditoria** para operações sensíveis
+
+### Roles e Permissões
+- **owner**: Acesso total à organização
+- **admin**: Gerenciamento de usuários e configurações
+- **user**: Acesso básico às funcionalidades
+- **doctor**: Acesso específico para médicos parceiros
+
+## 🌍 Deploy
+
+### Netlify/Vercel
+```bash
+npm run build
+# Deploy da pasta dist/
+```
+
+### Docker
+```bash
+docker build -t formula-ai .
+docker run -p 3000:3000 formula-ai
+```
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
+
+### Padrões de Código
+- Use TypeScript para tipagem
+- Siga as regras do ESLint configurado
+- Escreva testes para novas funcionalidades
+- Mantenha componentes pequenos e focados
+
+## 📈 Roadmap
+
+- [ ] Sistema de notificações push
+- [ ] Integração com sistemas de farmácia
+- [ ] App mobile nativo
+- [ ] API pública para parceiros
+- [ ] Machine Learning avançado
+- [ ] Relatórios automatizados
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 🆘 Suporte
+
+- 📧 Email: suporte@formula-ai.app
+- 📚 Documentação: [docs.formula-ai.app](https://docs.formula-ai.app)
+- 💬 Discord: [Comunidade Formula AI](https://discord.gg/formula-ai)
+
+---
+
+**Desenvolvido com ❤️ para revolucionar a farmácia de manipulação**

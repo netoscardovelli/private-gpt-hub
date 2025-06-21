@@ -10,15 +10,64 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Estrutura de logging melhorada
+const logWithMetrics = (level: string, message: string, data?: any) => {
+  const timestamp = new Date().toISOString();
+  const logEntry = {
+    timestamp,
+    level,
+    message,
+    service: 'chat-ai',
+    ...data
+  };
+  console.log(JSON.stringify(logEntry));
+};
+
+// Função para medir performance
+const measurePerformance = async <T>(
+  operation: string,
+  fn: () => Promise<T>
+): Promise<{ result: T; duration: number }> => {
+  const startTime = performance.now();
+  try {
+    const result = await fn();
+    const duration = performance.now() - startTime;
+    
+    logWithMetrics('info', 'Operation completed', {
+      operation,
+      duration: `${duration.toFixed(2)}ms`,
+      success: true
+    });
+    
+    return { result, duration };
+  } catch (error) {
+    const duration = performance.now() - startTime;
+    
+    logWithMetrics('error', 'Operation failed', {
+      operation,
+      duration: `${duration.toFixed(2)}ms`,
+      success: false,
+      error: error.message
+    });
+    
+    throw error;
+  }
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  const requestId = crypto.randomUUID();
   const startTime = performance.now();
 
   try {
-    console.log('🚀 Processando requisição de chat-ai...');
+    logWithMetrics('info', 'Processing chat-ai request', { 
+      requestId,
+      method: req.method,
+      url: req.url 
+    });
     
     const { 
       message, 
@@ -32,43 +81,75 @@ serve(async (req) => {
 
     // Se é feedback, processar aprendizado
     if (feedback && originalAnalysis && userId) {
-      console.log('📚 Processando feedback para aprendizado...');
+      logWithMetrics('info', 'Processing feedback for learning', { 
+        requestId, 
+        userId,
+        rating 
+      });
       
-      await saveFeedback(userId, originalAnalysis, feedback, rating || 5);
+      const { result: feedbackResult } = await measurePerformance('save-feedback', async () => {
+        await saveFeedback(userId, originalAnalysis, feedback, rating || 5);
+        return true;
+      });
       
       const learningPrompt = buildLearningPrompt(userId, feedback, originalAnalysis);
       
-      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'user', content: learningPrompt }
-          ],
-          max_tokens: 1000,
-          temperature: 0.3,
-        }),
+      const { result: learningResponse } = await measurePerformance('openai-learning', async () => {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'user', content: learningPrompt }
+            ],
+            max_tokens: 1000,
+            temperature: 0.3,
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`OpenAI API error: ${response.status}`);
+        }
+        
+        return response.json();
       });
 
-      if (openaiResponse.ok) {
-        const learningResult = await openaiResponse.json();
-        const learningData = learningResult.choices[0]?.message?.content;
+      if (learningResponse) {
+        const learningData = learningResponse.choices[0]?.message?.content;
         
         try {
           const parsedLearning = JSON.parse(learningData);
-          await updateDoctorLearning(userId, parsedLearning);
-          console.log('✅ Aprendizado processado e salvo');
+          await measurePerformance('update-learning', async () => {
+            await updateDoctorLearning(userId, parsedLearning);
+          });
+          
+          logWithMetrics('info', 'Learning processed successfully', { requestId, userId });
         } catch (e) {
-          console.log('❌ Erro ao parsear dados de aprendizado:', e);
+          logWithMetrics('error', 'Failed to parse learning data', { 
+            requestId, 
+            userId, 
+            error: e.message 
+          });
         }
       }
 
+      const totalTime = performance.now() - startTime;
+      
+      logWithMetrics('info', 'Feedback processing completed', {
+        requestId,
+        processingTime: `${totalTime.toFixed(2)}ms`
+      });
+
       return new Response(
-        JSON.stringify({ success: true, message: 'Feedback processado com sucesso!' }),
+        JSON.stringify({ 
+          success: true, 
+          message: 'Feedback processado com sucesso!',
+          requestId 
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -77,17 +158,32 @@ serve(async (req) => {
       throw new Error('Mensagem é obrigatória');
     }
 
-    console.log('🔧 Preparando mensagens com especialidade:', specialty);
+    logWithMetrics('info', 'Preparing messages', { 
+      requestId, 
+      specialty, 
+      userId,
+      hasCustomActives: customActives.length > 0
+    });
 
     // Buscar perfil do médico se userId fornecido
     let doctorProfile = null;
     if (userId) {
-      doctorProfile = await getDoctorProfile(userId);
-      console.log('👨‍⚕️ Perfil do médico carregado:', doctorProfile?.specialty || 'Sem perfil');
+      const { result: profile } = await measurePerformance('get-doctor-profile', async () => {
+        return await getDoctorProfile(userId);
+      });
+      doctorProfile = profile;
+      
+      logWithMetrics('info', 'Doctor profile loaded', { 
+        requestId, 
+        userId,
+        specialty: doctorProfile?.specialty || 'No profile' 
+      });
     }
 
     // Construir prompt do sistema com contexto de referência
-    const systemPrompt = await buildSystemPrompt(customActives, doctorProfile, specialty, message);
+    const { result: systemPrompt } = await measurePerformance('build-system-prompt', async () => {
+      return await buildSystemPrompt(customActives, doctorProfile, specialty, message);
+    });
 
     const messages = [
       {
@@ -100,49 +196,72 @@ serve(async (req) => {
       }
     ];
 
-    console.log('🤖 Enviando para OpenAI...');
+    logWithMetrics('info', 'Sending request to OpenAI', { requestId });
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
       throw new Error('OPENAI_API_KEY não configurada');
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: messages,
-        max_tokens: 4000,
-        temperature: 0.7,
-      }),
+    const { result: openaiResponse, duration: openaiDuration } = await measurePerformance('openai-chat', async () => {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: messages,
+          max_tokens: 4000,
+          temperature: 0.7,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logWithMetrics('error', 'OpenAI API error', { 
+          requestId, 
+          status: response.status, 
+          error: errorText 
+        });
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      }
+
+      return response.json();
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Erro da OpenAI API:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
+    logWithMetrics('info', 'OpenAI response received', { 
+      requestId,
+      openaiDuration: `${openaiDuration.toFixed(2)}ms`
+    });
 
-    const data = await response.json();
-    console.log('✅ Resposta da OpenAI recebida');
-
-    const aiResponse = data.choices[0]?.message?.content || 'Desculpe, não foi possível gerar uma resposta.';
-    const tokensUsed = data.usage?.total_tokens || 0;
+    const aiResponse = openaiResponse.choices[0]?.message?.content || 'Desculpe, não foi possível gerar uma resposta.';
+    const tokensUsed = openaiResponse.usage?.total_tokens || 0;
 
     // Processar aprendizado automático baseado na interação
     if (userId) {
-      console.log('🧠 Iniciando aprendizado automático...');
-      await processAutoLearning(userId, message, aiResponse, specialty);
+      logWithMetrics('info', 'Starting auto-learning', { requestId, userId });
+      
+      measurePerformance('auto-learning', async () => {
+        await processAutoLearning(userId, message, aiResponse, specialty);
+      }).catch(error => {
+        logWithMetrics('error', 'Auto-learning failed', { 
+          requestId, 
+          userId, 
+          error: error.message 
+        });
+      });
     }
 
-    const endTime = performance.now();
-    const processingTime = endTime - startTime;
+    const totalTime = performance.now() - startTime;
 
-    console.log(`⚡ Análise concluída em ${processingTime.toFixed(2)}ms`);
+    logWithMetrics('info', 'Analysis completed successfully', {
+      requestId,
+      processingTime: `${totalTime.toFixed(2)}ms`,
+      tokensUsed,
+      responseLength: aiResponse.length
+    });
 
     return new Response(
       JSON.stringify({ 
@@ -150,7 +269,8 @@ serve(async (req) => {
         model: 'gpt-4o',
         hasReferenceContext: true,
         tokens: tokensUsed,
-        processingTime: processingTime
+        processingTime: totalTime,
+        requestId
       }),
       { 
         headers: { 
@@ -161,16 +281,21 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    const endTime = performance.now();
-    const processingTime = endTime - startTime;
+    const totalTime = performance.now() - startTime;
     
-    console.error('❌ Erro na função:', error);
+    logWithMetrics('error', 'Function execution failed', {
+      requestId,
+      processingTime: `${totalTime.toFixed(2)}ms`,
+      error: error.message,
+      stack: error.stack
+    });
     
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Erro interno do servidor',
         details: error.toString(),
-        processingTime: processingTime
+        processingTime: totalTime,
+        requestId
       }),
       { 
         status: 500, 

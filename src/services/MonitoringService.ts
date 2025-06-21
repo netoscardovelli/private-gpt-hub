@@ -1,317 +1,287 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
+import { metricsCollector, type PerformanceMetric } from './MetricsCollector';
+import { alertingService } from './AlertingService';
 
-interface LogEvent {
-  timestamp: string;
-  level: 'info' | 'warn' | 'error' | 'debug';
-  event: string;
-  userId?: string;
-  sessionId: string;
-  metadata: Record<string, any>;
-  context: {
-    userAgent: string;
-    url: string;
-    component?: string;
+export interface SystemHealth {
+  status: 'healthy' | 'degraded' | 'critical';
+  uptime: number;
+  memory: {
+    used: number;
+    total: number;
+    percentage: number;
+  };
+  performance: {
+    avgResponseTime: number;
+    errorRate: number;
+    throughput: number;
+  };
+  alerts: {
+    active: number;
+    critical: number;
+  };
+  services: {
+    database: 'up' | 'down' | 'degraded';
+    ai: 'up' | 'down' | 'degraded';
+    storage: 'up' | 'down' | 'degraded';
   };
 }
 
-interface PerformanceMetric {
-  name: string;
-  value: number;
-  unit: string;
-  timestamp: string;
-  tags: Record<string, string>;
-}
-
 class MonitoringService {
-  private sessionId: string;
-  private userId?: string;
-  private static instance: MonitoringService;
+  private startTime: number;
+  private healthCheckInterval: NodeJS.Timeout | null = null;
 
   constructor() {
-    this.sessionId = this.generateSessionId();
-    this.setupErrorHandling();
-    this.setupPerformanceMonitoring();
-    this.initializeSession();
+    this.startTime = Date.now();
+    this.startHealthChecks();
   }
 
-  static getInstance(): MonitoringService {
-    if (!MonitoringService.instance) {
-      MonitoringService.instance = new MonitoringService();
-    }
-    return MonitoringService.instance;
-  }
-
-  setUserId(userId: string) {
-    this.userId = userId;
-  }
-
-  private generateSessionId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  private async initializeSession() {
-    try {
-      await supabase.from('user_sessions').insert({
-        session_id: this.sessionId,
-        user_id: this.userId,
-        user_agent: navigator.userAgent,
-        ip_address: null, // Will be handled by server
-        metadata: {
-          screen: {
-            width: window.screen.width,
-            height: window.screen.height
-          },
-          viewport: {
-            width: window.innerWidth,
-            height: window.innerHeight
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Failed to initialize session:', error);
-    }
-  }
-
-  async log(level: LogEvent['level'], event: string, metadata: any = {}, component?: string) {
-    const logEntry: LogEvent = {
-      timestamp: new Date().toISOString(),
-      level,
-      event,
-      userId: this.userId,
-      sessionId: this.sessionId,
-      metadata,
-      context: {
-        userAgent: navigator.userAgent,
-        url: window.location.href,
-        component
+  // Monitorar operação específica
+  async monitorOperation<T>(
+    operationName: string, 
+    operation: () => Promise<T>,
+    context?: Record<string, any>
+  ): Promise<T> {
+    logger.debug('Operation started', { operation: operationName, context });
+    
+    return metricsCollector.timer(operationName, async () => {
+      const result = await operation();
+      
+      // Coletar métricas específicas baseadas no tipo de operação
+      if (operationName.includes('chat')) {
+        metricsCollector.counter('chat_requests_total');
+      } else if (operationName.includes('database')) {
+        metricsCollector.counter('database_operations_total');
+      } else if (operationName.includes('ai')) {
+        metricsCollector.counter('ai_requests_total');
       }
+      
+      return result;
+    }, context);
+  }
+
+  // Obter saúde do sistema
+  async getSystemHealth(): Promise<SystemHealth> {
+    const performanceStats = metricsCollector.getPerformanceStats();
+    const alertStats = alertingService.getAlertStats();
+    
+    const memory = this.getMemoryUsage();
+    const performance = this.calculatePerformanceMetrics(performanceStats);
+    const services = await this.checkServices();
+    
+    const status = this.determineOverallStatus(memory, performance, alertStats, services);
+    
+    return {
+      status,
+      uptime: Date.now() - this.startTime,
+      memory,
+      performance,
+      alerts: {
+        active: alertStats.active,
+        critical: alertStats.byLevel.critical
+      },
+      services
+    };
+  }
+
+  // Obter uso de memória
+  private getMemoryUsage() {
+    if (typeof performance !== 'undefined' && (performance as any).memory) {
+      const memory = (performance as any).memory;
+      return {
+        used: memory.usedJSHeapSize,
+        total: memory.jsHeapSizeLimit,
+        percentage: (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100
+      };
+    }
+    
+    return {
+      used: 0,
+      total: 0,
+      percentage: 0
+    };
+  }
+
+  // Calcular métricas de performance
+  private calculatePerformanceMetrics(performanceStats: any) {
+    const allOps = Object.values(performanceStats) as any[];
+    
+    if (allOps.length === 0) {
+      return {
+        avgResponseTime: 0,
+        errorRate: 0,
+        throughput: 0
+      };
+    }
+    
+    const totalCalls = allOps.reduce((sum, op) => sum + op.totalCalls, 0);
+    const avgResponseTime = allOps.reduce((sum, op) => sum + (op.avgDuration * op.totalCalls), 0) / totalCalls || 0;
+    const totalErrors = allOps.reduce((sum, op) => sum + op.errors.length, 0);
+    const errorRate = totalCalls > 0 ? (totalErrors / totalCalls) * 100 : 0;
+    
+    // Throughput por minuto
+    const throughput = totalCalls / 5; // 5 minutos de janela
+    
+    return {
+      avgResponseTime,
+      errorRate,
+      throughput
+    };
+  }
+
+  // Verificar status dos serviços
+  private async checkServices(): Promise<SystemHealth['services']> {
+    const services: SystemHealth['services'] = {
+      database: 'up',
+      ai: 'up',
+      storage: 'up'
     };
 
-    // Log local para desenvolvimento
-    if (import.meta.env.DEV) {
-      console[level](`[${level.toUpperCase()}] ${event}:`, metadata);
-    }
-
     try {
-      await supabase.from('application_logs').insert({
-        timestamp: logEntry.timestamp,
-        level: logEntry.level,
-        event: logEntry.event,
-        user_id: logEntry.userId,
-        session_id: logEntry.sessionId,
-        metadata: logEntry.metadata,
-        context: logEntry.context
-      });
-    } catch (error) {
-      console.error('Failed to save log:', error);
-    }
-
-    // Update session activity
-    this.updateSessionActivity();
-  }
-
-  async trackPerformance(name: string, value: number, unit: string, tags: Record<string, string> = {}) {
-    const metric: PerformanceMetric = {
-      name,
-      value,
-      unit,
-      timestamp: new Date().toISOString(),
-      tags: {
-        ...tags,
-        sessionId: this.sessionId,
-        userId: this.userId || 'anonymous'
+      // Verificação simples do banco (pode ser expandida)
+      const dbStats = metricsCollector.getPerformanceStats();
+      const dbOps = Object.keys(dbStats).filter(key => key.includes('database'));
+      
+      if (dbOps.length > 0) {
+        const hasDbErrors = dbOps.some(op => dbStats[op].successRate < 90);
+        services.database = hasDbErrors ? 'degraded' : 'up';
       }
-    };
 
-    try {
-      await supabase.from('performance_metrics').insert(metric);
+      // Verificação da API de IA
+      const aiOps = Object.keys(dbStats).filter(key => key.includes('ai') || key.includes('openai'));
+      if (aiOps.length > 0) {
+        const hasAiErrors = aiOps.some(op => dbStats[op].successRate < 95);
+        services.ai = hasAiErrors ? 'degraded' : 'up';
+      }
+
     } catch (error) {
-      console.error('Failed to track performance:', error);
+      logger.error('Error checking services', { error });
+    }
+
+    return services;
+  }
+
+  // Determinar status geral do sistema
+  private determineOverallStatus(
+    memory: SystemHealth['memory'],
+    performance: SystemHealth['performance'],
+    alerts: any,
+    services: SystemHealth['services']
+  ): SystemHealth['status'] {
+    // Crítico se houver alertas críticos
+    if (alerts.byLevel.critical > 0) {
+      return 'critical';
+    }
+
+    // Crítico se algum serviço estiver down
+    if (Object.values(services).includes('down')) {
+      return 'critical';
+    }
+
+    // Degradado se memória > 85% ou error rate > 10%
+    if (memory.percentage > 85 || performance.errorRate > 10) {
+      return 'degraded';
+    }
+
+    // Degradado se algum serviço estiver degradado
+    if (Object.values(services).includes('degraded')) {
+      return 'degraded';
+    }
+
+    // Degradado se tempo de resposta muito alto
+    if (performance.avgResponseTime > 3000) {
+      return 'degraded';
+    }
+
+    return 'healthy';
+  }
+
+  // Iniciar verificações de saúde automáticas
+  private startHealthChecks() {
+    this.healthCheckInterval = setInterval(async () => {
+      try {
+        const health = await this.getSystemHealth();
+        
+        // Log do status do sistema
+        logger.info('System health check', {
+          status: health.status,
+          uptime: health.uptime,
+          memoryUsage: `${health.memory.percentage.toFixed(1)}%`,
+          errorRate: `${health.performance.errorRate.toFixed(2)}%`,
+          avgResponseTime: `${health.performance.avgResponseTime.toFixed(0)}ms`,
+          activeAlerts: health.alerts.active
+        });
+
+        // Coletar métricas do sistema
+        metricsCollector.gauge('system_memory_usage_percent', health.memory.percentage);
+        metricsCollector.gauge('system_error_rate_percent', health.performance.errorRate);
+        metricsCollector.gauge('system_avg_response_time_ms', health.performance.avgResponseTime);
+        metricsCollector.gauge('system_active_alerts', health.alerts.active);
+
+      } catch (error) {
+        logger.error('Health check failed', { error });
+      }
+    }, 60000); // A cada minuto
+  }
+
+  // Parar monitoramento
+  stop() {
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
+      this.healthCheckInterval = null;
     }
   }
 
-  async trackEvent(eventName: string, properties: Record<string, any> = {}) {
-    await this.log('info', eventName, properties, 'analytics');
-
-    switch (eventName) {
-      case 'query_submitted':
-        await this.trackQueryMetrics(properties);
-        break;
-      case 'pdf_generated':
-        await this.trackPDFGeneration(properties);
-        break;
-      case 'user_upgrade':
-        await this.trackConversion(properties);
-        break;
-      case 'cache_hit':
-        await this.trackCacheMetrics(properties);
-        break;
-    }
-  }
-
-  private async trackQueryMetrics(properties: any) {
-    const { startTime, endTime, specialty, provider, fromCache, tokens } = properties;
-    
-    if (startTime && endTime) {
-      const responseTime = endTime - startTime;
-      await this.trackPerformance('ai_response_time', responseTime, 'ms', {
-        specialty: specialty || 'general',
-        provider: provider || 'unknown',
-        cached: fromCache ? 'true' : 'false'
-      });
-    }
-
-    if (properties.response) {
-      await this.trackPerformance('response_length', properties.response.length, 'chars', {
-        specialty: specialty || 'general'
-      });
-    }
-
-    if (tokens) {
-      await this.trackPerformance('tokens_used', tokens, 'tokens', {
-        provider: provider || 'unknown'
-      });
-    }
-  }
-
-  private async trackPDFGeneration(properties: any) {
-    const { duration, sections, pages } = properties;
-    
-    if (duration) {
-      await this.trackPerformance('pdf_generation_time', duration, 'ms', {
-        sections: sections?.length?.toString() || '0',
-        pages: pages?.toString() || '1'
-      });
-    }
-  }
-
-  private async trackConversion(properties: any) {
-    await this.log('info', 'conversion_completed', {
-      fromTier: properties.fromTier,
-      toTier: properties.toTier,
-      value: properties.value,
-      currency: 'BRL'
-    }, 'business');
-  }
-
-  private async trackCacheMetrics(properties: any) {
-    await this.trackPerformance('cache_hit_rate', properties.hitRate || 0, 'percentage', {
-      specialty: properties.specialty || 'general'
-    });
-  }
-
-  async trackError(error: Error, context: any = {}) {
-    await this.log('error', 'application_error', {
-      message: error.message,
+  // Reportar erro personalizado
+  reportError(error: Error, context?: Record<string, any>) {
+    logger.error('Application error reported', {
+      error: error.message,
       stack: error.stack,
-      name: error.name,
+      context
+    });
+
+    metricsCollector.counter('application_errors_total', 1, {
+      error_type: error.name,
       ...context
     });
-  }
 
-  private setupErrorHandling() {
-    window.addEventListener('error', (event) => {
-      this.trackError(event.error, {
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno
-      });
-    });
-
-    window.addEventListener('unhandledrejection', (event) => {
-      this.trackError(new Error(event.reason), {
-        type: 'unhandled_promise_rejection'
-      });
-    });
-  }
-
-  private setupPerformanceMonitoring() {
-    if ('PerformanceObserver' in window) {
-      // Largest Contentful Paint
-      try {
-        new PerformanceObserver((list) => {
-          for (const entry of list.getEntries()) {
-            this.trackPerformance('lcp', entry.startTime, 'ms', {
-              element: (entry as any).element?.tagName || 'unknown'
-            });
-          }
-        }).observe({ entryTypes: ['largest-contentful-paint'] });
-      } catch (e) {
-        console.warn('LCP monitoring not supported');
-      }
-
-      // First Input Delay
-      try {
-        new PerformanceObserver((list) => {
-          for (const entry of list.getEntries()) {
-            this.trackPerformance('fid', (entry as any).processingStart - entry.startTime, 'ms', {
-              eventType: entry.name
-            });
-          }
-        }).observe({ entryTypes: ['first-input'] });
-      } catch (e) {
-        console.warn('FID monitoring not supported');
-      }
-    }
-
-    // Page load metrics
-    window.addEventListener('load', () => {
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-      if (navigation) {
-        this.trackPerformance('page_load_time', navigation.loadEventEnd - navigation.fetchStart, 'ms');
-        this.trackPerformance('dom_content_loaded', navigation.domContentLoadedEventEnd - navigation.fetchStart, 'ms');
-      }
-    });
-  }
-
-  private async updateSessionActivity() {
-    try {
-      await supabase
-        .from('user_sessions')
-        .update({ last_activity: new Date().toISOString() })
-        .eq('session_id', this.sessionId);
-    } catch (error) {
-      // Silent fail
+    // Criar alerta para erros críticos
+    if (context?.critical) {
+      alertingService.createAlert(
+        'error',
+        'Application Error',
+        `${error.message}${context?.operation ? ` in ${context.operation}` : ''}`,
+        'application'
+      );
     }
   }
 
-  async getCacheMetrics(): Promise<{
-    hitRate: number;
-    totalEntries: number;
-    avgQualityScore: number;
-    topQueries: any[];
-  }> {
-    try {
-      const { data: stats } = await supabase
-        .from('query_cache')
-        .select('hit_count, quality_score, specialty, query_normalized')
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
-
-      if (!stats || stats.length === 0) {
-        return { hitRate: 0, totalEntries: 0, avgQualityScore: 0, topQueries: [] };
-      }
-
-      const totalHits = stats.reduce((sum, entry) => sum + entry.hit_count, 0);
-      const hitRate = totalHits / stats.length;
-      const avgQuality = stats.reduce((sum, entry) => sum + Number(entry.quality_score), 0) / stats.length;
-      
-      const topQueries = stats
-        .sort((a, b) => b.hit_count - a.hit_count)
-        .slice(0, 10);
-
-      return {
-        hitRate,
-        totalEntries: stats.length,
-        avgQualityScore: avgQuality,
-        topQueries
-      };
-    } catch (error) {
-      console.error('Failed to get cache metrics:', error);
-      return { hitRate: 0, totalEntries: 0, avgQualityScore: 0, topQueries: [] };
-    }
+  // Obter métricas resumidas
+  getMetricsSummary() {
+    return {
+      aggregated: metricsCollector.getAggregatedMetrics(),
+      performance: metricsCollector.getPerformanceStats(),
+      alerts: alertingService.getAlertStats()
+    };
   }
 }
 
-export const monitoring = MonitoringService.getInstance();
-export default MonitoringService;
+export const monitoringService = new MonitoringService();
+
+// Configurar handler global de erros
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (event) => {
+    monitoringService.reportError(event.error, {
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno
+    });
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    monitoringService.reportError(
+      new Error(event.reason?.message || 'Unhandled promise rejection'),
+      { type: 'unhandled_rejection' }
+    );
+  });
+}
