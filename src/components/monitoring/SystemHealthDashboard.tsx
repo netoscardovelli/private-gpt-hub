@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -178,7 +177,7 @@ const SystemHealthDashboard = () => {
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="services">Serviços</TabsTrigger>
           <TabsTrigger value="alerts">Alertas</TabsTrigger>
-          <TabsTrigger value="metrics">Métricas</Tab4sTrigger>
+          <TabsTrigger value="metrics">Métricas</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">

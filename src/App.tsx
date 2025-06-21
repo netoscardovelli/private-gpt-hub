@@ -35,9 +35,7 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClient
-
-Provider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
           <div className="App">
